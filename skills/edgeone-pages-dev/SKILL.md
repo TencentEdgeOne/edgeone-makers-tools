@@ -7,7 +7,8 @@ description: >-
   WebSocket endpoints, or full-stack features specifically on EdgeOne Pages — e.g.
   "create an API", "add a serverless function", "write middleware", "build a full-stack app",
   "add WebSocket support", "set up edge functions", "use KV storage",
-  "create a Go API", "build a Python backend", "use Flask/FastAPI/Gin on EdgeOne Pages".
+  "create a Go API", "build a Python backend", "use Flask/FastAPI/Gin on EdgeOne Pages",
+  "创建接口", "写个API", "加个中间件", "写后端", "搭建全栈应用".
   Do NOT trigger for framework-native features (Next.js API routes, Next.js middleware,
   Nuxt server routes) or generic Express/Koa development outside an EdgeOne Pages project.
   Do NOT trigger for deployment — use edgeone-pages-deploy instead.
