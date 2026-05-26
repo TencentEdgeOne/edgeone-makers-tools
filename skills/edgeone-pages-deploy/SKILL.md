@@ -143,7 +143,9 @@ If this happens, guide the user to:
 
 #### Token Login
 
-Token login does **NOT** use `edgeone login`. Pass the token directly in the deploy command via `-t`.
+Token login does **NOT** use `edgeone login` or `edgeone whoami`. Pass the token directly in the deploy command via `-t`.
+
+⚠️ **Important**: `edgeone whoami` does NOT support a `-t` flag. Do NOT attempt to verify a token with `whoami -t <token>`. The token is validated by the deploy command itself (`edgeone pages deploy -t <token>`). When the user provides a token, skip Check 2 (login status) entirely and go straight to **Deploy with Token**.
 
 Guide the user to obtain a token:
 1. Go to the console:
