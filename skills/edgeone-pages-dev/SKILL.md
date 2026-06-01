@@ -71,6 +71,9 @@ Lightweight API with ultra-low latency (simple logic, no npm)?
 KV persistent storage? (⚠️ enable KV in console first)
   → Edge Functions + KV Storage                       → read references/kv-storage.md
 
+Blob object storage for uploads, images, files, or JSON datasets?
+  → Cloud Functions (Node.js) + Pages Blob SDK         → read references/blob-storage.md
+
 Complex backend with npm packages / database / WebSocket?
   → Cloud Functions (Node.js)                         → read references/node-functions.md
 
@@ -122,6 +125,7 @@ Need a project structure template?
 |------|------|
 | Edge Functions (lightweight APIs, V8 runtime, KV Storage) | [references/edge-functions.md](references/edge-functions.md) |
 | KV Storage (persistent key-value storage on edge) | [references/kv-storage.md](references/kv-storage.md) |
+| Blob Storage (object files, browser uploads, images, JSON datasets) | [references/blob-storage.md](references/blob-storage.md) |
 | Cloud Functions — Node.js (npm, database, Express/Koa, WebSocket) | [references/node-functions.md](references/node-functions.md) |
 | Cloud Functions — Go (Gin, Echo, Chi, Fiber, net/http) | [references/go-functions.md](references/go-functions.md) |
 | Cloud Functions — Python (Flask, FastAPI, Django, Sanic, Handler) | [references/python-functions.md](references/python-functions.md) |
