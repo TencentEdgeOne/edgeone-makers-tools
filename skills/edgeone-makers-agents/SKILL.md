@@ -9,10 +9,7 @@ description: >-
   It should be used when the user wants to create or review an AI agent endpoint
   on EdgeOne Pages — e.g. "build an agent on EdgeOne Pages", "create a Claude
   agent endpoint", "wire LangGraph into Makers", "stream LLM responses with SSE",
-  "review my agent template", "use context.store / context.sandbox / context.tools",
-  "在 EdgeOne Pages 上写 Agent", "创建 Agent 接口", "审查 Agent 模板",
-  "接入 LangChain / LangGraph / Claude SDK / OpenAI Agents / CrewAI",
-  "AI 流式接口", "Agent 多步推理".
+  "review my agent template", "use context.store / context.sandbox / context.tools".
   Do NOT trigger for plain Edge Functions, Cloud Functions, or middleware
   (those don't run AI logic — use edgeone-pages-dev instead).
   Do NOT trigger for deployment workflows (use edgeone-pages-deploy).
@@ -27,7 +24,7 @@ metadata:
 
 Build production-grade AI agent endpoints on **EdgeOne Pages (Makers)** — five framework routes, platform-injected runtime, file-based routing.
 
-This skill is distilled from five real production templates (`content-creator-edgeone`, `multimodal-processor-edgeone`, `openai-agents-test`, `deepagents-test-starter`, `email-assistant-crewai-edgeone-template`) plus second-pass verification against the `tef-cli` source.
+This skill covers five framework routes (LangChain, Claude Agent SDK, OpenAI Agents SDK, LangGraph/DeepAgents, CrewAI) for building AI agent endpoints on EdgeOne Pages Makers.
 
 ## When to use this skill
 
@@ -225,13 +222,13 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 
 ### Route Comparison
 
-| Route | Language | Dependencies | Best For | Reference Template |
-|-------|----------|--------------|----------|-------------------|
-| **A. LangChain direct** | TS | `langchain` + `@langchain/openai` | Text generation, lightweight tool calls, low token cost | content-creator-edgeone |
-| **B. Claude Agent SDK** | TS | `@anthropic-ai/claude-agent-sdk` | Multi-step agentic, sandbox code exec, file processing, session memory | multimodal-processor-edgeone |
-| **C. OpenAI Agents SDK** | TS | `@openai/agents` + `openai` | Multi-agent (handoff), Session auto-prepend, guardrails | openai-agents-test |
-| **D. LangGraph / DeepAgents** | TS | `langchain` + `deepagents` (or `@langchain/langgraph`) | Long tasks with auto context compression, sub-agent orchestration, checkpointer/store persistence | deepagents-test-starter |
-| **E. CrewAI** ⭐ Python | **Python** | `crewai` + `openai` (+ optional `langgraph`) | Multi-agent role split (Sequential/Hierarchical), CrewAI built-in skills/event_bus | email-assistant-crewai-edgeone-template |
+| Route | Language | Dependencies | Best For |
+|-------|----------|--------------|----------|
+| **A. LangChain direct** | TS | `langchain` + `@langchain/openai` | Text generation, lightweight tool calls, low token cost |
+| **B. Claude Agent SDK** | TS | `@anthropic-ai/claude-agent-sdk` | Multi-step agentic, sandbox code exec, file processing, session memory |
+| **C. OpenAI Agents SDK** | TS | `@openai/agents` + `openai` | Multi-agent (handoff), Session auto-prepend, guardrails |
+| **D. LangGraph / DeepAgents** | TS | `langchain` + `deepagents` (or `@langchain/langgraph`) | Long tasks with auto context compression, sub-agent orchestration, checkpointer/store persistence |
+| **E. CrewAI** ⭐ Python | **Python** | `crewai` + `openai` (+ optional `langgraph`) | Multi-agent role split (Sequential/Hierarchical), CrewAI built-in skills/event_bus |
 
 ---
 
