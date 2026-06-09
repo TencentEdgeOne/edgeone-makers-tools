@@ -106,13 +106,12 @@ Set `agents.framework` in `edgeone.json`, and `context.tools.all()` will return 
 
 | Framework | `agents.framework` | How to fetch tools | Notes |
 |------|---------------------|-----------|------|
-| **Claude Agent SDK** | `'claude-sdk'` | `const tools = context.tools.all()` → feed straight into `createSdkMcpServer({ name, tools, alwaysLoad: true })` | Tools are already in MCP-compatible format; allowlist is shaped like `mcp__<server>__<tool>` |
-| **OpenAI Agents** | `'openai-agents'` | `const tools = context.tools.all()` → pass to `new Agent({ tools })` | FunctionTool format |
-| **OpenAI Chat/Responses** | `'openai-sdk'` | `const tools = context.tools.all()` | function descriptors; **distinct entry from openai-agents** |
+| **Claude Agent SDK** | `'claude-agent-sdk'` | `const tools = context.tools.all()` → feed straight into `createSdkMcpServer({ name, tools, alwaysLoad: true })` | Tools are already in MCP-compatible format; allowlist is shaped like `mcp__<server>__<tool>` |
+| **OpenAI Agents SDK** | `'openai-agents-sdk'` | `const tools = context.tools.all()` → pass to `new Agent({ tools })` | FunctionTool format |
 | **LangGraph / DeepAgents / LangChain** | `'langgraph'` or `'deepagents'` | `const tools = context.tools.all()` → pass to `createAgent({ tools })` or `ToolNode(tools)` | LangChain `StructuredTool` instances |
 | **CrewAI** | `'crewai'` | `const tools = context.tools.all()` | CrewAI BaseTool instances |
 
-> ⚠️ The legal values of `agents.framework` are constrained by the Zod enum in `tef-cli/src/schema/config.ts`: `claude-sdk` / `openai-sdk` / `openai-agents` / `langgraph` / `crewai` / `deepagents`. **There is no `basic`** — `basic` is only the runtime fallback default inside `buildTools`; writing it into `edgeone.json` will be rejected by schema validation.
+> ⚠️ The legal values of `agents.framework` are constrained by the Zod enum in `tef-cli/src/schema/config.ts`: `claude-agent-sdk` / `openai-agents-sdk` / `langgraph` / `crewai` / `deepagents`. **There is no `basic`** — `basic` is only the runtime fallback default inside `buildTools`; writing it into `edgeone.json` will be rejected by schema validation.
 
 ```typescript
 // Claude SDK template pattern (recommended: use the official toClaudeMcpServer helper)
@@ -208,7 +207,7 @@ If a template uses `context.tools.web_search` (or pulls this tool via `context.t
 
 - [ ] Agent endpoints use `context.sandbox` / `context.tools` directly, with **no** hand-written `/v1/sandbox/*` calls or manual token parsing
 - [ ] Template `.env` does **not** require sandbox tickets / PROJECT_ID / SANDBOX_API_BASE / API_ENV (unless connecting via SDK directly)
-- [ ] `agents.framework` in `edgeone.json` is set correctly (`claude-sdk` / `openai-agents` / `openai-sdk` / `langgraph` / `deepagents` / `crewai` — **no `basic`**)
+- [ ] `agents.framework` in `edgeone.json` is set correctly (`claude-agent-sdk` / `openai-agents-sdk` / `langgraph` / `deepagents` / `crewai` — **no `basic`**) — **required for console icon display**
 - [ ] Claude SDK templates prefer `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` (recommended); manual assembly via `all()` is also acceptable
 - [ ] `screenshot` is called with an object: `screenshot({ fullPage: true })`, not the boolean `screenshot(true)`
 - [ ] `runCode` is invoked as the top-level `sandbox.runCode(...)`, **not** `sandbox.code_interpreter.runCode(...)` (that namespace does not exist)

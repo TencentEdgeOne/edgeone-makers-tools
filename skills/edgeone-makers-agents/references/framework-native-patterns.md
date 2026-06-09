@@ -89,7 +89,7 @@ const agent = new Agent({ name: 'Assistant', instructions: '...', tools, model }
 //   event.type === 'agent_updated_stream_event' → Handoff switch
 ```
 
-> **→ How the Makers version differs**: tools come from `context.tools.all()` (with `agents.framework='openai-agents'`); session comes from `context.store.openaiSession(conversationId)`, which auto-prepends history; env goes through `context.env` — never read `process.env`.
+> **→ How the Makers version differs**: tools come from `context.tools.all()` (with `agents.framework='openai-agents-sdk'`); session comes from `context.store.openaiSession(conversationId)`, which auto-prepends history; env goes through `context.env` — never read `process.env`.
 
 ---
 
@@ -162,7 +162,7 @@ const client = new Anthropic()
 //   → execute the tool → append tool_result back into messages → call again, until no more tool_use
 ```
 
-> **→ How the Makers version differs**: see `claude-sdk-route.md`; after setting `agents.framework: 'claude-sdk'` in `edgeone.json`, the recommended way to wire tools is `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` (returns `{name,tools,allowedTools}` — a Claude SDK-specific capability), or feed `context.tools.all()` into `createSdkMcpServer({ name, tools, alwaysLoad: true })`; session comes from `context.store.claudeSessionStore()` (no arguments — ⭐ standalone usage; do not wrap it with langgraph).
+> **→ How the Makers version differs**: see `claude-sdk-route.md`; after setting `agents.framework: 'claude-agent-sdk'` in `edgeone.json`, the recommended way to wire tools is `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` (returns `{name,tools,allowedTools}` — a Claude SDK-specific capability), or feed `context.tools.all()` into `createSdkMcpServer({ name, tools, alwaysLoad: true })`; session comes from `context.store.claudeSessionStore()` (no arguments — ⭐ standalone usage; do not wrap it with langgraph).
 
 ---
 

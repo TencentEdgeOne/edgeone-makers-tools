@@ -71,7 +71,7 @@ This skill is distilled from five real production templates (`content-creator-ed
     - `context.agent.store` (cloud-function endpoints, `cloud-functions/<name>/`): runtime explicitly **strips** `langgraphCheckpointer` and `langgraphStore` in `createCloudFunctionAgentStore` (see `tef-cli/src/pages/builder/impls/node-function.ts:1944-1952`). Only generic message API + `openaiSession` + `claudeSessionStore` are available.
     - **Consequence**: any endpoint that needs `langgraphStore.get/put` MUST live under `agents/`. Putting it in `cloud-functions/` will throw `kv.get is not a function` at runtime.
     - Never write `store?.langgraphStore ?? store` as a fake fallback — in cloud-function context this falls back to the store itself, which has no `.get`, and crashes.
-13. **Use injected `context.sandbox` / `context.tools`.** Do not hand-write `/v1/sandbox/*` calls or parse tokens. `context.tools` shape is determined by `edgeone.json`'s `agents.framework` (`claude-sdk` / `openai-sdk` / `openai-agents` / `langgraph` / `crewai` / `deepagents` — there is **no `basic`**). Use `context.tools.all()`, `.get(name)`, `.files()`, `.browser()`. Sandbox: `sandbox.runCode(...)` is **top-level** (not `code_interpreter.runCode`); `screenshot({ fullPage: true })` takes an object, not a boolean; timeout is in **seconds**.
+13. **Use injected `context.sandbox` / `context.tools`.** Do not hand-write `/v1/sandbox/*` calls or parse tokens. `context.tools` shape is determined by `edgeone.json`'s `agents.framework` (`claude-agent-sdk` / `openai-agents-sdk` / `langgraph` / `crewai` / `deepagents` — there is **no `basic`**). Use `context.tools.all()`, `.get(name)`, `.files()`, `.browser()`. Sandbox: `sandbox.runCode(...)` is **top-level** (not `code_interpreter.runCode`); `screenshot({ fullPage: true })` takes an object, not a boolean; timeout is in **seconds**.
 
 > Note: red line numbering jumps from 12 to 13 deliberately — twelve was the original count; #12 absorbs the store-shape correction with sub-bullets, #13 was added for sandbox/tools to match the breadth of the other rules.
 
@@ -134,6 +134,73 @@ EdgeOne Makers Agent **is not** a generic Next.js API route, **is not** Vercel A
 - **`_`-prefixed files = internal modules**: not routed; imported by siblings only.
 - **`_shared.ts`, `_model.ts`, `_tools.ts` are internal**; `index.ts`, `create.ts` are endpoints.
 - **Pick TS or Python per template**, do not mix in one project.
+
+---
+
+## edgeone.json Configuration
+
+The `edgeone.json` file is the deployment configuration file for EdgeOne Pages Makers projects. It defines the build command, output directory, and agent-specific settings.
+
+### Key Fields
+
+| Field | Type | Description |
+|-------|------|-------------|
+| `buildCommand` | string | Build command (e.g., `npm run build`) |
+| `outputDirectory` | string | Build output directory (e.g., `.next`, `dist`) |
+| `framework` | string | Frontend framework (e.g., `nextjs`, `vite`) |
+| `cloudFunctions` | object | Cloud functions configuration |
+| `agents` | object | **Agent-specific settings (important!)** |
+
+### `agents.framework` — Console Icon Display
+
+The `agents.framework` field in `edgeone.json` tells the EdgeOne Pages console which icon to display for your project. **This is required for the console to show the correct framework icon.**
+
+Available values:
+
+| Value | Framework | Console Icon |
+|-------|-----------|---------------|
+| `claude-agent-sdk` | Claude Agent SDK | Claude |
+| `openai-agents-sdk` | OpenAI Agents SDK | OpenAI |
+| `langgraph` | LangGraph / DeepAgents | LangGraph |
+| `crewai` | CrewAI | CrewAI |
+| `deepagents` | DeepAgents | DeepAgents |
+
+**⚠️ Important**: If `agents.framework` is not set or set to an unrecognized value, the console will show a generic icon (not the framework-specific icon).
+
+### Example `edgeone.json`
+
+```json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "cloudFunctions": {
+    "nodejs": {
+      "includeFiles": []
+    }
+  },
+  "agents": {
+    "framework": "claude-agent-sdk",
+    "externalNodeModules": ["@anthropic-ai/sdk"]
+  }
+}
+```
+
+### `agents.runtime` (Python routes only)
+
+For Python routes (Route E: CrewAI), you must also set `agents.runtime: "python"`:
+
+```json
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "agents": {
+    "framework": "crewai",
+    "runtime": "python",
+    "timeout": 1800
+  }
+}
+```
 
 ---
 
@@ -218,7 +285,7 @@ This tells the platform that the command was triggered from an AI skill context.
    4. ❌ Writing `sandbox.code_interpreter.runCode(...)` (it's `sandbox.runCode(...)`, top-level); `screenshot(true)` should be `screenshot({ fullPage: true })`
    5. ❌ `/stop` carrying `makers-conversation-id` header (use body only)
    6. ❌ Frontend fetch to AI endpoints missing `makers-conversation-id` header
-   7. ❌ `edgeone.json` missing `agents.framework` (default `'claude-sdk'` may not match actual framework, breaks `context.tools` shape)
+   7. ❌ `edgeone.json` missing `agents.framework` (default `'claude-agent-sdk'` may not match actual framework, breaks `context.tools` shape)
 
 ### Developer SOP
 

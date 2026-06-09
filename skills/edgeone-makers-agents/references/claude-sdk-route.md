@@ -191,7 +191,7 @@ export async function onRequest(context: any) {
   //     + session binding (see above)
 
   // ⭐ context.tools is already a Claude SDK-compatible MCP tool array
-  //   (requires agents.framework: 'claude-sdk' in edgeone.json)
+  //   (requires agents.framework: 'claude-agent-sdk' in edgeone.json)
   // ⭐ Recommended: use the official helper toClaudeMcpServer
   //   (returns { name, tools, allowedTools })
   // Or feed context.tools.all() into createSdkMcpServer manually — both work.
@@ -244,7 +244,7 @@ export async function onRequest(context: any) {
 > // Form B (manual)
 > const mcp = createSdkMcpServer({ name: 'edgeone', tools: context.tools.all(), alwaysLoad: true });
 > ```
-> Prerequisite: set `agents.framework: "claude-sdk"` in `edgeone.json`. Older skill docs claiming "Node doesn't have this method" are wrong.
+> Prerequisite: set `agents.framework: "claude-agent-sdk"` in `edgeone.json`. Older skill docs claiming "Node doesn't have this method" are wrong.
 
 ### 8. Degrading when the sandbox is unavailable
 ```typescript
@@ -277,7 +277,7 @@ if (!sandboxWorking && uploadedFiles.length > 0) {
 - [ ] Sessions normalised with `normalizeUuid` + `getSessionInfo` to decide resume/new
 - [ ] AbortSignal forwarded to `query()` and checked inside the loop
 - [ ] `context.request.headers` accessed via `headers['x-foo']` indexing, **not** `.get('x-foo')`
-- [ ] `edgeone.json` has `agents.framework: "claude-sdk"`
+- [ ] `edgeone.json` has `agents.framework: "claude-agent-sdk"`
 - [ ] ⭐ Tools wired with `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` or `context.tools.all()` fed into `createSdkMcpServer`
 - [ ] System prompt explicitly forbids the AI from fabricating files on `FileNotFoundError`
 - [ ] ⭐ Frontend includes `makers-conversation-id` header on `/chat`; **omits** the header on `/stop` (uses body)

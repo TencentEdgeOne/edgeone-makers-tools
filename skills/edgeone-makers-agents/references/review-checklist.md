@@ -22,7 +22,7 @@
 
 - [ ] `.edgeone/project.json` exists (Name + ProjectId)
 
-- [ ] `edgeone.json` sets `agents.framework` (`claude-sdk` / `openai-agents` / `openai-sdk` / `langgraph` / `deepagents` / `crewai` — **no `basic`**, the schema enum does not include it)
+- [ ] `edgeone.json` sets `agents.framework` (`claude-agent-sdk` / `openai-agents-sdk` / `langgraph` / `crewai` / `deepagents` — **no `basic`**, the schema enum does not include it) — **required for console icon display**
 
 - [ ] Frontend lives under `app/`, components under `app/components/`, global utilities under root `lib/`
 

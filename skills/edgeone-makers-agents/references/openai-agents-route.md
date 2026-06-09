@@ -82,7 +82,7 @@ export function createTools(contextTools?: any) {
 }
 ```
 
-> You can also use `context.tools.all()` directly (provided `agents.framework: "openai-agents"` is set in `edgeone.json`); the platform pre-wraps tools so they're OpenAI Agents-compatible.
+> You can also use `context.tools.all()` directly (provided `agents.framework: "openai-agents-sdk"` is set in `edgeone.json`); the platform pre-wraps tools so they're OpenAI Agents-compatible.
 
 ### 3. Session persistence (key: use the `openaiSession` adapter)
 ```typescript
@@ -260,7 +260,7 @@ async function readJsonBody(context: any) {
 
 ## Route C review checklist
 
-- [ ] `edgeone.json` sets `agents.framework: "openai-agents"` (required if you inject tools via `context.tools.all()`)
+- [ ] `edgeone.json` sets `agents.framework: "openai-agents-sdk"` (required if you inject tools via `context.tools.all()`)
 - [ ] Model initialization uses `context.env.AI_GATEWAY_API_KEY` / `AI_GATEWAY_BASE_URL` — **never reads `process.env`**
 - [ ] Session uses `context.store.openaiSession(conversation_id)`; **no** hand-spliced messages array
 - [ ] Stream-to-SSE mapping: `output_text_delta` → `ai_response`, `tool_called` → `tool_call`, `tool_output` → `tool_result`
