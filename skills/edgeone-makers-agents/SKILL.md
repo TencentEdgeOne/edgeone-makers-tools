@@ -1,0 +1,236 @@
+---
+name: edgeone-makers-agents
+description: >-
+  This skill guides building AI agent endpoints on EdgeOne Pages (Makers) — five
+  framework routes (LangChain, Claude Agent SDK, OpenAI Agents SDK,
+  LangGraph/DeepAgents, CrewAI), platform-injected `context.store` /
+  `context.tools` / `context.sandbox`, conversation_id dual-channel routing,
+  SSE streaming, and `agents/` vs `cloud-functions/` separation.
+  It should be used when the user wants to create or review an AI agent endpoint
+  on EdgeOne Pages — e.g. "build an agent on EdgeOne Pages", "create a Claude
+  agent endpoint", "wire LangGraph into Makers", "stream LLM responses with SSE",
+  "review my agent template", "use context.store / context.sandbox / context.tools",
+  "在 EdgeOne Pages 上写 Agent", "创建 Agent 接口", "审查 Agent 模板",
+  "接入 LangChain / LangGraph / Claude SDK / OpenAI Agents / CrewAI",
+  "AI 流式接口", "Agent 多步推理".
+  Do NOT trigger for plain Edge Functions, Cloud Functions, or middleware
+  (those don't run AI logic — use edgeone-pages-dev instead).
+  Do NOT trigger for deployment workflows (use edgeone-pages-deploy).
+  Do NOT trigger for generic LangChain / OpenAI / CrewAI development outside
+  an EdgeOne Pages Makers project.
+metadata:
+  author: edgeone
+  version: "1.0.0"
+---
+
+# EdgeOne Makers Agent Development Guide
+
+Build production-grade AI agent endpoints on **EdgeOne Pages (Makers)** — five framework routes, platform-injected runtime, file-based routing.
+
+This skill is distilled from five real production templates (`content-creator-edgeone`, `multimodal-processor-edgeone`, `openai-agents-test`, `deepagents-test-starter`, `email-assistant-crewai-edgeone-template`) plus second-pass verification against the `tef-cli` source.
+
+## When to use this skill
+
+- Creating a new AI agent endpoint on EdgeOne Pages Makers
+- Wiring LangChain / Claude Agent SDK / OpenAI Agents SDK / LangGraph (DeepAgents) / CrewAI into a Makers project
+- Reviewing an existing agent template against platform red lines
+- Implementing SSE streaming with abort support
+- Persisting conversation state via `context.store` (LangGraph checkpointer / OpenAI session / Claude session)
+- Calling sandbox or platform tools via `context.sandbox` / `context.tools`
+- Splitting AI inference (`agents/`) from data CRUD (`cloud-functions/`)
+
+**Do NOT use for:**
+- Plain Edge Functions / Cloud Functions / Middleware → use `edgeone-pages-dev`
+- Deployment workflows → use `edgeone-pages-deploy`
+- Generic AI framework development outside an EdgeOne Pages Makers project
+- Other platforms (Cloudflare Workers AI, Vercel AI SDK, AWS Bedrock)
+
+## How to use this skill (for a coding agent)
+
+1. Skim the **Mental Model** below — Makers ≠ generic Next.js API routes
+2. Walk the **Decision Tree** to pick one of the five framework routes
+3. Read the matching `references/*-route.md` for a copy-paste skeleton
+4. Self-check against the **Twelve Red Lines**
+5. Run through `references/review-checklist.md` before considering the work done
+
+## ⛔ Critical Rules (never skip)
+
+1. **File-based routing is automatic.** `agents/<name>/index.ts` or `agents/<name>.ts` becomes `POST /<name>`. Never hand-edit `.edgeone/agent-node/config.json`.
+2. **Entry signature is fixed.** TS: `export async function onRequest(context: any)`. Python: `async def handler(context):`. Method-specific variants (`onRequestPost`, `onRequestGet`, etc.) also work.
+3. **Read env via `context.env`, never `process.env` / `os.environ`.** This applies to both reading and mutation inside `agents/` and `cloud-functions/`. Frontend code (`app/`, `src/`) is unaffected.
+4. **Headers are plain objects, not the Web `Headers` API.** Use `context.request.headers['makers-conversation-id']`, never `.get('x')`.
+5. **Conversation ID is a dual-channel contract.** AI endpoints (`/chat`, `/outline`, etc.) MUST receive the `makers-conversation-id` HTTP header from the frontend. The `/stop` endpoint MUST NOT send that header (it would route to the stuck instance) — pass `conversation_id` in the body instead.
+6. **Do not hardcode model name / base URL / API key.** Read `AI_GATEWAY_API_KEY` + `AI_GATEWAY_BASE_URL` (+ optional `AI_GATEWAY_MODEL`) from `context.env`. If your template uses `context.tools.web_search`, also configure `WSA_API_KEY` (Tencent Cloud WSAPI).
+7. **SSE protocol is a template-level convention.** Event types: `ai_response` / `tool_call` / `tool_result` / `usage` / `suggest_actions` / `file_output` / `ping` / `error_message`. Stream ends with `data: [DONE]\n\n`.
+8. **Heartbeat + buffering control are mandatory.** Send a `ping` event every 5 s. Response headers must include `X-Accel-Buffering: no`, `Cache-Control: no-cache`, `Connection: keep-alive`.
+9. **Always honor `context.request.signal`.** Check `signal?.aborted` (TS) or `signal.is_set()` (Python) inside loops; exit gracefully on abort, do not throw.
+10. **Cap your loops.** Manual bind-tools loops use a hard turn limit (e.g. `for (let i = 0; i < 4; i++)`); SDK routes set `maxTurns`. No unbounded "until model says stop" loops.
+11. **Errors must not crash the stream.** Wrap every model / tool call in try/catch. Swallow `AbortError` silently. Emit other errors as `error_message` events without ending the stream prematurely.
+12. **Pick the right `store` entry point — they are NOT shape-equivalent.**
+    - `context.store` (agent endpoints, `agents/<name>/`): full `AgentMemory`, includes **all** adapters (`openaiSession`, `claudeSessionStore`, `langgraphCheckpointer`, `langgraphStore`).
+    - `context.agent.store` (cloud-function endpoints, `cloud-functions/<name>/`): runtime explicitly **strips** `langgraphCheckpointer` and `langgraphStore` in `createCloudFunctionAgentStore` (see `tef-cli/src/pages/builder/impls/node-function.ts:1944-1952`). Only generic message API + `openaiSession` + `claudeSessionStore` are available.
+    - **Consequence**: any endpoint that needs `langgraphStore.get/put` MUST live under `agents/`. Putting it in `cloud-functions/` will throw `kv.get is not a function` at runtime.
+    - Never write `store?.langgraphStore ?? store` as a fake fallback — in cloud-function context this falls back to the store itself, which has no `.get`, and crashes.
+13. **Use injected `context.sandbox` / `context.tools`.** Do not hand-write `/v1/sandbox/*` calls or parse tokens. `context.tools` shape is determined by `edgeone.json`'s `agents.framework` (`claude-sdk` / `openai-sdk` / `openai-agents` / `langgraph` / `crewai` / `deepagents` — there is **no `basic`**). Use `context.tools.all()`, `.get(name)`, `.files()`, `.browser()`. Sandbox: `sandbox.runCode(...)` is **top-level** (not `code_interpreter.runCode`); `screenshot({ fullPage: true })` takes an object, not a boolean; timeout is in **seconds**.
+
+> Note: red line numbering jumps from 12 to 13 deliberately — twelve was the original count; #12 absorbs the store-shape correction with sub-bullets, #13 was added for sandbox/tools to match the breadth of the other rules.
+
+---
+
+## Mental Model
+
+EdgeOne Makers Agent **is not** a generic Next.js API route, **is not** Vercel AI SDK's `route.ts` pattern. It has its own runtime conventions.
+
+| Dimension | EdgeOne Makers convention | ⚠️ Common mistake |
+|-----------|---------------------------|-------------------|
+| Backend entry | `agents/<name>/index.ts` or `agents/<name>.ts` (Python: `.py`) | ❌ NOT `app/api/<name>/route.ts` |
+| Function signature | `export async function onRequest(context)` (Python: `async def handler(context)`) | ❌ NOT `export async function POST(req)` |
+| Request body | `context.request.body` (already parsed) | ❌ NOT `await req.json()` |
+| Request headers | `context.request.headers['x-foo']` (plain object) | ❌ NOT `headers.get('x-foo')` (silently returns undefined) |
+| Environment | `context.env.AI_GATEWAY_API_KEY` (runtime-injected) | ❌ NOT `process.env.X` / `os.environ` (banned in agents/ and cloud-functions/) |
+| Model access | `context.env.AI_GATEWAY_*` → Makers AI Gateway | ❌ NOT direct OpenAI / Anthropic |
+| Platform capabilities | `context.tools` / `context.sandbox` / `context.store` injected by runtime | ❌ NOT importing the SDK yourself |
+| Route registration | Auto-scanned at build time → `.edgeone/agent-node/config.json` | ❌ Don't write that file by hand |
+
+> **The core idea**: you write a thin handler that runs inside the EdgeOne Agent Node Runtime (or Python Runtime). The platform injects the model gateway, sandbox, tools, and session store via `context`. Your code stays thin and leans on the runtime.
+
+---
+
+## Standard Project Layout
+
+```
+<template-name>-edgeone/
+├── agents/                          # ⭐ Agent backend (core)
+│   ├── _shared.ts                   # Shared: logger + SSE helper
+│   ├── _model.ts                    # Shared: model name + Gateway env mapping
+│   ├── <action>.ts                  # Simple agent: single file → POST /<action>
+│   └── <action>/                    # Complex agent: directory form
+│       ├── index.ts                 # onRequest entry → POST /<action>
+│       ├── _skills.ts               # System prompt builder (optional)
+│       ├── _tools.ts                # Custom / MCP tool definitions (optional)
+│       └── _templates.ts            # Output templates / default data (optional)
+├── app/                             # Next.js frontend (App Router)
+│   ├── layout.tsx
+│   ├── page.tsx
+│   ├── globals.css
+│   ├── components/
+│   └── lib/                         # Frontend utils (context, hooks, conversation-id)
+├── lib/                             # Cross-cutting utils (i18n, helpers)
+├── cloud-functions/                 # ⭐ Data persistence functions (separate from agents)
+│   ├── _logger.ts
+│   └── <resource>/index.ts          # e.g. articles/, preferences/, history/, health/
+├── .edgeone/
+│   └── project.json                 # { Name, ProjectId }
+├── edgeone.json                     # Deployment config + agents.framework / agents.runtime / agents.timeout
+├── package.json                     # TS routes (A/B/C/D)
+├── requirements.txt                 # ⭐ Python route (E) only
+└── README.md
+```
+
+### Layout principles
+
+- **`agents/` = AI inference**: model calls, streaming, tool calling. Each file/directory is one SSE endpoint.
+- **`cloud-functions/` = data CRUD**: KV/Blob reads/writes, health checks, history. Returns JSON; not streamed.
+- **`_`-prefixed files = internal modules**: not routed; imported by siblings only.
+- **`_shared.ts`, `_model.ts`, `_tools.ts` are internal**; `index.ts`, `create.ts` are endpoints.
+- **Pick TS or Python per template**, do not mix in one project.
+
+---
+
+## Technology Decision Tree
+
+Pick one of the five framework routes:
+
+```
+Need a sandbox to run code, process uploaded files, or use MCP tools?
+├─ Yes → Route B: Claude Agent SDK
+└─ No ↓
+   Need multi-agent collaboration?
+   ├─ No → Route A: LangChain (lightest)
+   └─ Yes ↓
+      Want to use Python? (team / existing deps / CrewAI ecosystem)
+      ├─ Yes → Route E: CrewAI (Python)
+      └─ No ↓
+         Need OpenAI Agents handoff?
+         ├─ Yes → Route C: OpenAI Agents SDK
+         └─ No → Route D: LangGraph / DeepAgents (best for long tasks)
+```
+
+### Route Comparison
+
+| Route | Language | Dependencies | Best For | Reference Template |
+|-------|----------|--------------|----------|-------------------|
+| **A. LangChain direct** | TS | `langchain` + `@langchain/openai` | Text generation, lightweight tool calls, low token cost | content-creator-edgeone |
+| **B. Claude Agent SDK** | TS | `@anthropic-ai/claude-agent-sdk` | Multi-step agentic, sandbox code exec, file processing, session memory | multimodal-processor-edgeone |
+| **C. OpenAI Agents SDK** | TS | `@openai/agents` + `openai` | Multi-agent (handoff), Session auto-prepend, guardrails | openai-agents-test |
+| **D. LangGraph / DeepAgents** | TS | `langchain` + `deepagents` (or `@langchain/langgraph`) | Long tasks with auto context compression, sub-agent orchestration, checkpointer/store persistence | deepagents-test-starter |
+| **E. CrewAI** ⭐ Python | **Python** | `crewai` + `openai` (+ optional `langgraph`) | Multi-agent role split (Sequential/Hierarchical), CrewAI built-in skills/event_bus | email-assistant-crewai-edgeone-template |
+
+---
+
+## Routing
+
+| Task | Read |
+|------|------|
+| Platform conventions (file routing, `onRequest` signature, env, headers, SSE protocol, cloud-functions, memory) | [references/platform-conventions.md](references/platform-conventions.md) |
+| Memory / Store cheat sheet (5 frameworks → adapters, agent vs cloud-function entry, single-object API signatures) | [references/memory-store.md](references/memory-store.md) |
+| Sandbox + Tools cheat sheet (`context.sandbox` API, `ToolsContext` shape, `/tmp/` cross-request caveat, `WSA_API_KEY` setup, built-in tools) | [references/sandbox-and-tools.md](references/sandbox-and-tools.md) |
+| Framework-native patterns vs Makers-injected variants (migration reference) | [references/framework-native-patterns.md](references/framework-native-patterns.md) |
+| Route A — LangChain direct (TS) | [references/langchain-route.md](references/langchain-route.md) |
+| Route B — Claude Agent SDK (TS) | [references/claude-sdk-route.md](references/claude-sdk-route.md) |
+| Route C — OpenAI Agents SDK (TS) | [references/openai-agents-route.md](references/openai-agents-route.md) |
+| Route D — LangGraph / DeepAgents (TS) | [references/langgraph-deepagents-route.md](references/langgraph-deepagents-route.md) |
+| Route E — CrewAI (Python) | [references/crewai-route.md](references/crewai-route.md) |
+| Review checklist (9 sections, tick-list audit) | [references/review-checklist.md](references/review-checklist.md) |
+
+---
+
+## Environment Setup
+
+Before executing **any** `edgeone` CLI command (`pages init`, `pages dev`, `pages link`, `pages env pull`, etc.), set:
+
+```bash
+export PAGES_SOURCE=skills
+```
+
+Or prefix each command inline:
+
+```bash
+PAGES_SOURCE=skills edgeone pages dev
+```
+
+This tells the platform that the command was triggered from an AI skill context.
+
+---
+
+## Standard Operating Procedure
+
+### Reviewer SOP
+
+1. Run `find . -type d -name agents -o -name cloud-functions` to confirm directory shape.
+2. Open `edgeone.json`, read `agents.framework` / `agents.runtime` to identify the route.
+3. Walk through `references/review-checklist.md` from section A onward.
+4. When a violation is found, cite the matching Critical Rule + the "remediation table" at the end of the checklist.
+5. Top high-frequency issues to attack first (in order of observed frequency):
+   1. ❌ `process.env.X` / `os.environ` inside agents (use `context.env`); **mutation also counts**: `process.env.X = '...'` is a violation too
+   2. ❌ `headers.get('x')` (use `headers['x']`)
+   3. ❌ Hand-maintained `.edgeone/agent-node/config.json` (delete it). ⚠️ **How to judge**: check whether `.gitignore` includes `.edgeone`. If yes → the local `config.json` is a build artifact, not a violation. If no → the whole `.edgeone/` is committed, that's the violation.
+   4. ❌ Writing `sandbox.code_interpreter.runCode(...)` (it's `sandbox.runCode(...)`, top-level); `screenshot(true)` should be `screenshot({ fullPage: true })`
+   5. ❌ `/stop` carrying `makers-conversation-id` header (use body only)
+   6. ❌ Frontend fetch to AI endpoints missing `makers-conversation-id` header
+   7. ❌ `edgeone.json` missing `agents.framework` (default `'claude-sdk'` may not match actual framework, breaks `context.tools` shape)
+
+### Developer SOP
+
+1. Pick a route via the Decision Tree above.
+2. Copy the skeleton from the matching `references/*-route.md`.
+3. Configure `edgeone.json`: set `agents.framework` correctly; Python route also needs `agents.runtime: "python"`.
+4. Frontend: `getOrCreateConversationId` + `fetch` with `makers-conversation-id` header.
+5. Get it running → self-check against the twelve Critical Rules → run through `references/review-checklist.md`.
+6. Before opening a PR, scan the high-frequency issues list above one more time.
+
+---
+
+> ⚠️ **This skill is calibrated against `tef-cli` source + `@edgeone/pages-agent-toolkit` types.** If you see older docs claiming "must hand-write `config.json`", "cloud-function and agent store have identical shape", "Node version lacks `toClaudeMcpServer()` / `files()` / `browser()`", "`agents.framework` accepts `'basic'`", "`code_interpreter.runCode`", "`screenshot(true)`" — those are wrong; this skill has the corrections.
+>
+> Pay special attention to the cloud-function store shape: `tef-cli/src/pages/builder/impls/node-function.ts:1944-1952`'s `createCloudFunctionAgentStore` explicitly strips `langgraphCheckpointer` and `langgraphStore` during destructuring. So `context.agent.store` does NOT have these two adapters — only generic message API + `openaiSession` / `claudeSessionStore`. Endpoints needing langgraph KV must live under `agents/` and use `context.store`.
