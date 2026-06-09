@@ -210,6 +210,50 @@ export async function onRequest(context: any) {
 
 ---
 
+## Python Store API (Route E and future Python routes)
+
+The Python runtime provides the same `ctx.store` (`ConversationMemory`) with **identical data layout** (shared COS namespace), but uses Python naming conventions:
+
+### Node ↔ Python Method Mapping
+
+| Node (TS) | Python | Notes |
+|-----------|--------|-------|
+| `store.appendMessage({ conversationId, role, content, metadata })` | `await ctx.store.append_message(conversation_id, role, content, metadata=None)` | Positional args (not single-object) |
+| `store.getMessages({ conversationId, limit, order })` | `await ctx.store.get_messages(conversation_id, limit=20, order="asc")` | Default ascending |
+| `store.updateMessage({ messageId, content, metadata })` | `await ctx.store.update_message(message_id, content=..., metadata=...)` | |
+| `store.deleteMessage({ messageId })` | `await ctx.store.delete_message(message_id)` | |
+| `store.clearMessages({ conversationId })` | `await ctx.store.clear_messages(conversation_id)` | |
+| `store.getConversation(id)` | `await ctx.store.get_conversation(conversation_id)` | |
+| `store.updateConversation(id, { metadata })` | `await ctx.store.update_conversation(conversation_id, metadata={})` | Shallow merge |
+| `store.listConversations({ limit, order })` | `await ctx.store.list_conversations(limit=20, order="desc")` | |
+| `store.deleteConversation(id)` | `await ctx.store.delete_conversation(conversation_id)` | |
+| `store.toOpenAIInput(messages)` | `ctx.store.to_openai_input(messages)` | Sync (no await) |
+| `store.toAnthropicMessages(messages)` | `ctx.store.to_anthropic_messages(messages)` | Sync (no await) |
+| `store.langgraphCheckpointer` | `ctx.store.langgraph_checkpointer` | Direct property (snake_case) |
+| `store.langgraphStore` | `ctx.store.langgraph_store` | Direct property (snake_case) |
+
+### Python Example
+
+```python
+async def handler(ctx):
+    # Append user message
+    msg_id = await ctx.store.append_message(ctx.conversation_id, "user", "Hello!")
+
+    # Get history (ascending = oldest first, ready for prompt)
+    messages = await ctx.store.get_messages(ctx.conversation_id, limit=50)
+
+    # Convert to OpenAI format for model input
+    openai_msgs = ctx.store.to_openai_input(messages)
+
+    # LangGraph adapters (same rules: only in agent endpoints, not cloud-functions)
+    checkpointer = ctx.store.langgraph_checkpointer
+    lg_store = ctx.store.langgraph_store
+```
+
+> ⚠️ **Same constraint applies**: `ctx.store.langgraph_checkpointer` and `ctx.store.langgraph_store` are only available in agent endpoints (`agents/<name>/`). The Python runtime applies the same stripping logic for cloud-function endpoints.
+
+---
+
 ## 7. Review Red Lines (Spot Issues in 5 Seconds)
 
 - [ ] Agent endpoints use `context.store`, cloud-functions use `context.agent.store` — is the entry point correct?

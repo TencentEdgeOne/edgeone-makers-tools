@@ -224,6 +224,38 @@
 
 ---
 
+## J. Python Routes (Route E and future Python routes)
+
+- [ ] `edgeone.json` sets both `agents.runtime: "python"` and `agents.framework` (`crewai` / `langgraph` / `deepagents`)
+
+- [ ] `requirements.txt` exists with pinned versions aligned to the platform's bundled lib
+
+- [ ] Entry function is `async def handler(ctx):` — not `handler(context)`, not `onRequest`
+
+- [ ] ⚠️ env is read from `ctx.env`, **never from `os.environ`**
+
+- [ ] Abort signal uses `ctx.request.signal.is_set()` — **not** `.aborted` (that's the TS convention)
+
+- [ ] SSE streaming uses `ctx.utils.stream_sse(gen())` or `StreamResponse.sse(gen())` — not hand-built ASGI responses
+
+- [ ] `ctx.utils.sse(data)` is used to construct SSE frames (returns `bytes`) — not manual `f"data: {json.dumps(...)}\n\n"`
+
+- [ ] Store methods use snake_case: `append_message` / `get_messages` / `langgraph_checkpointer` / `langgraph_store`
+
+- [ ] Store methods use **positional arguments**: `await ctx.store.append_message(conversation_id, role, content)` — **not** single-object input like Node
+
+- [ ] Synchronous blocking calls (e.g. `crew.kickoff()`) are wrapped in `asyncio.to_thread()` — otherwise the event loop stalls and heartbeats die
+
+- [ ] CrewAI LLM uses `provider="openai"` — bypassing LiteLLM (not bundled on platform)
+
+- [ ] CrewAI has `memory=False` + `verbose=False` (events go through `crewai_event_bus`, nothing on stdout)
+
+- [ ] `/stop` endpoint reads body only, calls `ctx.utils.abortActiveRun(conversation_id)` — **no** `makers-conversation-id` header
+
+- [ ] ⭐ Frontend calls to Python AI endpoints still use the standard `makers-conversation-id` header (the frontend is TS, identical to Node routes)
+
+---
+
 ## Bulk Refactor Workflow (SOP for teammates)
 
 1. **First, unify** `_shared.ts`: adopt the multimodal version's `createLogger / sseEvent / createSSEResponse` as the team standard and align every template to it.

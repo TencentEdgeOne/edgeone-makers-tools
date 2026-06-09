@@ -1,6 +1,5 @@
 # Route B: Claude Agent SDK (`@anthropic-ai/claude-agent-sdk`)
 
-> Reference template: `multimodal-processor-edgeone`
 > Use when: multi-step agentic flows, sandbox code execution, file processing, session memory.
 > Core pattern: `query()` + dual MCP servers (sandbox + custom tools) + session binding + SSE side channel.
 

@@ -1,6 +1,5 @@
 # Route D: LangGraph / DeepAgents (langchain + deepagents)
 
-> Reference template: `deepagents-test-starter`
 > When to use: long-running tasks with automatic context compression, sub-agent orchestration, requires checkpointer/store persistence for short-term + long-term memory.
 > Core pattern: `createDeepAgent({ model, systemPrompt, tools, middleware })` + `agent.stream({ messages }, { streamMode })`, with memory wired via `langgraphCheckpointer` / `langgraphStore`.
 

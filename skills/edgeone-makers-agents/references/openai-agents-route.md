@@ -1,6 +1,5 @@
 # Route C: OpenAI Agents SDK (`@openai/agents`)
 
-> Reference template: `openai-agents-test`
 > Use when: multi-agent collaboration (`handoff`), `guardrails`, or scenarios that need `Session` to auto-prepend history.
 > Core pattern: `Agent` + `run()` streaming + `context.store.openaiSession()` + event-to-SSE mapping.
 

@@ -53,7 +53,7 @@ This skill covers five framework routes (LangChain, Claude Agent SDK, OpenAI Age
 ## ⛔ Critical Rules (never skip)
 
 1. **File-based routing is automatic.** `agents/<name>/index.ts` or `agents/<name>.ts` becomes `POST /<name>`. Never hand-edit `.edgeone/agent-node/config.json`.
-2. **Entry signature is fixed.** TS: `export async function onRequest(context: any)`. Python: `async def handler(context):`. Method-specific variants (`onRequestPost`, `onRequestGet`, etc.) also work.
+2. **Entry signature is fixed.** TS: `export async function onRequest(context: any)`. Python: `async def handler(ctx):`. Method-specific variants (`onRequestPost`, `onRequestGet`, etc.) also work for TS.
 3. **Read env via `context.env`, never `process.env` / `os.environ`.** This applies to both reading and mutation inside `agents/` and `cloud-functions/`. Frontend code (`app/`, `src/`) is unaffected.
 4. **Headers are plain objects, not the Web `Headers` API.** Use `context.request.headers['makers-conversation-id']`, never `.get('x')`.
 5. **Conversation ID is a dual-channel contract.** AI endpoints (`/chat`, `/outline`, etc.) MUST receive the `makers-conversation-id` HTTP header from the frontend. The `/stop` endpoint MUST NOT send that header (it would route to the stuck instance) — pass `conversation_id` in the body instead.
@@ -236,7 +236,7 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 
 | Task | Read |
 |------|------|
-| Platform conventions (file routing, `onRequest` signature, env, headers, SSE protocol, cloud-functions, memory) | [references/platform-conventions.md](references/platform-conventions.md) |
+| Platform conventions (file routing, `onRequest` signature, env, headers, SSE protocol, cloud-functions, memory, **Python runtime §9**) | [references/platform-conventions.md](references/platform-conventions.md) |
 | Memory / Store cheat sheet (5 frameworks → adapters, agent vs cloud-function entry, single-object API signatures) | [references/memory-store.md](references/memory-store.md) |
 | Sandbox + Tools cheat sheet (`context.sandbox` API, `ToolsContext` shape, `/tmp/` cross-request caveat, `WSA_API_KEY` setup, built-in tools) | [references/sandbox-and-tools.md](references/sandbox-and-tools.md) |
 | Framework-native patterns vs Makers-injected variants (migration reference) | [references/framework-native-patterns.md](references/framework-native-patterns.md) |

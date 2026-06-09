@@ -1,6 +1,5 @@
 # Route A: LangChain direct (langchain + deepagents)
 
-> Reference template: `content-creator-edgeone`
 > Use cases: text generation, lightweight tool calls, low-token-cost scenarios.
 > Core pattern: `initChatModel` → `bindTools` → manual multi-turn loop → streaming SSE.
 
