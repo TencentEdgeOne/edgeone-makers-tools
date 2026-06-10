@@ -15,11 +15,12 @@ npm install deepagents @langchain/core @langchain/openai zod
 ```json
 {
   "agents": {
-    "framework": "deepagents",
-    "externalNodeModules": ["deepagents", "@langchain/core", "@langchain/openai"]
+    "framework": "deepagents"
   }
 }
 ```
+
+> `deepagents` and all `@langchain/*` packages are **auto-externalized** by the CLI — no manual `externalNodeModules` config needed.
 
 ---
 

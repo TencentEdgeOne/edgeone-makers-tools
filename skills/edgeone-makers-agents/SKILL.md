@@ -177,8 +177,7 @@ Available values:
     }
   },
   "agents": {
-    "framework": "claude-agent-sdk",
-    "externalNodeModules": ["@anthropic-ai/sdk"]
+    "framework": "claude-agent-sdk"
   }
 }
 ```

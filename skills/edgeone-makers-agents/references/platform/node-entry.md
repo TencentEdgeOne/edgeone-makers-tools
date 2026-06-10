@@ -92,3 +92,39 @@ export async function onRequest(context: any) {
 - Shared internal modules (`_shared.ts` / `_model.ts`, etc.): take `env` as a parameter, with the caller passing in `context.env`. The module itself must not read global env.
 
 ---
+
+## `externalNodeModules` (build config, usually not needed)
+
+The CLI uses esbuild to bundle agent code. Some packages cannot be bundled and must remain as separate `node_modules` at runtime. The CLI **auto-externalizes** the most common ones:
+
+| Auto-externalized (no config needed) | Reason |
+|--------------------------------------|--------|
+| `deepagents` | Default external |
+| `@anthropic-ai/claude-agent-sdk` | Default external |
+| All `@langchain/*` packages | Auto-detected from `package.json` |
+| OpenTelemetry packages | Observability layer handles it |
+
+**You only need to manually add `externalNodeModules`** when a package that is NOT in the list above fails to bundle. Common symptoms:
+- `Dynamic require of "xxx" is not supported`
+- `Cannot find module 'xxx'` at runtime (but it's in node_modules)
+- Native `.node` addon fails to load
+
+Example (only if needed):
+```json
+{
+  "agents": {
+    "framework": "openai-agents-sdk",
+    "externalNodeModules": ["openai", "@openai/agents"]
+  }
+}
+```
+
+**Packages that may need manual externalization**:
+
+| Package | When to add |
+|---------|-------------|
+| `openai` | If using OpenAI Agents SDK and build fails |
+| `@openai/agents` | Same as above |
+| `sharp` | If doing image processing (native addon) |
+| `puppeteer-core` | If using browser automation (native deps) |
+| `bcrypt` | Native C++ addon |

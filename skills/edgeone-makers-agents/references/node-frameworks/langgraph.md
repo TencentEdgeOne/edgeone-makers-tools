@@ -15,11 +15,12 @@ npm install @langchain/langgraph @langchain/core @langchain/openai zod
 ```json
 {
   "agents": {
-    "framework": "langgraph",
-    "externalNodeModules": ["@langchain/langgraph", "@langchain/core", "@langchain/openai"]
+    "framework": "langgraph"
   }
 }
 ```
+
+> All `@langchain/*` packages are **auto-externalized** by the CLI — no manual `externalNodeModules` config needed.
 
 ---
 

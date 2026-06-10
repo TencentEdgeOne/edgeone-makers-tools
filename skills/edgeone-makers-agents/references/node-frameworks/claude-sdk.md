@@ -15,11 +15,12 @@ npm install @anthropic-ai/claude-agent-sdk zod
 ```json
 {
   "agents": {
-    "framework": "claude-agent-sdk",
-    "externalNodeModules": ["@anthropic-ai/sdk"]
+    "framework": "claude-agent-sdk"
   }
 }
 ```
+
+> `@anthropic-ai/claude-agent-sdk` is **auto-externalized** by the CLI — no manual `externalNodeModules` config needed.
 
 ---
 
