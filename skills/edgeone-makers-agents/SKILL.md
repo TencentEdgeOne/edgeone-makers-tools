@@ -284,6 +284,42 @@ PAGES_SOURCE=skills edgeone pages dev
 
 This tells the platform that the command was triggered from an AI skill context.
 
+### Environment variables for deployment
+
+**AI Gateway variables** (`AI_GATEWAY_API_KEY`, `AI_GATEWAY_BASE_URL`) are **auto-provisioned** by the CLI during deployment — no manual setup needed, as long as `.env.example` declares them:
+
+```env
+# .env.example (commit this to repo)
+AI_GATEWAY_API_KEY=
+AI_GATEWAY_BASE_URL=
+```
+
+The CLI will detect these declarations and automatically fetch + inject the values at deploy time.
+
+**User-defined business variables** must be set manually before deployment:
+
+```bash
+# Set a variable on the remote project
+edgeone pages env set MY_SECRET_KEY "my-value"
+
+# List current variables
+edgeone pages env ls
+
+# Pull remote variables to local .env (for dev)
+edgeone pages env pull
+```
+
+**Common variables to set for Agent projects**:
+
+| Variable | When needed | How to set |
+|----------|-------------|------------|
+| `AI_GATEWAY_API_KEY` | Always | Auto-provisioned by CLI |
+| `AI_GATEWAY_BASE_URL` | Always | Auto-provisioned by CLI |
+| `WSA_API_KEY` | If using `web_search` tool | `edgeone pages env set WSA_API_KEY <value>` |
+| Custom business keys | Per project | `edgeone pages env set <KEY> <VALUE>` |
+
+> ⚠️ **Before deploying an Agent project**, ensure all required environment variables are either auto-provisioned (AI_GATEWAY_*) or manually set via `edgeone pages env set`. Missing variables will cause runtime 500 errors.
+
 ---
 
 ## Standard Operating Procedure
@@ -305,12 +341,51 @@ This tells the platform that the command was triggered from an AI skill context.
 
 ### Developer SOP
 
-1. Pick a route via the Decision Tree above.
-2. Copy the skeleton from the matching `references/*-route.md`.
+1. Pick a framework via the Decision Tree above.
+2. Copy the skeleton from the matching framework reference doc.
 3. Configure `edgeone.json`: set `agents.framework` correctly; Python route also needs `agents.runtime: "python"`.
 4. Frontend: `getOrCreateConversationId` + `fetch` with `makers-conversation-id` header.
-5. Get it running → self-check against the twelve Critical Rules → run through `references/review-checklist.md`.
-6. Before opening a PR, scan the high-frequency issues list above one more time.
+5. Get it running → self-check against the Critical Rules → run through `references/review-checklist.md`.
+
+### Pre-Deploy SOP (⚠️ MUST execute before `edgeone pages deploy`)
+
+> **This section is critical.** AI agents MUST follow these steps when helping a user deploy. Skipping them will cause runtime 500 errors in production.
+
+1. **Scan for environment variables in the project**:
+   - Check `.env`, `.env.example`, `.env.local` for all declared variables
+   - Scan source code for `context.env.XXX` / `ctx.env.get("XXX")` references to identify required variables
+   - Common patterns: `SUPABASE_URL`, `SUPABASE_KEY`, `DATABASE_URL`, `WSA_API_KEY`, custom API keys, etc.
+
+2. **Classify variables**:
+   - `AI_GATEWAY_API_KEY` + `AI_GATEWAY_BASE_URL` → **auto-provisioned** (no action needed if `.env.example` declares them)
+   - All other variables → **must be manually uploaded**
+
+3. **Upload non-auto-provisioned variables**:
+   ```bash
+   # For each variable the project needs:
+   edgeone pages env set <KEY> "<VALUE>"
+   ```
+   If the user has not provided the values, **ask the user** for them before deploying. Do NOT deploy without confirming all required variables are set.
+
+4. **Verify** (optional but recommended):
+   ```bash
+   edgeone pages env ls
+   ```
+
+5. **Deploy**:
+   ```bash
+   edgeone pages deploy
+   ```
+
+**Example interaction when deploying a project with Supabase**:
+
+> The project uses the following environment variables:
+> - `AI_GATEWAY_API_KEY` — auto-provisioned ✓
+> - `AI_GATEWAY_BASE_URL` — auto-provisioned ✓
+> - `SUPABASE_URL` — needs manual setup
+> - `SUPABASE_ANON_KEY` — needs manual setup
+>
+> Please provide the values for `SUPABASE_URL` and `SUPABASE_ANON_KEY`, and I'll set them before deploying.
 
 ---
 
