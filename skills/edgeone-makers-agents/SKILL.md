@@ -236,7 +236,8 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 
 | Topic | Read |
 |-------|------|
-| File routing + onRequest signature | [platform/routing-and-entry.md](references/platform/routing-and-entry.md) |
+| Node entry (onRequest, context, AbortSignal) | [platform/node-entry.md](references/platform/node-entry.md) |
+| Python entry (handler, ctx, asyncio.Event) | [platform/python-entry.md](references/platform/python-entry.md) |
 | Environment variables + model convention | [platform/env-and-model.md](references/platform/env-and-model.md) |
 | SSE streaming protocol | [platform/sse-protocol.md](references/platform/sse-protocol.md) |
 | conversation-id dual-channel + frontend | [platform/conversation-id.md](references/platform/conversation-id.md) |
@@ -244,17 +245,30 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 | Store (context.store) | [capabilities/store.md](references/capabilities/store.md) |
 | Sandbox (context.sandbox) | [capabilities/sandbox.md](references/capabilities/sandbox.md) |
 | Tools (context.tools) | [capabilities/tools.md](references/capabilities/tools.md) |
-| Route A — LangChain (Node) | [node-frameworks/langchain.md](references/node-frameworks/langchain.md) |
-| Route B — Claude Agent SDK (Node) | [node-frameworks/claude-sdk.md](references/node-frameworks/claude-sdk.md) |
-| Route C — OpenAI Agents SDK (Node) | [node-frameworks/openai-agents.md](references/node-frameworks/openai-agents.md) |
-| Route D — LangGraph / DeepAgents (Node) | [node-frameworks/langgraph.md](references/node-frameworks/langgraph.md) |
-| Python runtime conventions | [python-frameworks/_python-runtime.md](references/python-frameworks/_python-runtime.md) |
-| Route E — CrewAI (Python) | [python-frameworks/crewai.md](references/python-frameworks/crewai.md) |
+| Claude Agent SDK (Node) | [node-frameworks/claude-sdk.md](references/node-frameworks/claude-sdk.md) |
+| OpenAI Agents SDK (Node) | [node-frameworks/openai-agents.md](references/node-frameworks/openai-agents.md) |
+| LangGraph (Node) | [node-frameworks/langgraph.md](references/node-frameworks/langgraph.md) |
+| DeepAgents (Node) | [node-frameworks/deepagents.md](references/node-frameworks/deepagents.md) |
+| Claude Agent SDK (Python) | [python-frameworks/claude-sdk.md](references/python-frameworks/claude-sdk.md) |
+| OpenAI Agents SDK (Python) | [python-frameworks/openai-agents.md](references/python-frameworks/openai-agents.md) |
+| LangGraph (Python) | [python-frameworks/langgraph.md](references/python-frameworks/langgraph.md) |
+| DeepAgents (Python) | [python-frameworks/deepagents.md](references/python-frameworks/deepagents.md) |
+| CrewAI (Python only) | [python-frameworks/crewai.md](references/python-frameworks/crewai.md) |
 | Review checklist | [review-checklist.md](references/review-checklist.md) |
 
 ---
 
 ## Environment Setup
+
+### Install the EdgeOne CLI
+
+```bash
+npm install -g edgeone
+```
+
+Verify: `edgeone -v`.
+
+### Set environment variable
 
 Before executing **any** `edgeone` CLI command (`pages init`, `pages dev`, `pages link`, `pages env pull`, etc.), set:
 

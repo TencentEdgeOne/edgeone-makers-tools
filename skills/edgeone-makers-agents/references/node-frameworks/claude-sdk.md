@@ -5,6 +5,24 @@
 
 ---
 
+## Dependencies
+
+```bash
+npm install @anthropic-ai/claude-agent-sdk zod
+```
+
+`edgeone.json`:
+```json
+{
+  "agents": {
+    "framework": "claude-agent-sdk",
+    "externalNodeModules": ["@anthropic-ai/sdk"]
+  }
+}
+```
+
+---
+
 ## When to Use Route B
 
 ✅ Good fit:

@@ -151,6 +151,12 @@ async def handler(ctx):
 ```
 
 ### 2. `requirements.txt`
+
+Install dependencies locally for development:
+```bash
+pip install -r requirements.txt
+```
+
 ```txt
 # CrewAI core (version aligned with the platform's bundled lib: .edgeone/agent-python/lib/)
 crewai>=1.14.5

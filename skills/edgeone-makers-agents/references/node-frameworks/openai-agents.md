@@ -5,6 +5,24 @@
 
 ---
 
+## Dependencies
+
+```bash
+npm install @openai/agents openai zod
+```
+
+`edgeone.json`:
+```json
+{
+  "agents": {
+    "framework": "openai-agents-sdk",
+    "externalNodeModules": ["openai", "@openai/agents"]
+  }
+}
+```
+
+---
+
 ## When to use Route C
 
 ✅ Good fit:
