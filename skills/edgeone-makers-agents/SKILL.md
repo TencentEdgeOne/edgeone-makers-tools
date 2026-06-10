@@ -234,36 +234,23 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 
 ## Routing
 
-### Runtime (entry signature, context object, env, headers, SSE, return values)
-
-| Runtime | Read |
-|---------|------|
-| Node (TS) — `onRequest(context)`, AbortSignal, `createSSEResponse` | [references/runtime/node-runtime.md](references/runtime/node-runtime.md) |
-| Python — `async def handler(ctx)`, asyncio.Event, `ctx.utils.stream_sse` | [references/runtime/python-runtime.md](references/runtime/python-runtime.md) |
-
-### Capabilities (platform features shared across all runtimes and frameworks)
-
-| Capability | Read |
-|------------|------|
-| Memory / Store (5 frameworks → adapters, agent vs cloud-function entry, Node + Python API) | [references/capabilities/memory-store.md](references/capabilities/memory-store.md) |
-| Sandbox + Tools (`context.sandbox` API, `ToolsContext` shape, `/tmp/` caveat, `WSA_API_KEY`) | [references/capabilities/sandbox-and-tools.md](references/capabilities/sandbox-and-tools.md) |
-
-### Frameworks (route-specific patterns)
-
-| Route | Read |
+| Topic | Read |
 |-------|------|
-| Route A — LangChain direct (TS) | [references/frameworks/langchain-route.md](references/frameworks/langchain-route.md) |
-| Route B — Claude Agent SDK (TS) | [references/frameworks/claude-sdk-route.md](references/frameworks/claude-sdk-route.md) |
-| Route C — OpenAI Agents SDK (TS) | [references/frameworks/openai-agents-route.md](references/frameworks/openai-agents-route.md) |
-| Route D — LangGraph / DeepAgents (TS) | [references/frameworks/langgraph-deepagents-route.md](references/frameworks/langgraph-deepagents-route.md) |
-| Route E — CrewAI (Python) | [references/frameworks/crewai-route.md](references/frameworks/crewai-route.md) |
-
-### Cross-cutting
-
-| Task | Read |
-|------|------|
-| Review checklist (10 sections, tick-list audit) | [references/review-checklist.md](references/review-checklist.md) |
-| Framework-native patterns vs Makers-injected variants (migration reference) | [references/framework-native-patterns.md](references/framework-native-patterns.md) |
+| File routing + onRequest signature | [platform/routing-and-entry.md](references/platform/routing-and-entry.md) |
+| Environment variables + model convention | [platform/env-and-model.md](references/platform/env-and-model.md) |
+| SSE streaming protocol | [platform/sse-protocol.md](references/platform/sse-protocol.md) |
+| conversation-id dual-channel + frontend | [platform/conversation-id.md](references/platform/conversation-id.md) |
+| agents/ vs cloud-functions/ separation | [platform/cloud-functions.md](references/platform/cloud-functions.md) |
+| Store (context.store) | [capabilities/store.md](references/capabilities/store.md) |
+| Sandbox (context.sandbox) | [capabilities/sandbox.md](references/capabilities/sandbox.md) |
+| Tools (context.tools) | [capabilities/tools.md](references/capabilities/tools.md) |
+| Route A — LangChain (Node) | [node-frameworks/langchain.md](references/node-frameworks/langchain.md) |
+| Route B — Claude Agent SDK (Node) | [node-frameworks/claude-sdk.md](references/node-frameworks/claude-sdk.md) |
+| Route C — OpenAI Agents SDK (Node) | [node-frameworks/openai-agents.md](references/node-frameworks/openai-agents.md) |
+| Route D — LangGraph / DeepAgents (Node) | [node-frameworks/langgraph.md](references/node-frameworks/langgraph.md) |
+| Python runtime conventions | [python-frameworks/_python-runtime.md](references/python-frameworks/_python-runtime.md) |
+| Route E — CrewAI (Python) | [python-frameworks/crewai.md](references/python-frameworks/crewai.md) |
+| Review checklist | [review-checklist.md](references/review-checklist.md) |
 
 ---
 
