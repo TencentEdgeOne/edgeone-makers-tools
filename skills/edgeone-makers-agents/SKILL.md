@@ -234,18 +234,36 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 
 ## Routing
 
+### Runtime (entry signature, context object, env, headers, SSE, return values)
+
+| Runtime | Read |
+|---------|------|
+| Node (TS) — `onRequest(context)`, AbortSignal, `createSSEResponse` | [references/runtime/node-runtime.md](references/runtime/node-runtime.md) |
+| Python — `async def handler(ctx)`, asyncio.Event, `ctx.utils.stream_sse` | [references/runtime/python-runtime.md](references/runtime/python-runtime.md) |
+
+### Capabilities (platform features shared across all runtimes and frameworks)
+
+| Capability | Read |
+|------------|------|
+| Memory / Store (5 frameworks → adapters, agent vs cloud-function entry, Node + Python API) | [references/capabilities/memory-store.md](references/capabilities/memory-store.md) |
+| Sandbox + Tools (`context.sandbox` API, `ToolsContext` shape, `/tmp/` caveat, `WSA_API_KEY`) | [references/capabilities/sandbox-and-tools.md](references/capabilities/sandbox-and-tools.md) |
+
+### Frameworks (route-specific patterns)
+
+| Route | Read |
+|-------|------|
+| Route A — LangChain direct (TS) | [references/frameworks/langchain-route.md](references/frameworks/langchain-route.md) |
+| Route B — Claude Agent SDK (TS) | [references/frameworks/claude-sdk-route.md](references/frameworks/claude-sdk-route.md) |
+| Route C — OpenAI Agents SDK (TS) | [references/frameworks/openai-agents-route.md](references/frameworks/openai-agents-route.md) |
+| Route D — LangGraph / DeepAgents (TS) | [references/frameworks/langgraph-deepagents-route.md](references/frameworks/langgraph-deepagents-route.md) |
+| Route E — CrewAI (Python) | [references/frameworks/crewai-route.md](references/frameworks/crewai-route.md) |
+
+### Cross-cutting
+
 | Task | Read |
 |------|------|
-| Platform conventions (file routing, `onRequest` signature, env, headers, SSE protocol, cloud-functions, memory, **Python runtime §9**) | [references/platform-conventions.md](references/platform-conventions.md) |
-| Memory / Store cheat sheet (5 frameworks → adapters, agent vs cloud-function entry, single-object API signatures) | [references/memory-store.md](references/memory-store.md) |
-| Sandbox + Tools cheat sheet (`context.sandbox` API, `ToolsContext` shape, `/tmp/` cross-request caveat, `WSA_API_KEY` setup, built-in tools) | [references/sandbox-and-tools.md](references/sandbox-and-tools.md) |
+| Review checklist (10 sections, tick-list audit) | [references/review-checklist.md](references/review-checklist.md) |
 | Framework-native patterns vs Makers-injected variants (migration reference) | [references/framework-native-patterns.md](references/framework-native-patterns.md) |
-| Route A — LangChain direct (TS) | [references/langchain-route.md](references/langchain-route.md) |
-| Route B — Claude Agent SDK (TS) | [references/claude-sdk-route.md](references/claude-sdk-route.md) |
-| Route C — OpenAI Agents SDK (TS) | [references/openai-agents-route.md](references/openai-agents-route.md) |
-| Route D — LangGraph / DeepAgents (TS) | [references/langgraph-deepagents-route.md](references/langgraph-deepagents-route.md) |
-| Route E — CrewAI (Python) | [references/crewai-route.md](references/crewai-route.md) |
-| Review checklist (9 sections, tick-list audit) | [references/review-checklist.md](references/review-checklist.md) |
 
 ---
 
