@@ -1,8 +1,6 @@
 # Sandbox (context.sandbox)
 
-> Platform-capability spec: `context.sandbox` (sandbox) and `context.tools` (LLM tool registry).
-> Source of truth: `@edgeone/pages-agent-toolkit` (internal, this is what the runtime actually bundles) / `@tencent/pages-agent-toolkit` (external mirror, may lag); cross-check against `tef-cli/src/agent/runtime.ts`. Always pin to `@latest`, never lock a version.
-> Use alongside `platform-conventions.md`; together with `memory-store.md` (store), these form the three platform capabilities of Makers.
+> Platform capability: `context.sandbox` provides sandboxed code execution, file operations, and browser automation.
 
 ---
 

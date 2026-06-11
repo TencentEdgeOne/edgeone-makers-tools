@@ -19,8 +19,7 @@ cloud-functions/
 └── history/index.ts         → conversation history retrieval
 ```
 
-### Storage dependencies
-- KV/Blob: `@edgeone/pages-blob` (see content-creator's package.json)
+### Storage
 - Access conversation-scoped storage via `context.agent.store`
 
 ### Health Check

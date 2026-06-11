@@ -1,7 +1,6 @@
 # Memory / Store Cheat Sheet (Five Frameworks → context.store Adapters)
 
 > One-page reference: on EdgeOne Makers, which store entry point each Agent framework should use, how short-term/long-term memory is wired up, and how cloud-functions read it.
-> Authoritative source: `tef-cli/src/agent/memory.ts` (cross-checked against actual source). Use together with `platform-conventions.md` §8.
 
 ---
 
@@ -10,7 +9,6 @@
 - `context.store` / `context.agent.store` is a **conversation-storage wrapper**, not a raw KV (no `get/set/delete/list`).
 - It ships **official adapters** for each framework — use them directly; **do not roll your own `kvGet/kvSet`**.
 - Agent endpoints get `context.store` (full `AgentMemory`); cloud-functions get `context.agent.store` (with `langgraphCheckpointer` / `langgraphStore` **stripped out**). The generic message API plus the openai/claude adapters are identical on both sides, **but the langgraph adapters are only available on agent endpoints** — see §1.
-- The underlying layer is **COS object storage** (`PagesStore` → pages-blob → COS). It is fundamentally a "one record = one object + prefix listing" KV, **not a database** — see §6 for fit/no-fit boundaries.
 
 ---
 
@@ -32,23 +30,7 @@ Where is this endpoint built?
 | `langgraphCheckpointer` / `langgraphStore` | ✅ | ❌ **Explicitly stripped by the runtime** |
 | Cross-function shared data | — | Use conversation metadata (recommended) |
 
-> ⭐ **Critical difference**: a cloud-function's `context.agent.store` is **not** a full `AgentMemory`. The source at `tef-cli/src/pages/builder/impls/node-function.ts:1944-1952` — function `createCloudFunctionAgentStore` — actively strips `langgraphCheckpointer` and `langgraphStore` during destructuring:
->
-> ```ts
-> function createCloudFunctionAgentStore() {
->   const rawAgentStore = createAgentMemoryFn(resolveAgentMemoryStore());
->   const {
->     langgraphCheckpointer: _langgraphCheckpointer,
->     langgraphStore: _langgraphStore,
->     ...cloudFunctionAgentStore        // ← only this part is kept
->   } = rawAgentStore;
->   return cloudFunctionAgentStore;
-> }
-> ```
->
-> **Consequence**: calling `store.langgraphStore.get(...)` inside a cloud-function throws `Cannot read properties of undefined`. Endpoints that need langgraph KV operations **must live under `agents/`** and use `context.store`.
->
-> **Historical context**: earlier skill versions claimed "both sides have the same shape — cloud-function also exposes the langgraph adapters." That was wrong (it referenced an unmerged old branch or a test fixture). This section is canon against the actual tef-cli source.
+> ⭐ **Critical difference**: a cloud-function's `context.agent.store` does **not** include `langgraphCheckpointer` / `langgraphStore` — the runtime strips them. Calling `store.langgraphStore.get(...)` inside a cloud-function throws `Cannot read properties of undefined`. Endpoints that need langgraph operations **must live under `agents/`** and use `context.store`.
 
 ---
 
@@ -191,28 +173,26 @@ export async function onRequest(context: any) {
 
 ---
 
-## 6. The Backing Store Is Object Storage (COS) — Fit Boundaries
+## 6. Store Fit Boundaries
 
-**Underlying path**: every entry point (the generic message API plus all framework adapters) ultimately funnels into the same `PagesStore` (which exposes only the four primitives `get/set/delete/list`) → `@edgeone/pages-blob` → **COS object storage**.
-
-**Nature**: this is a "**one record = one COS object** + prefix listing" KV — **not a database**. Use that to judge fit:
+The store is designed for **conversation-oriented data** — not a general-purpose database. Use this to judge fit:
 
 | Use case | Fit? | Reason |
 |------|-------|------|
-| Conversation/dialog history (append by conversation prefix, sequential reads, ≤10,000 entries) | ✅ | COS prefix model is a natural fit — this is the bread-and-butter case |
+| Conversation/dialog history (sequential reads, ≤10,000 entries) | ✅ | Primary use case |
 | Agent execution state / thread snapshots | ✅ | Use `langgraphCheckpointer` |
-| Small-scale KV (whole-object get/put keyed by namespace+key) | ✅ | `langgraphStore.get/put` |
-| Structured business data (queryable by field, sorting, aggregation, relations) | ❌ | COS has no indexes — you'd List every object and filter in memory = O(N) object reads. Use **MySQL** in ef-api-server instead |
-| Document retrieval / RAG (semantic / full-text search) | ❌ | `langgraphStore.search` has no vector search (`score` always undefined); you must bring an external vector store |
-| Bulk documents / large files / binaries | ❌ | One COS object per record — at scale, List + fetch performance collapses. Push binaries through direct COS upload or sandbox `commands` generation |
+| Small-scale KV (get/put by namespace+key) | ✅ | `langgraphStore.get/put` |
+| Structured business data (queryable by field, sorting, aggregation) | ❌ | No indexes — use a database instead |
+| Document retrieval / RAG (semantic / full-text search) | ❌ | `langgraphStore.search` has no vector search; use an external vector store |
+| Bulk documents / large files / binaries | ❌ | Not designed for large objects at scale |
 
-**Key cross-framework sharing rule**: although every adapter (`openaiSession` / `claudeSessionStore` / `langgraphStore` / generic `appendMessage`) shares the same underlying COS, **each one writes into its own key namespace and cannot see the others**. To share data across multiple frameworks, **pick one entry point as the source of truth** (recommended: standardize on either the generic message API or a single `langgraphStore` namespace). Do not expect adapters to interoperate automatically.
+**Key cross-framework sharing rule**: each adapter (`openaiSession` / `claudeSessionStore` / `langgraphStore` / generic `appendMessage`) writes into its own namespace and cannot see the others. To share data across frameworks, **pick one entry point as the source of truth**. Do not expect adapters to interoperate automatically.
 
 ---
 
 ## Python Store API (Route E and future Python routes)
 
-The Python runtime provides the same `ctx.store` (`ConversationMemory`) with **identical data layout** (shared COS namespace), but uses Python naming conventions:
+The Python runtime provides the same `ctx.store` (`ConversationMemory`) with **identical data layout**, but uses Python naming conventions:
 
 ### Node ↔ Python Method Mapping
 

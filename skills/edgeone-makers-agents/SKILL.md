@@ -1,20 +1,20 @@
 ---
 name: edgeone-makers-agents
 description: >-
-  This skill guides building AI agent endpoints on EdgeOne Pages (Makers) — five
+  This skill guides building AI agent endpoints on EdgeOne Makers — five
   framework routes (LangChain, Claude Agent SDK, OpenAI Agents SDK,
   LangGraph/DeepAgents, CrewAI), platform-injected `context.store` /
   `context.tools` / `context.sandbox`, conversation_id dual-channel routing,
   SSE streaming, and `agents/` vs `cloud-functions/` separation.
   It should be used when the user wants to create or review an AI agent endpoint
-  on EdgeOne Pages — e.g. "build an agent on EdgeOne Pages", "create a Claude
+  on EdgeOne Makers — e.g. "build an agent on EdgeOne Makers", "create a Claude
   agent endpoint", "wire LangGraph into Makers", "stream LLM responses with SSE",
   "review my agent template", "use context.store / context.sandbox / context.tools".
   Do NOT trigger for plain Edge Functions, Cloud Functions, or middleware
   (those don't run AI logic — use edgeone-pages-dev instead).
   Do NOT trigger for deployment workflows (use edgeone-pages-deploy).
   Do NOT trigger for generic LangChain / OpenAI / CrewAI development outside
-  an EdgeOne Pages Makers project.
+  an EdgeOne Makers project.
 metadata:
   author: edgeone
   version: "1.0.0"
@@ -22,13 +22,13 @@ metadata:
 
 # EdgeOne Makers Agent Development Guide
 
-Build production-grade AI agent endpoints on **EdgeOne Pages (Makers)** — five framework routes, platform-injected runtime, file-based routing.
+Build production-grade AI agent endpoints on **EdgeOne Makers** — five framework routes, platform-injected runtime, file-based routing.
 
-This skill covers five framework routes (LangChain, Claude Agent SDK, OpenAI Agents SDK, LangGraph/DeepAgents, CrewAI) for building AI agent endpoints on EdgeOne Pages Makers.
+This skill covers five framework routes (LangChain, Claude Agent SDK, OpenAI Agents SDK, LangGraph/DeepAgents, CrewAI) for building AI agent endpoints on EdgeOne Makers.
 
 ## When to use this skill
 
-- Creating a new AI agent endpoint on EdgeOne Pages Makers
+- Creating a new AI agent endpoint on EdgeOne Makers
 - Wiring LangChain / Claude Agent SDK / OpenAI Agents SDK / LangGraph (DeepAgents) / CrewAI into a Makers project
 - Reviewing an existing agent template against platform red lines
 - Implementing SSE streaming with abort support
@@ -39,7 +39,7 @@ This skill covers five framework routes (LangChain, Claude Agent SDK, OpenAI Age
 **Do NOT use for:**
 - Plain Edge Functions / Cloud Functions / Middleware → use `edgeone-pages-dev`
 - Deployment workflows → use `edgeone-pages-deploy`
-- Generic AI framework development outside an EdgeOne Pages Makers project
+- Generic AI framework development outside an EdgeOne Makers project
 - Other platforms (Cloudflare Workers AI, Vercel AI SDK, AWS Bedrock)
 
 ## How to use this skill (for a coding agent)
@@ -65,7 +65,7 @@ This skill covers five framework routes (LangChain, Claude Agent SDK, OpenAI Age
 11. **Errors must not crash the stream.** Wrap every model / tool call in try/catch. Swallow `AbortError` silently. Emit other errors as `error_message` events without ending the stream prematurely.
 12. **Pick the right `store` entry point — they are NOT shape-equivalent.**
     - `context.store` (agent endpoints, `agents/<name>/`): full `AgentMemory`, includes **all** adapters (`openaiSession`, `claudeSessionStore`, `langgraphCheckpointer`, `langgraphStore`).
-    - `context.agent.store` (cloud-function endpoints, `cloud-functions/<name>/`): runtime explicitly **strips** `langgraphCheckpointer` and `langgraphStore` in `createCloudFunctionAgentStore` (see `tef-cli/src/pages/builder/impls/node-function.ts:1944-1952`). Only generic message API + `openaiSession` + `claudeSessionStore` are available.
+    - `context.agent.store` (cloud-function endpoints, `cloud-functions/<name>/`): runtime **strips** `langgraphCheckpointer` and `langgraphStore`. Only generic message API + `openaiSession` + `claudeSessionStore` are available.
     - **Consequence**: any endpoint that needs `langgraphStore.get/put` MUST live under `agents/`. Putting it in `cloud-functions/` will throw `kv.get is not a function` at runtime.
     - Never write `store?.langgraphStore ?? store` as a fake fallback — in cloud-function context this falls back to the store itself, which has no `.get`, and crashes.
 13. **Use injected `context.sandbox` / `context.tools`.** Do not hand-write `/v1/sandbox/*` calls or parse tokens. `context.tools` shape is determined by `edgeone.json`'s `agents.framework` (`claude-agent-sdk` / `openai-agents-sdk` / `langgraph` / `crewai` / `deepagents` — there is **no `basic`**). Use `context.tools.all()`, `.get(name)`, `.files()`, `.browser()`. Sandbox: `sandbox.runCode(...)` is **top-level** (not `code_interpreter.runCode`); `screenshot({ fullPage: true })` takes an object, not a boolean; timeout is in **seconds**.
@@ -136,7 +136,7 @@ EdgeOne Makers Agent **is not** a generic Next.js API route, **is not** Vercel A
 
 ## edgeone.json Configuration
 
-The `edgeone.json` file is the deployment configuration file for EdgeOne Pages Makers projects. It defines the build command, output directory, and agent-specific settings.
+The `edgeone.json` file is the deployment configuration file for EdgeOne Makers projects. It defines the build command, output directory, and agent-specific settings.
 
 ### Key Fields
 
@@ -150,7 +150,7 @@ The `edgeone.json` file is the deployment configuration file for EdgeOne Pages M
 
 ### `agents.framework` — Console Icon Display
 
-The `agents.framework` field in `edgeone.json` tells the EdgeOne Pages console which icon to display for your project. **This is required for the console to show the correct framework icon.**
+The `agents.framework` field in `edgeone.json` tells the EdgeOne Makers console which icon to display for your project. **This is required for the console to show the correct framework icon.**
 
 Available values:
 
@@ -393,7 +393,3 @@ edgeone pages env pull
 > Please provide the values for `SUPABASE_URL` and `SUPABASE_ANON_KEY`, and I'll set them before deploying.
 
 ---
-
-> ⚠️ **This skill is calibrated against `tef-cli` source + `@edgeone/pages-agent-toolkit` types.** If you see older docs claiming "must hand-write `config.json`", "cloud-function and agent store have identical shape", "Node version lacks `toClaudeMcpServer()` / `files()` / `browser()`", "`agents.framework` accepts `'basic'`", "`code_interpreter.runCode`", "`screenshot(true)`" — those are wrong; this skill has the corrections.
->
-> Pay special attention to the cloud-function store shape: `tef-cli/src/pages/builder/impls/node-function.ts:1944-1952`'s `createCloudFunctionAgentStore` explicitly strips `langgraphCheckpointer` and `langgraphStore` during destructuring. So `context.agent.store` does NOT have these two adapters — only generic message API + `openaiSession` / `claudeSessionStore`. Endpoints needing langgraph KV must live under `agents/` and use `context.store`.

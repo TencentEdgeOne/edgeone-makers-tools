@@ -188,9 +188,9 @@ Example response:
 ```json
 [
   {
-    "title": "EdgeOne Pages Documentation",
+    "title": "EdgeOne Makers Documentation",
     "href": "https://edgeone.ai/docs/pages",
-    "snippet": "EdgeOne Pages is a full-stack deployment platform...",
+    "snippet": "EdgeOne Makers is a full-stack deployment platform...",
     "site": "edgeone.ai",
     "date": "2026-05-01"
   },
