@@ -23,7 +23,7 @@ pip install -r requirements.txt
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "agents": {
-    "runtime": "python",
+    
     "framework": "claude-agent-sdk",
     "timeout": 1800
   }

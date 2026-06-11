@@ -142,7 +142,7 @@ async def handler(ctx):
   "agents": {
     "scene": ["process"],
     "tags": ["CrewAI", "multi-agent"],
-    "runtime": "python",          // ⭐ Python runtime (required)
+    
     "slug": "email-assistant",
     "framework": "langgraph",     // can also be "crewai" directly; use langgraph here if mixing LangGraph nesting Crew
     "timeout": 1800

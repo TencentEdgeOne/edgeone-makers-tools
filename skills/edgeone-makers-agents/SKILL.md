@@ -182,15 +182,23 @@ Available values:
 }
 ```
 
-### `agents.runtime`
+### `agents.runtime` (optional)
 
-Specifies the runtime image version. Format: `agent-node:<version>` or `agent-python:<version>` (can combine with `|`).
+Pins the runtime image version for deployment. The CLI **auto-detects** whether to use `agent-node` or `agent-python` based on file extensions in `agents/` (`.ts`/`.js` → Node, `.py` → Python). You usually do **not** need to set this field.
 
-- **Python projects**: must include `agent-python` (e.g., `"runtime": "agent-python:1"`)
-- **Node projects**: usually omit this field (defaults to latest `agent-node`)
-- **Mixed**: `"runtime": "agent-node:1|agent-python:1.2.0"`
+Format: `agent-node:<version>` or `agent-python:<version>` (combine with `|` for mixed projects).
 
-Python example:
+Only set this when you need to lock a specific runtime version:
+```json
+{
+  "agents": {
+    "framework": "langgraph",
+    "runtime": "agent-python:1"
+  }
+}
+```
+
+Python example (full):
 
 ```json
 {
@@ -198,7 +206,6 @@ Python example:
   "outputDirectory": "dist",
   "agents": {
     "framework": "crewai",
-    "runtime": "python",
     "timeout": 1800
   }
 }

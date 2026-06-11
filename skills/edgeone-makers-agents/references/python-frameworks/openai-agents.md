@@ -25,7 +25,7 @@ pip install -r requirements.txt
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "agents": {
-    "runtime": "python",
+    
     "framework": "openai-agents-sdk",
     "timeout": 1800
   }

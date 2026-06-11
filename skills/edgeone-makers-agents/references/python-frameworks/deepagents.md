@@ -26,7 +26,7 @@ pip install -r requirements.txt
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "agents": {
-    "runtime": "python",
+    
     "framework": "deepagents",
     "timeout": 1800
   }
