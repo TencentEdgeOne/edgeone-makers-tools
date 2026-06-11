@@ -43,7 +43,7 @@ pip install -r requirements.txt
 - Team already uses Python / existing Python codebase
 
 ❌ Not a fit:
-- Single-turn short Q&A → Route A (lighter)
+- Single-turn short Q&A → DeepAgents (simpler)
 - Need sandbox to run code → Route B (Claude SDK)
 - Need LangGraph persistence → Route D
 

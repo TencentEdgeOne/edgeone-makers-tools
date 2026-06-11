@@ -79,7 +79,7 @@ export async function onRequest(context: any) {
     });
   }
 
-  // 2. Prepare the model (differs between Route A/B; always read env via context.env, never process.env)
+  // 2. Prepare the model (always read env via context.env, never process.env)
   // 3. Return the SSE stream
 }
 ```

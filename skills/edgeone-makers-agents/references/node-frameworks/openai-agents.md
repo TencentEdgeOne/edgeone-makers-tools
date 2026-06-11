@@ -33,7 +33,7 @@ npm install @openai/agents openai zod
 - Connect to EdgeOne AI Gateway via the OpenAI-compatible protocol
 
 ❌ Not a fit:
-- A single agent with simple text generation → Route A (`langchain-route.md`) is lighter
+- A single agent with simple text generation → DeepAgents is simpler
 - Need a sandbox to run Python / handle uploaded files → Route B (`claude-sdk-route.md`) is more suitable
 - Want fine-grained graph orchestration like LangGraph → Route D (`langgraph-deepagents-route.md`)
 
@@ -347,15 +347,14 @@ export async function fetchHistory() {
 
 ---
 
-## Quick diff vs. Routes A / B / D / E
+## Quick diff vs. other frameworks
 
-| Dimension | Route A (LangChain) | Route B (Claude SDK) | **Route C (OpenAI Agents)** |
-|-----------|---------------------|----------------------|-----------------------------|
-| Agent abstraction | Hand-rolled `bindTools` loop | `query()` built-in loop | `Agent` + `run()` |
-| History persistence | Manual `appendMessage` / `getMessages` | `claudeSessionStore()` | **`openaiSession(convId)` auto-prepend** |
-| Tool entry point | `bindTools(tools)` | `createSdkMcpServer({ tools })` | `new Agent({ tools })` or `context.tools.all()` |
-| Stream events | LangChain `chunk.text` / `tool_call_chunks` | `query` stream `msg.type` dispatch | `result.toStream()`, branch on `e.type` |
-| Multi-agent collaboration | Hand-rolled | ❌ (single agent) | ⭐ Handoff |
-| Guardrails | Hand-rolled | Use `permissionMode` | ⭐ Built-in `input_guardrails` |
+| Dimension | DeepAgents | Claude SDK | **OpenAI Agents** |
+|-----------|------------|------------|--------------------|
+| Agent abstraction | `createDeepAgent()` | `query()` built-in loop | `Agent` + `run()` |
+| History persistence | LangGraph checkpointer | `claudeSessionStore()` | **`openaiSession(convId)` auto-prepend** |
+| Tool entry point | `context.tools.all()` | `toClaudeMcpServer()` | `new Agent({ tools })` or `context.tools.all()` |
+| Multi-agent | Sub-agent orchestration | ❌ (single agent) | ⭐ Handoff |
+| Guardrails | N/A | Use `permissionMode` | ⭐ Built-in `input_guardrails` |
 
-For Routes D and E, see `langgraph-deepagents-route.md` and `crewai-route.md`.
+See also: `langgraph.md`, `deepagents.md`, `crewai.md`.

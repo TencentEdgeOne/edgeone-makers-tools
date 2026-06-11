@@ -1,6 +1,6 @@
 # Environment Variables and Model Convention
 
-> Covers: AI_GATEWAY_* variables, WSA_API_KEY for web_search, model initialization patterns (Route A + Route B).
+> Covers: AI_GATEWAY_* variables, WSA_API_KEY for web_search, model initialization patterns.
 
 ---
 ## 3. Environment Variables and Model Convention

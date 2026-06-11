@@ -2,8 +2,8 @@
 name: edgeone-makers-agents
 description: >-
   This skill guides building AI agent endpoints on EdgeOne Makers — five
-  framework routes (LangChain, Claude Agent SDK, OpenAI Agents SDK,
-  LangGraph/DeepAgents, CrewAI), platform-injected `context.store` /
+  framework routes (DeepAgents, LangGraph, CrewAI, OpenAI Agents SDK,
+  Claude Agent SDK), platform-injected `context.store` /
   `context.tools` / `context.sandbox`, conversation_id dual-channel routing,
   SSE streaming, and `agents/` vs `cloud-functions/` separation.
   It should be used when the user wants to create or review an AI agent endpoint
@@ -13,7 +13,7 @@ description: >-
   Do NOT trigger for plain Edge Functions, Cloud Functions, or middleware
   (those don't run AI logic — use edgeone-pages-dev instead).
   Do NOT trigger for deployment workflows (use edgeone-pages-deploy).
-  Do NOT trigger for generic LangChain / OpenAI / CrewAI development outside
+  Do NOT trigger for generic AI framework development outside
   an EdgeOne Makers project.
 metadata:
   author: edgeone
@@ -24,12 +24,12 @@ metadata:
 
 Build production-grade AI agent endpoints on **EdgeOne Makers** — five framework routes, platform-injected runtime, file-based routing.
 
-This skill covers five framework routes (LangChain, Claude Agent SDK, OpenAI Agents SDK, LangGraph/DeepAgents, CrewAI) for building AI agent endpoints on EdgeOne Makers.
+This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, OpenAI Agents SDK, Claude Agent SDK) for building AI agent endpoints on EdgeOne Makers.
 
 ## When to use this skill
 
 - Creating a new AI agent endpoint on EdgeOne Makers
-- Wiring LangChain / Claude Agent SDK / OpenAI Agents SDK / LangGraph (DeepAgents) / CrewAI into a Makers project
+- Wiring DeepAgents / LangGraph / CrewAI / OpenAI Agents SDK / Claude Agent SDK into a Makers project
 - Reviewing an existing agent template against platform red lines
 - Implementing SSE streaming with abort support
 - Persisting conversation state via `context.store` (LangGraph checkpointer / OpenAI session / Claude session)
@@ -190,28 +190,28 @@ Pick one of the five framework routes:
 
 ```
 Need a sandbox to run code, process uploaded files, or use MCP tools?
-├─ Yes → Route B: Claude Agent SDK
+├─ Yes → Claude Agent SDK
 └─ No ↓
-   Need multi-agent collaboration?
-   ├─ No → Route A: LangChain (lightest)
-   └─ Yes ↓
-      Want to use Python? (team / existing deps / CrewAI ecosystem)
-      ├─ Yes → Route E: CrewAI (Python)
+   Need multi-agent handoff?
+   ├─ Yes → OpenAI Agents SDK
+   └─ No ↓
+      Need fine-grained graph control (nodes, edges, human-in-the-loop)?
+      ├─ Yes → LangGraph
       └─ No ↓
-         Need OpenAI Agents handoff?
-         ├─ Yes → Route C: OpenAI Agents SDK
-         └─ No → Route D: LangGraph / DeepAgents (best for long tasks)
+         Want multi-agent role split (Sequential/Hierarchical)?
+         ├─ Yes → CrewAI (Python only)
+         └─ No → DeepAgents (simplest, auto context compression)
 ```
 
-### Route Comparison
+### Framework Comparison
 
-| Route | Language | Dependencies | Best For |
-|-------|----------|--------------|----------|
-| **A. LangChain direct** | TS | `langchain` + `@langchain/openai` | Text generation, lightweight tool calls, low token cost |
-| **B. Claude Agent SDK** | TS | `@anthropic-ai/claude-agent-sdk` | Multi-step agentic, sandbox code exec, file processing, session memory |
-| **C. OpenAI Agents SDK** | TS | `@openai/agents` + `openai` | Multi-agent (handoff), Session auto-prepend, guardrails |
-| **D. LangGraph / DeepAgents** | TS | `langchain` + `deepagents` (or `@langchain/langgraph`) | Long tasks with auto context compression, sub-agent orchestration, checkpointer/store persistence |
-| **E. CrewAI** ⭐ Python | **Python** | `crewai` + `openai` (+ optional `langgraph`) | Multi-agent role split (Sequential/Hierarchical), CrewAI built-in skills/event_bus |
+| Framework | Runtime | Best For |
+|-----------|---------|----------|
+| **DeepAgents** | Node + Python | Simple agent tasks, automatic context compression, sub-agent orchestration |
+| **LangGraph** | Node + Python | Fine-grained graph control, human-in-the-loop, persistent thread state |
+| **Claude Agent SDK** | Node + Python | Sandbox code execution, file processing, MCP tools, session memory |
+| **OpenAI Agents SDK** | Node + Python | Multi-agent handoff, guardrails, session auto-prepend |
+| **CrewAI** | Python only | Multi-agent role split (Sequential/Hierarchical), built-in skills/event_bus |
 
 ---
 

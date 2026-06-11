@@ -15,8 +15,8 @@
 - You want to nest CrewAI as a sub-flow inside a LangGraph node (hybrid paradigm)
 
 ❌ Not a fit:
-- TypeScript templates (CrewAI has no JS SDK) → pick Route A/B/C/D instead
-- Single-agent simple Q&A → Route A (lighter)
+- TypeScript templates (CrewAI has no JS SDK) → pick another framework instead
+- Single-agent simple Q&A → DeepAgents (simpler)
 - Need Claude SDK's sandbox MCP capabilities → Route B
 - Need langgraph checkpointer persistence → Route D (you can also mix: embed CrewAI inside a LangGraph node)
 
@@ -593,7 +593,7 @@ await fetch('/email/stop', {
 8. **`requirements.txt` not pinned, or grossly diverging from the bundled platform versions** → dependency conflicts and failed deployment
 
 See also:
-- Route A (LangChain/LangGraph TS): `langchain-route.md`
+- 
 - Route B (Claude Agent SDK): `claude-sdk-route.md`
 - Route C (OpenAI Agents SDK): `openai-agents-route.md`
 - Route D (LangGraph + DeepAgents): `langgraph-deepagents-route.md`

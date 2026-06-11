@@ -42,7 +42,7 @@ pip install -r requirements.txt
 - Team already uses Python
 
 ❌ Not a fit:
-- Single-turn short Q&A → Route A (lighter)
+- Single-turn short Q&A → DeepAgents (simpler)
 - Multi-agent handoff → Route C (OpenAI Agents)
 - Need LangGraph checkpointer persistence → Route D (LangGraph)
 

@@ -42,7 +42,7 @@ Where is this endpoint built?
 | **OpenAI Agents SDK** | SDK Session (auto-prepend) | Store messages + metadata | `context.store.openaiSession(convId)` | Don't manually concatenate history |
 | **LangGraph** | `langgraphCheckpointer` | `langgraphStore` | `context.store.langgraphCheckpointer` / `.langgraphStore` | Direct properties; thread_id = conversation_id |
 | **DeepAgents** | Reuses LangGraph checkpointer | LangGraph store + filesystem | Same as LangGraph | Essentially LangGraph |
-| **Bare model / custom loop** (Route A) | `appendMessage`/`getMessages` | Messages + metadata | Use the message API directly | Convert input via `toOpenAIInput`/`toAnthropicMessages` |
+| **Bare model / custom loop | `appendMessage`/`getMessages` | Messages + metadata | Use the message API directly | Convert input via `toOpenAIInput`/`toAnthropicMessages` |
 
 > ⭐ **Why Claude SDK is in its own row**: it goes through `claudeSessionStore()` to plug into the SDK's own session (resume/fork), which is a completely different mechanism from LangGraph's checkpointer+store pair. The multimodal template uses this route — don't conflate them during review.
 
@@ -95,7 +95,7 @@ const anthropicMsgs = store.toAnthropicMessages(msgs);
 
 ## 4. Copy-Paste Snippets
 
-### Bare model / Route A — read & store history
+### Bare model / custom loop — read & store history
 ```typescript
 const { store, conversation_id } = context;
 

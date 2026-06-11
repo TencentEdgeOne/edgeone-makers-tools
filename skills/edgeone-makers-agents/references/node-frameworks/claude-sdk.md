@@ -33,7 +33,7 @@ npm install @anthropic-ai/claude-agent-sdk zod
 - Complex multi-step agentic reasoning
 
 ❌ Not a fit:
-- Plain text generation only → Route A ([`langchain-route.md`](./langchain-route.md)) is more token-efficient
+- Plain text generation only → DeepAgents is simpler
 
 ---
 
@@ -337,7 +337,7 @@ async function stopAgent() {
 
 ## See Also
 
-- Route A (LangChain): [`langchain-route.md`](./langchain-route.md)
+
 - Route C (OpenAI Agents): [`openai-agents-route.md`](./openai-agents-route.md)
 - Route D (LangGraph + DeepAgents): [`langgraph-deepagents-route.md`](./langgraph-deepagents-route.md)
 - Route E (CrewAI): [`crewai-route.md`](./crewai-route.md)
