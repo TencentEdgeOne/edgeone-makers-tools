@@ -8,7 +8,7 @@
 ## Dependencies
 
 ```bash
-npm install deepagents @langchain/core @langchain/openai zod
+npm install deepagents @langchain/openai @langchain/core zod
 ```
 
 `edgeone.json`:
@@ -28,7 +28,6 @@ npm install deepagents @langchain/core @langchain/openai zod
 
 ✅ Good fit:
 - Long agent tasks (writing, research) — automatic context compression saves manual work
-- Want middleware (`modelRetryMiddleware` / `toolCallLimitMiddleware` / `toolRetryMiddleware`)
 - Sub-agent orchestration with isolated context
 - Multi-step research workflows (search → deep-read → cite → produce)
 
@@ -44,15 +43,15 @@ npm install deepagents @langchain/core @langchain/openai zod
 ### 1. Model initialization
 
 ```typescript
-import { initChatModel } from 'langchain';
+import { ChatOpenAI } from '@langchain/openai';
 
 const MODEL_NAME = '@makers/deepseek-v4-flash';
 
-let _model: any = null;
-async function getModel(env: Record<string, string>) {
+let _model: ChatOpenAI | null = null;
+function getModel(env: Record<string, string>): ChatOpenAI {
   if (_model) return _model;
-  _model = await initChatModel(MODEL_NAME, {
-    modelProvider: 'openai',
+  _model = new ChatOpenAI({
+    model: MODEL_NAME,
     apiKey: env.AI_GATEWAY_API_KEY,
     configuration: { baseURL: env.AI_GATEWAY_BASE_URL },
     temperature: 0,
@@ -66,12 +65,6 @@ async function getModel(env: Record<string, string>) {
 
 ```typescript
 import { createDeepAgent } from 'deepagents';
-import {
-  modelRetryMiddleware,
-  modelCallLimitMiddleware,
-  toolRetryMiddleware,
-  toolCallLimitMiddleware,
-} from 'langchain';
 
 let _agent: any = null;
 function getAgent(model: any) {
@@ -80,12 +73,7 @@ function getAgent(model: any) {
     model,
     systemPrompt: 'You are a helpful research assistant.',
     tools: [internetSearch],
-    middleware: [
-      modelRetryMiddleware({ maxRetries: 3 }),
-      modelCallLimitMiddleware({ runLimit: 30 }),
-      toolRetryMiddleware({ maxRetries: 2, tools: ['internet_search'] }),
-      toolCallLimitMiddleware({ toolName: 'internet_search', runLimit: 15 }),
-    ],
+    maxTurns: 30,
   });
   return _agent;
 }
@@ -183,7 +171,7 @@ const lgStore = context.store.langgraphStore;              // direct property
 - [ ] `edgeone.json` has `agents.framework: "deepagents"`
 - [ ] Model/agent instances cached as module-level singletons
 - [ ] env from `context.env` — never `process.env`
-- [ ] Middleware includes call caps (`modelCallLimitMiddleware` / `toolCallLimitMiddleware`)
+- [ ] `maxTurns` is set to cap agent loops
 - [ ] Streaming uses `streamMode: 'messages'`
 - [ ] Signal forwarded and checked inside the loop
 - [ ] Stream ends with `data: [DONE]\n\n`

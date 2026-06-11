@@ -11,9 +11,9 @@
 - Default model as a constant: `@makers/deepseek-v4-flash`
 - ⭐ **If the template uses `context.tools.web_search`**: you must also configure `WSA_API_KEY` in the project's environment variables. Create an API KEY in the [Tencent Cloud Web Search API console](https://console.cloud.tencent.com/wsapi/index), copy the value, and set `WSA_API_KEY=<value>` in the EdgeOne project environment variables (reference docs: https://cloud.tencent.com/document/product/1806/130615). This variable is read directly by the sandbox runner; template code typically does not need to reference it explicitly. Without it, search will fail authentication / return 401. Detailed steps in `sandbox-and-tools.md`.
 
-### Route A — env validation + model initialization (`agents/_model.ts` / `_shared.ts`)
+### LangGraph / DeepAgents — env validation + model initialization (`agents/_model.ts`)
 ```typescript
-import { initChatModel } from 'langchain';
+import { ChatOpenAI } from '@langchain/openai';
 
 const MODEL_NAME = '@makers/deepseek-v4-flash';
 
@@ -33,15 +33,15 @@ export function getAgentEnv(contextEnv: Record<string, string | undefined> | und
   };
 }
 
-// Cache the model instance per baseURL to avoid repeated initialization
-const modelCache = new Map<string, any>();
+// Cache the model instance per baseURL
+const modelCache = new Map<string, ChatOpenAI>();
 
-export async function createModel(env: AgentEnv, options?: { timeout?: number }) {
+export function createModel(env: AgentEnv, options?: { timeout?: number }): ChatOpenAI {
   const cacheKey = `${MODEL_NAME}:${env.AI_GATEWAY_BASE_URL}`;
   if (modelCache.has(cacheKey)) return modelCache.get(cacheKey)!;
 
-  const model = await initChatModel(MODEL_NAME, {
-    modelProvider: 'openai',
+  const model = new ChatOpenAI({
+    model: MODEL_NAME,
     apiKey: env.AI_GATEWAY_API_KEY,
     configuration: { baseURL: env.AI_GATEWAY_BASE_URL },
     timeout: options?.timeout ?? 300_000,

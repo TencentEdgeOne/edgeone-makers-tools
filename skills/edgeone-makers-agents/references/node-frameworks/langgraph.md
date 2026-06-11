@@ -8,7 +8,7 @@
 ## Dependencies
 
 ```bash
-npm install @langchain/langgraph @langchain/core @langchain/openai zod
+npm install @langchain/langgraph @langchain/openai @langchain/core zod
 ```
 
 `edgeone.json`:
@@ -44,15 +44,15 @@ npm install @langchain/langgraph @langchain/core @langchain/openai zod
 ### 1. Model initialization
 
 ```typescript
-import { initChatModel } from 'langchain';
+import { ChatOpenAI } from '@langchain/openai';
 
 const MODEL_NAME = '@makers/deepseek-v4-flash';
 
-let _model: any = null;
-async function getModel(env: Record<string, string>) {
+let _model: ChatOpenAI | null = null;
+function getModel(env: Record<string, string>): ChatOpenAI {
   if (_model) return _model;
-  _model = await initChatModel(MODEL_NAME, {
-    modelProvider: 'openai',
+  _model = new ChatOpenAI({
+    model: MODEL_NAME,
     apiKey: env.AI_GATEWAY_API_KEY,
     configuration: { baseURL: env.AI_GATEWAY_BASE_URL },
     temperature: 0,
