@@ -56,67 +56,60 @@ interface ToolsContext {
 
 ### 2.3 Framework-Specific Tool Wiring
 
-Each framework gets tools in a different format. The toolkit handles the conversion automatically based on `agents.framework`:
+⚠️ **Different frameworks require different methods to get tools.** Using the wrong method may result in tools that don't work (e.g., duck-type objects that fail `instanceof` checks).
 
-| `agents.framework` | Output format | How to use in code |
-|---------------------|--------------|-------------------|
-| `claude-agent-sdk` | Claude MCP tool definitions (`{ name, description, inputSchema, handler }`) | `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` → returns `{ name, tools, allowedTools }` |
-| `openai-agents-sdk` | OpenAI function tools (`{ type:'function', name, description, parameters, execute }`) | `context.tools.all()` → pass directly to `new Agent({ tools })` |
-| `langgraph` | LangChain StructuredTool-compatible (`{ name, description, schema, invoke }`) | `context.tools.all()` → pass to `ToolNode(tools)` or `model.bindTools(tools)` |
-| `deepagents` | LangChain-compatible + `call` alias (`{ name, description, schema, invoke, call }`) | `context.tools.all()` → pass to `createDeepAgent({ tools })` |
-| `crewai` | CrewAI BaseTool (`{ name, description, args_schema, _run, _arun }`) | `context.tools.all()` → pass to `Agent(tools=[...])` |
+| `agents.framework` | ⭐ Recommended method | Why |
+|---------------------|----------------------|-----|
+| `claude-agent-sdk` | `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` | Returns `{ name, tools, allowedTools }` bundle for MCP registration |
+| `openai-agents-sdk` | `context.tools.all()` | Returns real OpenAI function tool objects, ready to use |
+| `langgraph` | `context.tools.toLangChainTools(tool)` | ⚠️ Must inject LangChain `tool` factory to produce real `StructuredTool` instances. `all()` returns duck-type objects that may fail. |
+| `deepagents` | `context.tools.toLangChainTools(tool)` | ⚠️ Same as LangGraph — DeepAgents expects real LangChain tools. |
+| `crewai` | `context.tools.toCrewAITools(BaseTool)` | ⚠️ Must inject CrewAI `BaseTool` class to produce real CrewAI tool instances. |
 
 ### 2.4 Code Examples Per Framework
 
 **Claude Agent SDK (Node)**:
 ```typescript
-// Option A (recommended): toClaudeMcpServer generates everything
+// Recommended: toClaudeMcpServer
 const bundle = context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true });
-// bundle = { name: 'edgeone', tools: [...], allowedTools: ['mcp__edgeone__commands', ...] }
 const mcp = createSdkMcpServer(bundle);
 query({ prompt, options: { mcpServers: { [bundle.name]: mcp }, allowedTools: bundle.allowedTools } });
-
-// Option B: use all() manually
-const tools = context.tools.all();  // already Claude MCP format
-const mcp = createSdkMcpServer({ name: 'edgeone', tools, alwaysLoad: true });
-```
-
-**Claude Agent SDK (Python)**:
-```python
-bundle = ctx.tools.to_claude_mcp_server("edgeone", always_load=True)
-# bundle = { "name": "edgeone", "tools": [...], "allowed_tools": ["mcp__edgeone__commands", ...] }
 ```
 
 **OpenAI Agents SDK (Node)**:
 ```typescript
-const tools = context.tools.all();  // OpenAI function tool format
+// all() works directly — tools are already in OpenAI function format
+const tools = context.tools.all();
 const agent = new Agent({ name: 'Assistant', tools, model });
-```
-
-**OpenAI Agents SDK (Python)**:
-```python
-tools = ctx.tools.all()  # OpenAI function tool format
-agent = Agent(name="Assistant", tools=tools, model=model)
 ```
 
 **LangGraph / DeepAgents (Node)**:
 ```typescript
-const tools = context.tools.all();  // LangChain StructuredTool format
+import { tool } from '@langchain/core/tools';
+
+// ⭐ Must use toLangChainTools — inject the LangChain tool factory
+const tools = context.tools.toLangChainTools(tool);
 const modelWithTools = model.bindTools(tools);
 const toolNode = new ToolNode(tools);
 ```
 
-**LangGraph / DeepAgents (Python)**:
-```python
-tools = ctx.tools.all()  # LangChain tool format
-model_with_tools = model.bind_tools(tools)
-tool_node = ToolNode(tools)
-```
-
 **CrewAI (Python)**:
 ```python
-tools = ctx.tools.all()  # CrewAI BaseTool format
+from crewai import BaseTool
+
+# ⭐ Must use toCrewAITools — inject the CrewAI BaseTool class
+tools = ctx.tools.to_crewai_tools(BaseTool)
 agent = Agent(role="...", tools=tools, llm=llm)
+```
+
+**LangGraph / DeepAgents (Python)**:
+```python
+from langchain_core.tools import tool
+
+# ⭐ Must use toLangChainTools
+tools = ctx.tools.to_langchain_tools(tool)
+model_with_tools = model.bind_tools(tools)
+tool_node = ToolNode(tools)
 ```
 
 ### 2.5 Getting a Single Tool / Group

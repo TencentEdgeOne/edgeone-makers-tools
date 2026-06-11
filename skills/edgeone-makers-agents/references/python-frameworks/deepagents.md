@@ -129,7 +129,9 @@ async def handler(ctx):
         return {"error": "'message' is required"}, 400
 
     model = get_model(ctx.env)
-    tools = ctx.tools.all() if ctx.tools else []
+    # ⭐ Must use to_langchain_tools to get real LangChain tool instances
+    from langchain_core.tools import tool
+    tools = ctx.tools.to_langchain_tools(tool) if ctx.tools else []
     agent = build_agent(model, tools)
 
     async def gen():

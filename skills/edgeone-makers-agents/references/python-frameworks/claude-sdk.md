@@ -89,8 +89,8 @@ async def handler(ctx):
     env = ctx.env
     gateway_env = collect_gateway_env(env)
 
-    # Platform tools (shaped for Claude SDK when framework = "claude-agent-sdk")
-    edgeone_tools = ctx.tools.all() if ctx.tools else []
+    # ⭐ Use to_claude_mcp_server to get MCP-compatible tools
+    edgeone_bundle = ctx.tools.to_claude_mcp_server("edgeone", always_load=True)
     edgeone_mcp = create_sdk_mcp_server(
         name="edgeone",
         tools=edgeone_tools,

@@ -135,7 +135,10 @@ export async function onRequest(context: any) {
 
   const signal = request?.signal as AbortSignal | undefined;
   const model = await getModel(env);
-  const tools = context.tools?.all?.() ?? [];
+
+  // ⭐ Must use toLangChainTools to get real StructuredTool instances
+  const { tool } = await import('@langchain/core/tools');
+  const tools = context.tools.toLangChainTools(tool);
 
   // ⭐ LangGraph adapters (direct properties)
   const checkpointer = store.langgraphCheckpointer;

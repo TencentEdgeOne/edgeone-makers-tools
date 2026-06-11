@@ -502,8 +502,9 @@ Once `edgeone.json` sets `agents.framework: 'crewai'`, `context.tools` returns C
 
 ```python
 async def handler(context):
-    # All tools (a list of CrewAI BaseTool)
-    tools = context.tools.all()
+    # ⭐ Must use to_crewai_tools to get real CrewAI BaseTool instances
+    from crewai import BaseTool
+    tools = context.tools.to_crewai_tools(BaseTool)
 
     # Get one
     web_search = context.tools.get("web_search")    # ⚠️ Using web_search requires WSA_API_KEY
@@ -514,7 +515,7 @@ async def handler(context):
     )
 ```
 
-> The Python toolkit (`pages-agent-toolkit` Python 0.1.25+) ships a `to_crewai_tools(BaseTool, names?)` helper, but **`context.tools.all()` is normally enough in templates** (the runtime already wraps tools according to `agents.framework`).
+> Use `ctx.tools.to_crewai_tools(BaseTool)` to get real CrewAI `BaseTool` instances. This injects the CrewAI class at call time so the toolkit doesn't depend on CrewAI directly.
 
 ---
 
