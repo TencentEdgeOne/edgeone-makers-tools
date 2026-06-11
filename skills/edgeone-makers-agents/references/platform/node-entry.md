@@ -126,5 +126,6 @@ Example (only if needed):
 | `openai` | If using OpenAI Agents SDK and build fails |
 | `@openai/agents` | Same as above |
 | `sharp` | If doing image processing (native addon) |
-| `puppeteer-core` | If using browser automation (native deps) |
+
+> ⚠️ **Do NOT install `puppeteer-core` for browser automation** — use `context.sandbox.browser` instead (built-in: `goto`, `screenshot`, `click`, `type`, `evaluate`). The platform sandbox already provides a managed Chromium instance.
 | `bcrypt` | Native C++ addon |

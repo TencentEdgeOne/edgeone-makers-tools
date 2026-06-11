@@ -56,9 +56,9 @@ This skill covers five framework routes (LangChain, Claude Agent SDK, OpenAI Age
 2. **Entry signature is fixed.** TS: `export async function onRequest(context: any)`. Python: `async def handler(ctx):`. Method-specific variants (`onRequestPost`, `onRequestGet`, etc.) also work for TS.
 3. **Read env via `context.env`, never `process.env` / `os.environ`.** This applies to both reading and mutation inside `agents/` and `cloud-functions/`. Frontend code (`app/`, `src/`) is unaffected.
 4. **Headers are plain objects, not the Web `Headers` API.** Use `context.request.headers['makers-conversation-id']`, never `.get('x')`.
-5. **Conversation ID is a dual-channel contract.** AI endpoints (`/chat`, `/outline`, etc.) MUST receive the `makers-conversation-id` HTTP header from the frontend. The `/stop` endpoint MUST NOT send that header (it would route to the stuck instance) — pass `conversation_id` in the body instead.
+5. **Conversation ID contract.** AI endpoints (`/chat`, `/outline`, etc.) MUST receive the `makers-conversation-id` HTTP header from the frontend. The `/stop` endpoint takes a `conversation_id` in the request body to identify which running conversation to cancel.
 6. **Do not hardcode model name / base URL / API key.** Read `AI_GATEWAY_API_KEY` + `AI_GATEWAY_BASE_URL` (+ optional `AI_GATEWAY_MODEL`) from `context.env`. If your template uses `context.tools.web_search`, also configure `WSA_API_KEY` (Tencent Cloud WSAPI).
-7. **SSE protocol is a template-level convention.** Event types: `ai_response` / `tool_call` / `tool_result` / `usage` / `suggest_actions` / `file_output` / `ping` / `error_message`. Stream ends with `data: [DONE]\n\n`.
+7. **SSE protocol is a recommended convention (not enforced by the runtime).** The runtime only forwards raw chunks — it does not parse or validate SSE content. The recommended event types are: `ai_response` / `tool_call` / `tool_result` / `usage` / `suggest_actions` / `file_output` / `ping` / `error_message`. Stream ends with `data: [DONE]\n\n`. All frameworks should follow this for frontend consistency.
 8. **Heartbeat + buffering control are mandatory.** Send a `ping` event every 5 s. Response headers must include `X-Accel-Buffering: no`, `Cache-Control: no-cache`, `Connection: keep-alive`.
 9. **Always honor `context.request.signal`.** Check `signal?.aborted` (TS) or `signal.is_set()` (Python) inside loops; exit gracefully on abort, do not throw.
 10. **Cap your loops.** Manual bind-tools loops use a hard turn limit (e.g. `for (let i = 0; i < 4; i++)`); SDK routes set `maxTurns`. No unbounded "until model says stop" loops.
@@ -182,9 +182,15 @@ Available values:
 }
 ```
 
-### `agents.runtime` (Python routes only)
+### `agents.runtime`
 
-For Python routes (Route E: CrewAI), you must also set `agents.runtime: "python"`:
+Specifies the runtime image version. Format: `agent-node:<version>` or `agent-python:<version>` (can combine with `|`).
+
+- **Python projects**: must include `agent-python` (e.g., `"runtime": "agent-python:1"`)
+- **Node projects**: usually omit this field (defaults to latest `agent-node`)
+- **Mixed**: `"runtime": "agent-node:1|agent-python:1.2.0"`
+
+Python example:
 
 ```json
 {
