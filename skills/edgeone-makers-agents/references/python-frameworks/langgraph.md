@@ -199,7 +199,7 @@ LangGraph supports `interrupt` / `resume`. When `interrupt()` is called inside a
 
 ## Review Checklist
 
-- [ ] `edgeone.json` sets `agents.runtime: "python"` and `agents.framework: "langgraph"`
+- [ ] `edgeone.json` sets `agents.framework: "langgraph"`
 - [ ] `requirements.txt` includes `langgraph>=1.0.0`
 - [ ] env from `ctx.env` — never `os.environ`
 - [ ] `ctx.store.langgraph_checkpointer` + `ctx.store.langgraph_store` used (direct properties)

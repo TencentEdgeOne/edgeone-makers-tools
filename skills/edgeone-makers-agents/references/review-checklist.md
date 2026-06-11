@@ -226,7 +226,7 @@
 
 ## J. Python Routes (Route E and future Python routes)
 
-- [ ] `edgeone.json` sets both `agents.runtime: "python"` and `agents.framework` (`crewai` / `langgraph` / `deepagents`)
+- [ ] `edgeone.json` sets `agents.framework` (`crewai` / `langgraph` / `deepagents`)
 
 - [ ] `requirements.txt` exists with pinned versions aligned to the platform's bundled lib
 
@@ -263,6 +263,6 @@
 3. **Fix entry points endpoint by endpoint**: `onRequest` signature + `context.request.body` + `context.request.signal` + headers by index.
 4. **Fix SSE endpoint by endpoint**: replace the inline `ReadableStream` with `createSSEResponse`, and align event `type`s to the unified table.
 5. **Delete the old** `.edgeone/agent-node/config.json`: the CLI generates it; stop hand-maintaining it.
-6. **Verify `edgeone.json`**: `agents.framework` is set correctly; tune `agents.timeout` as needed (default 1800 seconds).
+6. **Verify `edgeone.json`**: `agents.framework` is set correctly.
 7. **Run the checklist**: every box from A through I ticked.
 8. **Promote shared pieces to the template repo**: `_shared.ts` / `_model.ts` / this checklist crystallize into team scaffolding.

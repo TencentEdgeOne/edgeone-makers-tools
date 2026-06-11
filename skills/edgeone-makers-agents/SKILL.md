@@ -118,7 +118,7 @@ EdgeOne Makers Agent **is not** a generic Next.js API route, **is not** Vercel A
 │   └── <resource>/index.ts          # e.g. articles/, preferences/, history/, health/
 ├── .edgeone/
 │   └── project.json                 # { Name, ProjectId }
-├── edgeone.json                     # Deployment config + agents.framework / agents.runtime / agents.timeout
+├── edgeone.json                     # Deployment config + agents.framework
 ├── package.json                     # TS routes (A/B/C/D)
 ├── requirements.txt                 # ⭐ Python route (E) only
 └── README.md
@@ -178,35 +178,6 @@ Available values:
   },
   "agents": {
     "framework": "claude-agent-sdk"
-  }
-}
-```
-
-### `agents.runtime` (optional)
-
-Pins the runtime image version for deployment. The CLI **auto-detects** whether to use `agent-node` or `agent-python` based on file extensions in `agents/` (`.ts`/`.js` → Node, `.py` → Python). You usually do **not** need to set this field.
-
-Format: `agent-node:<version>` or `agent-python:<version>` (combine with `|` for mixed projects).
-
-Only set this when you need to lock a specific runtime version:
-```json
-{
-  "agents": {
-    "framework": "langgraph",
-    "runtime": "agent-python:1"
-  }
-}
-```
-
-Python example (full):
-
-```json
-{
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "agents": {
-    "framework": "crewai",
-    "timeout": 1800
   }
 }
 ```
@@ -339,7 +310,7 @@ edgeone pages env pull
 ### Reviewer SOP
 
 1. Run `find . -type d -name agents -o -name cloud-functions` to confirm directory shape.
-2. Open `edgeone.json`, read `agents.framework` / `agents.runtime` to identify the route.
+2. Open `edgeone.json`, read `agents.framework` to identify the route.
 3. Walk through `references/review-checklist.md` from section A onward.
 4. When a violation is found, cite the matching Critical Rule + the "remediation table" at the end of the checklist.
 5. Top high-frequency issues to attack first (in order of observed frequency):
@@ -355,7 +326,7 @@ edgeone pages env pull
 
 1. Pick a framework via the Decision Tree above.
 2. Copy the skeleton from the matching framework reference doc.
-3. Configure `edgeone.json`: set `agents.framework` correctly; Python route also needs `agents.runtime: "python"`.
+3. Configure `edgeone.json`: set `agents.framework` correctly.
 4. Frontend: `getOrCreateConversationId` + `fetch` with `makers-conversation-id` header.
 5. Get it running → self-check against the Critical Rules → run through `references/review-checklist.md`.
 

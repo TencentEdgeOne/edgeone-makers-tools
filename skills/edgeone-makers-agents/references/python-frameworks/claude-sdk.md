@@ -171,7 +171,7 @@ async def handler(ctx):
 
 ## Review Checklist (Python Claude SDK)
 
-- [ ] `edgeone.json` sets `agents.runtime: "python"` and `agents.framework: "claude-agent-sdk"`
+- [ ] `edgeone.json` sets `agents.framework: "claude-agent-sdk"`
 - [ ] `requirements.txt` includes `claude-agent-sdk>=0.1.0`
 - [ ] Entry function is `async def handler(ctx):`
 - [ ] env from `ctx.env` — never `os.environ`

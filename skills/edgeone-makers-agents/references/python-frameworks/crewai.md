@@ -29,7 +29,7 @@
 | File extension | `.ts` | `.py` |
 | Entry signature | `export async function onRequest(context)` | `async def handler(ctx):` |
 | Dependency mgmt | `package.json` | **`requirements.txt`** |
-| Key `edgeone.json` field | `agents.framework` | also requires `agents.runtime: "python"` |
+| Key `edgeone.json` field | `agents.framework` |
 | Naming style | camelCase (`appendMessage` / `abortActiveRun`) | **snake_case** (`append_message` / `abort_active_run`) |
 | Memory API | `store.appendMessage({ ... })` | `await ctx.store.append_message(conversation_id, role, content)` |
 | Types | TypeScript interfaces | Python type hints + Pydantic |
@@ -520,7 +520,7 @@ async def handler(context):
 
 ## Route E review checklist
 
-- [ ] `edgeone.json` sets both `agents.runtime: "python"` and `agents.framework` (`crewai` or `langgraph` for hybrid)
+- [ ] `edgeone.json` sets `agents.framework` (`crewai` or `langgraph` for hybrid)
 - [ ] `requirements.txt` exists and versions align with the platform's bundled lib
 - [ ] LLM construction uses `provider="openai"` (bypassing LiteLLM)
 - [ ] `LLM` / Crew / OpenAI client use a module-level singleton + env fingerprint reset
@@ -568,7 +568,7 @@ await fetch('/email/stop', {
 | Dimension | TS routes (A/B/C/D) | **Python route (E)** |
 |------|------|------|
 | Language | TypeScript | **Python** |
-| Runtime config | `agents.framework` | `agents.framework` + **`agents.runtime: "python"`** |
+| Runtime config | `agents.framework` | `agents.framework` |
 | Entry signature | `export async function onRequest(context)` | **`async def handler(context):`** |
 | Naming style | camelCase | **snake_case** |
 | Memory API | `store.appendMessage({ conversationId, role, content })` | **`await store.append_message(conversation_id=..., role=..., content=...)`** |

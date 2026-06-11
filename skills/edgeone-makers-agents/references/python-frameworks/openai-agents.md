@@ -202,7 +202,7 @@ async def handler(ctx):
 
 ## Review Checklist (Python OpenAI Agents)
 
-- [ ] `edgeone.json` sets `agents.runtime: "python"` and `agents.framework: "openai-agents-sdk"`
+- [ ] `edgeone.json` sets `agents.framework: "openai-agents-sdk"`
 - [ ] `requirements.txt` includes `openai-agents>=0.1.0` and `openai>=1.50.0`
 - [ ] Entry function is `async def handler(ctx):`
 - [ ] env from `ctx.env` — never `os.environ`

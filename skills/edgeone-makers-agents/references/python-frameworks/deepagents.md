@@ -170,7 +170,7 @@ lg_store = ctx.store.langgraph_store
 
 ## Review Checklist
 
-- [ ] `edgeone.json` sets `agents.runtime: "python"` and `agents.framework: "deepagents"`
+- [ ] `edgeone.json` sets `agents.framework: "deepagents"`
 - [ ] `requirements.txt` includes `deepagents>=1.9.0`
 - [ ] env from `ctx.env` — never `os.environ`
 - [ ] Abort signal checked via `ctx.request.signal.is_set()`

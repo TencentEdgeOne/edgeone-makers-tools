@@ -7,7 +7,6 @@
 
 ## Prerequisites
 
-- `edgeone.json` must set `agents.runtime: "python"`
 - `edgeone.json` must set `agents.framework` to `crewai`, `langgraph`, or `deepagents`
 - Dependencies go in `requirements.txt` (not `package.json`)
 
