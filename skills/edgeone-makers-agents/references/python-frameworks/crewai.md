@@ -478,7 +478,7 @@ async def handler(context):
     conversation_id = (
         body.get("conversation_id")
         or body.get("conversationId")
-        or context.request.headers.get("makers-conversation-id")  # In Python, headers are usually a Mapping
+        or ctx.conversation_id
         or ""
     )
     if not conversation_id:

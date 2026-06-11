@@ -242,10 +242,9 @@ const logger = createLogger('history');
 
 export async function onRequestPost(context: any) {
   const body = await readJsonBody(context);
-  // ⚠️ Inside a cloud-function, read conversation_id from body; headers are also a plain object
+  // cloud-function: use body or context.agent.conversation_id
   const conversationId =
     (body.conversation_id || body.conversationId)
-    || context?.request?.headers?.['makers-conversation-id']
     || '';
 
   const store = context.agent?.store;   // ⭐ cloud-function uses context.agent.store

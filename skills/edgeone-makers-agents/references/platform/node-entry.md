@@ -67,9 +67,7 @@ export async function onRequest(context: any) {
   const { request, env, tools: contextTools, sandbox, store } = context;
   const body = request?.body ?? {};
   const signal = request?.signal as AbortSignal | undefined;
-  const conversationId = context.conversation_id
-    || request?.headers?.['makers-conversation-id']
-    || '';
+  const conversationId = context.conversation_id;
 
   // 1. Validate input
   if (!body.message) {

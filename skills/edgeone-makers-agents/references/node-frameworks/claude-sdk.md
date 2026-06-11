@@ -198,10 +198,7 @@ export async function onRequest(context: any) {
   }
 
   const signal = context.request.signal;
-  // ⚠️ headers is a plain object, not the Headers API: use indexing, not .get()
-  const conversationId = context.conversation_id
-    || context.request?.headers?.['makers-conversation-id']
-    || '';
+  const conversationId = context.conversation_id;
   const sandbox = context.sandbox ?? null;
   const store = context.store ?? null;
 

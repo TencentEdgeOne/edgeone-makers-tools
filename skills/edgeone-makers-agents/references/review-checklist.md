@@ -92,7 +92,7 @@
 
 - [ ] The frontend `conversation_id` is generated with `crypto.randomUUID()` and persisted in `localStorage` (one ID, used across all AI endpoints)
 
-- [ ] AI endpoints on the backend prefer `context.conversation_id`, falling back to `context.request.headers['makers-conversation-id']`
+- [ ] AI endpoints on the backend use `context.conversation_id` directly (runtime injects it from the header automatically)
 
 - [ ] ⚠️ When the frontend calls `/stop`: **never** include the `makers-conversation-id` header (doing so sticky-routes the request to the very chat instance that is stuck). The target conversation_id is passed only via the body as `{ conversation_id }`
 
