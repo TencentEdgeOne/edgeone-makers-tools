@@ -170,7 +170,7 @@
 
 - [ ] Models are fed through `toOpenAIInput` / `toAnthropicMessages` conversion, **not** by hand-assembling a history array
 
-- [ ] Cross-function shared state goes through conversation metadata (`updateConversation` shallow-merges)
+- [ ] Complex business data (relational queries, aggregation, user management) uses an external database — `context.store` is conversation-oriented, not a relational DB
 
 - [ ] **Never** treat an in-process `new Map()` as durable storage (multi-instance / cold-start will lose it; the only legitimate exception is Path B's deliberate "sandbox `/tmp/` file cache" pattern)
 
@@ -216,7 +216,7 @@
 | `store.getMessages(convId, { limit })`                | `store.getMessages({ conversationId: convId, limit })`                                      |
 | Hard-coded model names scattered around               | constant / `resolveModelName(env)`                                                          |
 | Each file rolling its own SSE `ReadableStream`        | the shared `createSSEResponse` from `_shared.ts`                                            |
-| Home-grown `kvGet/kvSet` faking a KV                  | the official adapter / conversation metadata / `langgraphStore`                             |
+| Home-grown `kvGet/kvSet` faking a KV                  | use an external database for business data; `context.store` for conversation history only   |
 | Claude SDK bolted onto a langgraph checkpointer       | `context.store.claudeSessionStore()` (its own thing)                                        |
 | Hand-assembling a history array to feed the model     | `toOpenAIInput` / `toAnthropicMessages`                                                     |
 | `/stop` sent with a `makers-conversation-id` header   | `/stop` uses **only** the body `{ conversation_id }` (the header sticky-routes and fails)   |

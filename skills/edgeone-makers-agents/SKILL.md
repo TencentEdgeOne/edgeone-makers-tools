@@ -168,7 +168,7 @@ Available values:
 
 ```json
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build",  // your frontend build command
   "outputDirectory": "dist",
   "cloudFunctions": {
     "nodejs": {
@@ -252,7 +252,7 @@ Verify: `edgeone -v`.
 
 ### Set environment variable
 
-Before executing **any** `edgeone` CLI command (`pages init`, `pages dev`, `pages link`, `pages env pull`, etc.), set:
+Before executing **any** `edgeone` CLI command (`makers init`, `makers dev`, `makers link`, `makers env pull`, etc.), set:
 
 ```bash
 export PAGES_SOURCE=skills
@@ -261,10 +261,28 @@ export PAGES_SOURCE=skills
 Or prefix each command inline:
 
 ```bash
-PAGES_SOURCE=skills edgeone pages dev
+PAGES_SOURCE=skills edgeone makers dev
 ```
 
 This tells the platform that the command was triggered from an AI skill context.
+
+### package.json scripts (⚠️ must use `edgeone makers` commands)
+
+All agent projects must use `edgeone makers` commands in package.json. Do NOT use framework-specific dev servers (e.g., `next dev`, `vite dev`) — they won't start the agent runtime.
+
+```json
+{
+  "scripts": {
+    "dev": "edgeone makers dev",
+    "build": "edgeone makers build",
+    "deploy": "edgeone makers deploy"
+  }
+}
+```
+
+- `edgeone makers dev` — starts both the agent runtime (Node/Python) and the frontend dev server
+- `edgeone makers build` — builds agents + frontend into `.edgeone/` output
+- `edgeone makers deploy` — builds and deploys to EdgeOne Makers
 
 ### Environment variables for deployment
 
@@ -282,13 +300,13 @@ The CLI will detect these declarations and automatically fetch + inject the valu
 
 ```bash
 # Set a variable on the remote project
-edgeone pages env set MY_SECRET_KEY "my-value"
+edgeone makers env set MY_SECRET_KEY "my-value"
 
 # List current variables
-edgeone pages env ls
+edgeone makers env ls
 
 # Pull remote variables to local .env (for dev)
-edgeone pages env pull
+edgeone makers env pull
 ```
 
 **Common variables to set for Agent projects**:
@@ -297,10 +315,10 @@ edgeone pages env pull
 |----------|-------------|------------|
 | `AI_GATEWAY_API_KEY` | Always | Auto-provisioned by CLI |
 | `AI_GATEWAY_BASE_URL` | Always | Auto-provisioned by CLI |
-| `WSA_API_KEY` | If using `web_search` tool | `edgeone pages env set WSA_API_KEY <value>` |
-| Custom business keys | Per project | `edgeone pages env set <KEY> <VALUE>` |
+| `WSA_API_KEY` | If using `web_search` tool | `edgeone makers env set WSA_API_KEY <value>` |
+| Custom business keys | Per project | `edgeone makers env set <KEY> <VALUE>` |
 
-> ⚠️ **Before deploying an Agent project**, ensure all required environment variables are either auto-provisioned (AI_GATEWAY_*) or manually set via `edgeone pages env set`. Missing variables will cause runtime 500 errors.
+> ⚠️ **Before deploying an Agent project**, ensure all required environment variables are either auto-provisioned (AI_GATEWAY_*) or manually set via `edgeone makers env set`. Missing variables will cause runtime 500 errors.
 
 ---
 
@@ -329,7 +347,7 @@ edgeone pages env pull
 4. Frontend: `getOrCreateConversationId` + `fetch` with `makers-conversation-id` header.
 5. Get it running → self-check against the Critical Rules → run through `references/review-checklist.md`.
 
-### Pre-Deploy SOP (⚠️ MUST execute before `edgeone pages deploy`)
+### Pre-Deploy SOP (⚠️ MUST execute before `edgeone makers deploy`)
 
 > **This section is critical.** AI agents MUST follow these steps when helping a user deploy. Skipping them will cause runtime 500 errors in production.
 
@@ -345,18 +363,18 @@ edgeone pages env pull
 3. **Upload non-auto-provisioned variables**:
    ```bash
    # For each variable the project needs:
-   edgeone pages env set <KEY> "<VALUE>"
+   edgeone makers env set <KEY> "<VALUE>"
    ```
    If the user has not provided the values, **ask the user** for them before deploying. Do NOT deploy without confirming all required variables are set.
 
 4. **Verify** (optional but recommended):
    ```bash
-   edgeone pages env ls
+   edgeone makers env ls
    ```
 
 5. **Deploy**:
    ```bash
-   edgeone pages deploy
+   edgeone makers deploy
    ```
 
 **Example interaction when deploying a project with Supabase**:

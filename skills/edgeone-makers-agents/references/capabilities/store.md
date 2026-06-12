@@ -28,7 +28,8 @@ Where is this endpoint built?
 | Conversation metadata (`getConversation` / `updateConversation` etc.) | ✅ | ✅ |
 | `openaiSession` / `claudeSessionStore` | ✅ | ✅ |
 | `langgraphCheckpointer` / `langgraphStore` | ✅ | ❌ **Explicitly stripped by the runtime** |
-| Cross-function shared data | — | Use conversation metadata (recommended) |
+
+> ⚠️ **`context.store` is a conversation-oriented storage abstraction** — designed for message history, session state, conversation metadata (title, tags, summary, user preferences). Both `context.store` (agent endpoints) and `context.agent.store` (cloud-functions) point to the **same data**. It is NOT a general-purpose relational database — for complex queries, aggregation, or user management, use an external database.
 
 > ⭐ **Critical difference**: a cloud-function's `context.agent.store` does **not** include `langgraphCheckpointer` / `langgraphStore` — the runtime strips them. Calling `store.langgraphStore.get(...)` inside a cloud-function throws `Cannot read properties of undefined`. Endpoints that need langgraph operations **must live under `agents/`** and use `context.store`.
 
@@ -145,10 +146,11 @@ export async function onRequest(context: any) {
   const store = context.agent?.store;          // ⚠️ not context.store
   if (!store) return Response.json({ ok: false });
 
-  // ✅ Generic message API is identical to the agent endpoint
-  const conv = await store.getConversation(convId);
-  const prefs = conv?.metadata?.preferences ?? defaults;
-  await store.updateConversation(convId, { metadata: { preferences: next } }); // shallow merge
+  const conversationId = context.request.body?.conversation_id || '';
+
+  // ✅ Read conversation history (for display in frontend)
+  const messages = await store.getMessages({ conversationId, limit: 50, order: 'asc' });
+  return Response.json({ conversation_id: conversationId, messages });
 
   // ❌ Do NOT use the langgraph adapters inside a cloud-function:
   //    the runtime has explicitly stripped them; store.langgraphStore === undefined
@@ -173,18 +175,44 @@ export async function onRequest(context: any) {
 
 ---
 
-## 6. Store Fit Boundaries
+## 6. Choosing the Right Storage
 
-The store is designed for **conversation-oriented data** — not a general-purpose database. Use this to judge fit:
+`context.store` is one of several storage options available on EdgeOne Makers. Choose based on your data type:
 
-| Use case | Fit? | Reason |
+### Storage Decision Guide
+
+| Data type | Recommended storage | Why |
+|-----------|-------------------|-----|
+| Conversation history / messages | `context.store` | Built-in, zero-config, designed for this |
+| Agent session state / checkpoints | `context.store` (langgraphCheckpointer) | Framework-native integration |
+| Conversation metadata (title, summary, tags) | `context.store` (updateConversation) | Lightweight, per-conversation |
+| Simple key-value pairs | [EdgeOne Makers KV](https://cloud.tencent.com/document/product/1552/127420) | Fast, edge-distributed, string values |
+| File / blob storage (images, PDFs, large objects) | [EdgeOne Makers Blob](https://cloud.tencent.com/document/product/1552/131425) | Object storage, supports large files |
+| Structured business data (users, products, orders) | External database (Supabase, Neon, PlanetScale, etc.) | Relational queries, indexes, joins |
+| Vector / semantic search | External vector store (Supabase pgvector, Pinecone, etc.) | `langgraphStore.search` has no vector search |
+
+### Default behavior for AI assistants
+
+**Default: use `context.store` to implement the feature first.** After implementation is complete, inform the user about alternative storage options if their use case may benefit from them:
+
+> ✅ Done! I've implemented this using `context.store` (the platform's built-in conversation storage).
+>
+> FYI: if your project grows to need more advanced storage, EdgeOne Makers also offers:
+> - **[KV](https://cloud.tencent.com/document/product/1552/127420)** — edge-distributed key-value store (fast reads, simple data)
+> - **[Blob](https://cloud.tencent.com/document/product/1552/131425)** — object/file storage (images, PDFs, large files)
+> - **Supabase / external DB** — for relational data with queries, indexes, and joins
+
+### `context.store` Fit Boundaries
+
+| Use case | Fit? | Notes |
 |------|-------|------|
-| Conversation/dialog history (sequential reads, ≤10,000 entries) | ✅ | Primary use case |
-| Agent execution state / thread snapshots | ✅ | Use `langgraphCheckpointer` |
-| Small-scale KV (get/put by namespace+key) | ✅ | `langgraphStore.get/put` |
-| Structured business data (queryable by field, sorting, aggregation) | ❌ | No indexes — use a database instead |
-| Document retrieval / RAG (semantic / full-text search) | ❌ | `langgraphStore.search` has no vector search; use an external vector store |
-| Bulk documents / large files / binaries | ❌ | Not designed for large objects at scale |
+| Conversation/dialog history (≤10,000 messages) | ✅ | Primary use case |
+| Agent execution state / thread snapshots | ✅ | `langgraphCheckpointer` |
+| Conversation-level metadata (summary, preferences) | ✅ | `updateConversation` metadata |
+| Simple key-value within langgraph | ✅ | `langgraphStore.get/put` |
+| Structured queries (WHERE, JOIN, ORDER BY) | ❌ | Use external database |
+| Semantic / full-text search | ❌ | Use external vector store |
+| Large files / binaries | ❌ | Use Blob storage |
 
 **Key cross-framework sharing rule**: each adapter (`openaiSession` / `claudeSessionStore` / `langgraphStore` / generic `appendMessage`) writes into its own namespace and cannot see the others. To share data across frameworks, **pick one entry point as the source of truth**. Do not expect adapters to interoperate automatically.
 
@@ -243,7 +271,7 @@ async def handler(ctx):
 - [ ] **No** pseudo-fallback like `store?.langgraphStore ?? store`? (Inside a cloud-function, `langgraphStore` is undefined; the fallback hands back the store itself, and the next `.get` call will crash.)
 - [ ] Is history stored as multiple `appendMessage` records, **not** stuffed into a single message's content field?
 - [ ] Is the model fed via `toOpenAIInput`/`toAnthropicMessages`, **not** a hand-built array?
-- [ ] Does cross-function shared data flow through conversation metadata, avoiding double-write entry points?
+- [ ] Business data (user profiles, settings, files) is stored in an external database — NOT crammed into `context.store`?
 - [ ] No process-local `new Map()` cache mistaken for a persistence layer?
 - [ ] ⚠️ Endpoints that need `langgraphStore.get/put/delete` are **placed under `agents/`**, not accidentally dropped into `cloud-functions/` (the runtime strips langgraph adapters there)?
 - [ ] Structured business data that needs querying / sorting / aggregation has not been crammed into the store (that's MySQL's job)?
