@@ -44,7 +44,7 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 
 ## How to use this skill (for a coding agent)
 
-1. Skim the **Mental Model** below — Makers ≠ generic Next.js API routes
+1. Skim the **Mental Model** below — Makers ≠ generic API routes
 2. Walk the **Decision Tree** to pick one of the five framework routes
 3. Read the matching `references/*-route.md` for a copy-paste skeleton
 4. Self-check against the **Twelve Red Lines**
@@ -76,7 +76,7 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 
 ## Mental Model
 
-EdgeOne Makers Agent **is not** a generic Next.js API route, **is not** Vercel AI SDK's `route.ts` pattern. It has its own runtime conventions.
+EdgeOne Makers Agent **is not** a generic API route pattern (not Vercel AI SDK's `route.ts`, not Express). It has its own runtime conventions.
 
 | Dimension | EdgeOne Makers convention | ⚠️ Common mistake |
 |-----------|---------------------------|-------------------|
@@ -106,7 +106,7 @@ EdgeOne Makers Agent **is not** a generic Next.js API route, **is not** Vercel A
 │       ├── _skills.ts               # System prompt builder (optional)
 │       ├── _tools.ts                # Custom / MCP tool definitions (optional)
 │       └── _templates.ts            # Output templates / default data (optional)
-├── app/                             # Next.js frontend (App Router)
+├── app/ or src/                         # Frontend (any framework: Next.js, Vite, plain HTML, etc.)
 │   ├── layout.tsx
 │   ├── page.tsx
 │   ├── globals.css
@@ -143,8 +143,8 @@ The `edgeone.json` file is the deployment configuration file for EdgeOne Makers 
 | Field | Type | Description |
 |-------|------|-------------|
 | `buildCommand` | string | Build command (e.g., `npm run build`) |
-| `outputDirectory` | string | Build output directory (e.g., `.next`, `dist`) |
-| `framework` | string | Frontend framework (e.g., `nextjs`, `vite`) |
+| `outputDirectory` | string | Build output directory (e.g., `.next`, `dist`, `build`) |
+| `framework` | string | Frontend framework (e.g., `nextjs`, `vite`, `react`) |
 | `cloudFunctions` | object | Cloud functions configuration |
 | `agents` | object | **Agent-specific settings (important!)** |
 
@@ -169,8 +169,7 @@ Available values:
 ```json
 {
   "buildCommand": "npm run build",
-  "outputDirectory": ".next",
-  "framework": "nextjs",
+  "outputDirectory": "dist",
   "cloudFunctions": {
     "nodejs": {
       "includeFiles": []

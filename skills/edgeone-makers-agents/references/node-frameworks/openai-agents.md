@@ -269,7 +269,7 @@ See also: the platform and capabilities docs.
 ## Frontend call examples
 
 ```typescript
-// app/lib/api.ts
+// Frontend API helper
 const KEY = 'eo_conversation_id';
 
 function getOrCreateConversationId(): string {

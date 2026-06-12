@@ -86,7 +86,7 @@ export async function onRequest(context: any) {
 - Every `.ts` file under `agents/`: **`process.env.X` is forbidden**, **`context.env.X` is mandatory**
 - Every `.ts` file under `cloud-functions/`: **`process.env.X` is forbidden**, **`context.env.X` is mandatory**
 - ⚠️ **Both reads and writes are forbidden**: mutations like `process.env.X = 'foo'` are equally illegal — `process.env` is shared across the same process, multiple handler instances may run concurrently inside the agent runtime, and a mutation will pollute other handlers' env. If some SDK requires "configure via environment variable" (e.g. `OPENAI_AGENTS_DISABLE_TRACING`), prefer the SDK's own options/parameter API. If the SDK truly only supports the env path, accept the pollution but add a comment explaining it, and concentrate it inside a single init file.
-- Frontend `app/` directory: not subject to this restriction (Next.js `process.env` / `NEXT_PUBLIC_*` work as usual)
+- Frontend directory (`app/` or `src/`): not subject to this restriction (frontend frameworks handle env vars in their own way)
 - Shared internal modules (`_shared.ts` / `_model.ts`, etc.): take `env` as a parameter, with the caller passing in `context.env`. The module itself must not read global env.
 
 ---

@@ -308,7 +308,7 @@ See [`review-checklist.md`](../review-checklist.md) for the cross-route checklis
 ## Frontend Call Example (chat + stop + file upload)
 
 ```typescript
-// app/page.tsx
+// Frontend code example
 const conversationId = getOrCreateConversationId();   // UUID cached in localStorage
 
 // 1. /chat: header required

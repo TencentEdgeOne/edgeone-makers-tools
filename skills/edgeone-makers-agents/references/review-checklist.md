@@ -192,7 +192,7 @@
 
 - [ ] The frontend reads SSE through a `ReadableStream`, splits on `data: `, filters out `ping` heartbeats so they are not rendered, and stops on `[DONE]`
 
-- [ ] `process.env` is allowed on the frontend (consistent with Next.js), but **do not** expose backend secrets like `AI_GATEWAY_API_KEY` through `NEXT_PUBLIC_*` to the browser
+- [ ] `process.env` is allowed on the frontend (consistent with frontend frameworks), but **do not** expose backend secrets like `AI_GATEWAY_API_KEY` to the browser
 
 ---
 

@@ -539,7 +539,7 @@ async def handler(context):
 ## Frontend call example (frontend is TS, identical to other routes)
 
 ```typescript
-// Frontend (src/App.tsx or app/page.tsx)
+// Frontend code example
 const conversationId = getOrCreateConversationId();   // UUID cached in localStorage
 
 const resp = await fetch('/email/run', {

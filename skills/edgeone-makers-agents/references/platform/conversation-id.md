@@ -3,12 +3,10 @@
 > Covers: makers-conversation-id dual-channel contract, /stop inverted rule, frontend call patterns, endpoint cheat sheet.
 
 ---
-## 6. Frontend Convention (`app/`)
+## Frontend Convention
 
 ### Principle
-- Standard Next.js App Router: `app/layout.tsx` + `app/page.tsx`
-- Components live in `app/components/`; frontend utilities in `app/lib/` (e.g. `conversation-context.tsx`)
-- Global utilities (i18n, cn utils) in the root-level `lib/`
+- The frontend framework is not prescribed — use Next.js, Vite, React, Vue, plain HTML, or any framework
 - Frontend calls agent endpoints via `fetch('/<action>', { method:'POST', body })`, then reads SSE with `EventSource` / `ReadableStream`
 
 ### ⭐ Conversation ID and the `makers-conversation-id` Header (Iron Rule)
@@ -21,7 +19,7 @@
 
 **Generate + persist pattern (recommended on the frontend)**:
 ```typescript
-// app/lib/conversation-id.ts
+// Frontend conversation ID helper
 const KEY = 'eo_conversation_id';
 
 export function getOrCreateConversationId(): string {
@@ -42,7 +40,7 @@ export function rotateConversationId(): string {
 
 **Calling AI endpoints (header is mandatory)**:
 ```typescript
-// app/page.tsx or app/lib/api.ts
+// Frontend code example
 const conversationId = getOrCreateConversationId();
 
 const resp = await fetch('/chat', {
