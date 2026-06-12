@@ -9,7 +9,7 @@
 - Unified gateway variables: `AI_GATEWAY_API_KEY`, `AI_GATEWAY_BASE_URL`, plus optional `AI_GATEWAY_MODEL` / `AI_GATEWAY_SMALL_MODEL`
 - Missing variables must throw explicitly — never silently degrade
 - Default model as a constant: `@makers/deepseek-v4-flash`
-- ⭐ **If the template uses `context.tools.web_search`**: you must also configure `WSA_API_KEY` in the project's environment variables. Create an API KEY in the [Tencent Cloud Web Search API console](https://console.cloud.tencent.com/wsapi/index), copy the value, and set `WSA_API_KEY=<value>` in the EdgeOne project environment variables (reference docs: https://cloud.tencent.com/document/product/1806/130615). This variable is read directly by the sandbox runner; template code typically does not need to reference it explicitly. Without it, search will fail authentication / return 401. Detailed steps in `sandbox-and-tools.md`.
+- ⭐ **If the template uses `context.tools.web_search`**: you must also configure `WSA_API_KEY` in the project's environment variables. Create an API KEY in the [Tencent Cloud Web Search API console](https://console.cloud.tencent.com/wsapi/index), copy the value, and set `WSA_API_KEY=<value>` in the EdgeOne project environment variables (reference docs: https://cloud.tencent.com/document/product/1806/130615). This variable is read directly by the sandbox runner; template code typically does not need to reference it explicitly. Without it, search will fail authentication / return 401. Detailed steps in `capabilities/tools.md`.
 
 ### LangGraph / DeepAgents — env validation + model initialization (`agents/_model.ts`)
 ```typescript

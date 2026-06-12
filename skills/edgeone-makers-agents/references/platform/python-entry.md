@@ -190,8 +190,8 @@ This applies to any synchronous SDK call (CrewAI, some LangChain tools, file I/O
 
 ## See Also
 
-- Node runtime conventions: [node-runtime.md](./node-runtime.md)
-- Memory / Store: [../capabilities/memory-store.md](../capabilities/memory-store.md)
-- Sandbox & Tools: [../capabilities/sandbox-and-tools.md](../capabilities/sandbox-and-tools.md)
-- CrewAI framework route: [../frameworks/crewai-route.md](../frameworks/crewai-route.md)
+- Node runtime conventions: [node-entry.md](./node-entry.md)
+- Memory / Store: [../capabilities/store.md](../capabilities/store.md)
+- Sandbox & Tools: [../capabilities/sandbox.md](../capabilities/sandbox.md)
+- CrewAI framework route: [../python-frameworks/crewai.md](../python-frameworks/crewai.md)
 - Review checklist (§J Python): [../review-checklist.md](../review-checklist.md)

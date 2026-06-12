@@ -34,8 +34,8 @@ npm install @openai/agents openai zod
 
 ❌ Not a fit:
 - A single agent with simple text generation → DeepAgents is simpler
-- Need a sandbox to run Python / handle uploaded files → Route B (`claude-sdk-route.md`) is more suitable
-- Want fine-grained graph orchestration like LangGraph → Route D (`langgraph-deepagents-route.md`)
+- Need a sandbox to run Python / handle uploaded files → Route B (Claude Agent SDK) is more suitable
+- Want fine-grained graph orchestration like LangGraph → Route D (LangGraph)
 
 ---
 
@@ -288,7 +288,7 @@ async function readJsonBody(context: any) {
 - [ ] `context.request.headers['x-foo']` uses index access — **not** `.get('x-foo')`
 - [ ] ⭐ The frontend includes the `makers-conversation-id` header when calling `/chat`; **omits** it when calling `/stop` (uses the body instead)
 
-See also: `platform-conventions.md`, `sandbox-and-tools.md`, `review-checklist.md`.
+See also: the platform and capabilities docs.
 
 ---
 

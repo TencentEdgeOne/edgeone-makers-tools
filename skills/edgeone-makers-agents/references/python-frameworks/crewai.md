@@ -595,10 +595,10 @@ await fetch('/email/stop', {
 
 See also:
 - 
-- Route B (Claude Agent SDK): `claude-sdk-route.md`
-- Route C (OpenAI Agents SDK): `openai-agents-route.md`
-- Route D (LangGraph + DeepAgents): `langgraph-deepagents-route.md`
-- Platform conventions: `platform-conventions.md`
-- Sandbox & tools: `sandbox-and-tools.md`
-- Memory store: `memory-store.md`
+- Route B (Claude Agent SDK): `../node-frameworks/claude-sdk.md`
+- Route C (OpenAI Agents SDK): `../node-frameworks/openai-agents.md`
+- Route D (LangGraph + DeepAgents): `../node-frameworks/langgraph.md`
+- Platform conventions: `../platform/node-entry.md`
+- Sandbox & tools: `../capabilities/sandbox.md`
+- Memory store: `../capabilities/store.md`
 - Review checklist: `review-checklist.md`

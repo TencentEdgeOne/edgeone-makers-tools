@@ -40,7 +40,7 @@ npm install @anthropic-ai/claude-agent-sdk zod
 ## Core Pattern Walkthrough
 
 ### 1. Gateway env mapping (from `_model.ts`)
-See `resolveModelName` + `collectGatewayEnv` in [`platform-conventions.md`](./platform-conventions.md) §3. Key points:
+See `resolveModelName` + `collectGatewayEnv` in [`node-entry.md`](../platform/node-entry.md) §3. Key points:
 - Map `AI_GATEWAY_*` to the `ANTHROPIC_*` variables the SDK expects
 - Return a `Record` and inject it via `query()`'s `options.env`. **Do not read `process.env`** — agent endpoints disable `process.env`; always go through `context.env`.
 
@@ -88,7 +88,7 @@ async function resolveClaudeSessionBinding(
 ```
 > **Principle**: take `conversation_id` from `context.conversation_id`, falling back to the `makers-conversation-id` header.
 >
-> **Important**: Claude SDK has its own session/`resume`/`fork` mechanism via `context.store.claudeSessionStore()` (no-arg — unique to the Claude SDK). **Do not mix this with a langgraph checkpointer** — the two state models are incompatible. See [`langgraph-deepagents-route.md`](./langgraph-deepagents-route.md) for the langgraph-style alternative.
+> **Important**: Claude SDK has its own session/`resume`/`fork` mechanism via `context.store.claudeSessionStore()` (no-arg — unique to the Claude SDK). **Do not mix this with a langgraph checkpointer** — the two state models are incompatible. See [`langgraph.md`](./langgraph.md) for the langgraph-style alternative.
 
 ### 4. Sandbox readiness probe + file upload (with cold-start retry)
 ```typescript
@@ -116,7 +116,7 @@ if (sandbox) {
 // - All strategies fail → degrade to inline-text mode
 ```
 
-See [`sandbox-and-tools.md`](./sandbox-and-tools.md) for the full upload strategy reference.
+See [`sandbox.md`](../capabilities/sandbox.md) for the full upload strategy reference.
 
 ### 5. File cache (working around the ephemeral sandbox)
 ```typescript
@@ -277,7 +277,7 @@ if (!sandboxWorking && uploadedFiles.length > 0) {
 ```
 > **Principle**: the sandbox is best-effort. Text files can degrade to inline content; for binaries that can't degrade, tell the model explicitly that they were skipped.
 
-> Beyond `sandbox.runCode(...)` (top-level) and `sandbox.commands.run(...)`, the Claude SDK route can also use `screenshot({ fullPage: true })`, `context.tools.files()`, and `context.tools.browser()` — see [`sandbox-and-tools.md`](./sandbox-and-tools.md).
+> Beyond `sandbox.runCode(...)` (top-level) and `sandbox.commands.run(...)`, the Claude SDK route can also use `screenshot({ fullPage: true })`, `context.tools.files()`, and `context.tools.browser()` — see [`sandbox.md`](../capabilities/sandbox.md).
 
 ---
 
@@ -297,7 +297,7 @@ if (!sandboxWorking && uploadedFiles.length > 0) {
 - [ ] System prompt explicitly forbids the AI from fabricating files on `FileNotFoundError`
 - [ ] ⭐ Frontend includes `makers-conversation-id` header on `/chat`; **omits** the header on `/stop` (uses body)
 
-See [`review-checklist.md`](./review-checklist.md) for the cross-route checklist.
+See [`review-checklist.md`](../review-checklist.md) for the cross-route checklist.
 
 ---
 
@@ -335,9 +335,9 @@ async function stopAgent() {
 ## See Also
 
 
-- Route C (OpenAI Agents): [`openai-agents-route.md`](./openai-agents-route.md)
-- Route D (LangGraph + DeepAgents): [`langgraph-deepagents-route.md`](./langgraph-deepagents-route.md)
-- Route E (CrewAI): [`crewai-route.md`](./crewai-route.md)
-- Platform conventions: [`platform-conventions.md`](./platform-conventions.md)
-- Sandbox & tools reference: [`sandbox-and-tools.md`](./sandbox-and-tools.md)
-- Review checklist: [`review-checklist.md`](./review-checklist.md)
+- Route C (OpenAI Agents): [`openai-agents.md`](./openai-agents.md)
+- Route D (LangGraph + DeepAgents): [`langgraph.md`](./langgraph.md)
+- Route E (CrewAI): [`crewai.md`](../python-frameworks/crewai.md)
+- Platform conventions: [`node-entry.md`](../platform/node-entry.md)
+- Sandbox & tools reference: [`sandbox.md`](../capabilities/sandbox.md)
+- Review checklist: [`review-checklist.md`](../review-checklist.md)
