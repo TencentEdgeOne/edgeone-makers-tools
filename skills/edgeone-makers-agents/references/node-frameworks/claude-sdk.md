@@ -43,6 +43,16 @@ npm install @anthropic-ai/claude-agent-sdk zod
 See `resolveModelName` + `collectGatewayEnv` in [`node-entry.md`](../platform/node-entry.md) §3. Key points:
 - Map `AI_GATEWAY_*` to the `ANTHROPIC_*` variables the SDK expects
 - Return a `Record` and inject it via `query()`'s `options.env`. **Do not read `process.env`** — agent endpoints disable `process.env`; always go through `context.env`.
+- ⚠️ **Must include writable config directories** — the Claude CLI subprocess requires a writable `~/.claude` and temp directory. In the EdgeOne Makers serverless runtime, HOME is typically not writable — the SDK silently exits with zero output if it cannot initialise its config directory.
+
+```typescript
+const queryEnv = {
+  ...collectGatewayEnv(ctxEnv),
+  CLAUDE_CONFIG_DIR: '/tmp/claude-agent-sdk',  // writable config directory
+  CLAUDE_CODE_TMPDIR: '/tmp',                  // writable temp directory
+};
+// Pass to query({ options: { env: queryEnv, ... } })
+```
 
 ### 2. Defensive initialisation
 ```typescript

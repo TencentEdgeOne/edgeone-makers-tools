@@ -73,6 +73,17 @@ def collect_gateway_env(env: dict) -> dict:
     return result
 ```
 
+> ⚠️ **Must include writable config directories** in the env dict passed to `query()`. The Claude CLI subprocess requires a writable `~/.claude` and temp directory. In the EdgeOne Makers serverless runtime, HOME is typically not writable — the SDK silently exits with zero output if it cannot initialise its config directory.
+
+```python
+query_env = {
+    **collect_gateway_env(env),
+    "CLAUDE_CONFIG_DIR": "/tmp/claude-agent-sdk",  # writable config directory
+    "CLAUDE_CODE_TMPDIR": "/tmp",                  # writable temp directory
+}
+# Pass to query(prompt=..., options={"env": query_env, ...})
+```
+
 ### 2. SSE streaming with query()
 
 ```python
