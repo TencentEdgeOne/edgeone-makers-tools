@@ -215,17 +215,9 @@ export async function onRequest(context: any) {
   // ... sandbox probe + file upload (with module-level cache, re-upload each time)
   //     + session binding (see above)
 
-  // ⭐ context.tools is already a Claude SDK-compatible MCP tool array
-  //   (requires agents.framework: 'claude-agent-sdk' in edgeone.json)
-  // ⭐ Recommended: use the official helper toClaudeMcpServer
-  //   (returns { name, tools, allowedTools })
-  // Or feed context.tools.all() into createSdkMcpServer manually — both work.
-  const edgeoneTools = context.tools?.all?.() ?? [];
-  const edgeoneMcpServer = createSdkMcpServer({
-    name: 'edgeone',
-    tools: edgeoneTools,
-    alwaysLoad: true,
-  });
+  // ⭐ Use toClaudeMcpServer to get the MCP bundle (name + tools + allowedTools)
+  const edgeoneBundle = context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true });
+  const edgeoneMcpServer = createSdkMcpServer(edgeoneBundle);
 
   async function* run(sig?: AbortSignal): AsyncGenerator<string> {
     const sessionBinding = await resolveClaudeSessionBinding(store, conversationId, process.cwd());
@@ -233,14 +225,19 @@ export async function onRequest(context: any) {
     const stream = query({
       prompt: message,
       options: {
-        model: resolveModelName(ctxEnv),         // ⭐ via context.env
-        env: collectGatewayEnv(ctxEnv),          // ⭐ inject ANTHROPIC_* mapping; no process.env pollution
-        maxTurns: 30,                             // ⭐ hard cap
+        model: resolveModelName(ctxEnv),
+        env: {
+          ...collectGatewayEnv(ctxEnv),
+          CLAUDE_CONFIG_DIR: '/tmp/claude-agent-sdk',
+          CLAUDE_CODE_TMPDIR: '/tmp',
+        },
+        maxTurns: 30,
         mcpServers: {
           edgeone: edgeoneMcpServer,
           'custom-tools': customMcpServer,
         },
-        ...sessionBinding,                        // resume or sessionId
+        allowedTools: edgeoneBundle.allowedTools,
+        ...sessionBinding,
         abortController: sig ? { signal: sig } as any : undefined,
       },
     });
@@ -260,16 +257,13 @@ export async function onRequest(context: any) {
 }
 ```
 
-> ⭐ **About `context.tools.toClaudeMcpServer()`**: `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` returns `{ name, tools, allowedTools }` (where `allowedTools` looks like `mcp__edgeone__commands`). This is the **recommended way** to wire tools on the Claude SDK route (it's a claude-sdk framework capability, language-agnostic). Either form works:
+> ⭐ **About `context.tools.toClaudeMcpServer()`**: returns `{ name, tools, allowedTools }` (where `allowedTools` looks like `mcp__edgeone__commands`). This is the **required way** to wire platform tools on the Claude SDK route:
 > ```typescript
-> // Form A (recommended)
 > const bundle = context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true });
 > const mcp = createSdkMcpServer(bundle);
 > query({ prompt, options: { mcpServers: { [bundle.name]: mcp }, allowedTools: bundle.allowedTools } });
-> // Form B (manual)
-> const mcp = createSdkMcpServer({ name: 'edgeone', tools: context.tools.all(), alwaysLoad: true });
 > ```
-> Prerequisite: set `agents.framework: "claude-agent-sdk"` in `edgeone.json`. Older skill docs claiming "Node doesn't have this method" are wrong.
+> Prerequisite: set `agents.framework: "claude-agent-sdk"` in `edgeone.json`.
 
 ### 8. Degrading when the sandbox is unavailable
 ```typescript
@@ -303,7 +297,7 @@ if (!sandboxWorking && uploadedFiles.length > 0) {
 - [ ] AbortSignal forwarded to `query()` and checked inside the loop
 - [ ] `context.request.headers` accessed via `headers['x-foo']` indexing, **not** `.get('x-foo')`
 - [ ] `edgeone.json` has `agents.framework: "claude-agent-sdk"`
-- [ ] ⭐ Tools wired with `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` or `context.tools.all()` fed into `createSdkMcpServer`
+- [ ] ⭐ Tools wired with `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` → `createSdkMcpServer(bundle)`
 - [ ] System prompt explicitly forbids the AI from fabricating files on `FileNotFoundError`
 - [ ] ⭐ Frontend includes `makers-conversation-id` header on `/chat`; **omits** the header on `/stop` (uses body)
 

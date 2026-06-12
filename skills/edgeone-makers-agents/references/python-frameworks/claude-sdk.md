@@ -98,15 +98,15 @@ async def handler(ctx):
         return {"error": "'message' is required"}, 400
 
     env = ctx.env
-    gateway_env = collect_gateway_env(env)
+    query_env = {
+        **collect_gateway_env(env),
+        "CLAUDE_CONFIG_DIR": "/tmp/claude-agent-sdk",
+        "CLAUDE_CODE_TMPDIR": "/tmp",
+    }
 
-    # ⭐ Use to_claude_mcp_server to get MCP-compatible tools
+    # ⭐ Use to_claude_mcp_server — returns bundle with name, tools, allowed_tools
     edgeone_bundle = ctx.tools.to_claude_mcp_server("edgeone", always_load=True)
-    edgeone_mcp = create_sdk_mcp_server(
-        name="edgeone",
-        tools=edgeone_tools,
-        always_load=True,
-    )
+    edgeone_mcp = create_sdk_mcp_server(edgeone_bundle)
 
     async def gen():
         try:
@@ -114,9 +114,10 @@ async def handler(ctx):
                 prompt=message,
                 options={
                     "model": resolve_model_name(env),
-                    "env": gateway_env,
+                    "env": query_env,
                     "max_turns": 30,
                     "mcp_servers": {"edgeone": edgeone_mcp},
+                    "allowed_tools": edgeone_bundle.allowed_tools,
                 },
             )
 
@@ -173,7 +174,7 @@ async def handler(ctx):
 | Import | `import { query, createSdkMcpServer } from '@anthropic-ai/claude-agent-sdk'` | `from claude_agent_sdk import query, create_sdk_mcp_server` |
 | Entry | `export async function onRequest(context)` | `async def handler(ctx):` |
 | Env mapping | `collectGatewayEnv(context.env)` | `collect_gateway_env(ctx.env)` |
-| Tools | `context.tools.toClaudeMcpServer(...)` or `context.tools.all()` | `ctx.tools.all()` |
+| Tools | `context.tools.toClaudeMcpServer(...)` | `ctx.tools.to_claude_mcp_server(...)` |
 | SSE | `createSSEResponse(gen, signal)` | `ctx.utils.stream_sse(gen())` |
 | Abort signal | `signal?.aborted` | `ctx.request.signal.is_set()` |
 | Session store | `context.store.claudeSessionStore()` | `ctx.store` (direct) |

@@ -72,24 +72,13 @@ def build_client(env: dict) -> OpenAI:
 
 ```python
 # agents/<name>/_agents.py
-from agents import Agent, function_tool
-
-
-@function_tool
-def search_web(query: str) -> str:
-    """Search the web for information."""
-    return f"[mock] results for: {query}"
+from agents import Agent
 
 
 def build_agent(model: str, ctx_tools=None):
-    """Build the main agent with tools."""
-    tools = []
-    if ctx_tools:
-        # ctx.tools.all() returns OpenAI Agents-compatible tools
-        # when agents.framework = "openai-agents-sdk"
-        tools = ctx_tools.all()
-    else:
-        tools = [search_web]
+    """Build the main agent with platform tools."""
+    # ⭐ ctx.tools.all() returns OpenAI Agents-compatible tools directly
+    tools = ctx_tools.all() if ctx_tools else []
 
     return Agent(
         name="Assistant",

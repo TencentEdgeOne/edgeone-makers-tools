@@ -64,43 +64,17 @@ function buildModel(env: Record<string, string | undefined>) {
 ### 2. Agent and tool definitions
 ```typescript
 import { Agent } from '@openai/agents';
-import { createTools } from './_tools';   // your own tool set
 
+// ⭐ context.tools.all() returns OpenAI Agents-compatible function tools directly
 const agent = new Agent({
   name: 'Assistant',
   instructions: 'You are a helpful assistant. Use the available tools to answer questions.',
-  tools: createTools(),
+  tools: context.tools.all(),
   model,
 });
 ```
 
-`_tools.ts` example:
-```typescript
-import { tool } from '@openai/agents';
-import { z } from 'zod';
-
-export function createTools(contextTools?: any) {
-  // Platform tool: grab web_search
-  const webSearch = contextTools?.get?.('web_search');
-
-  return [
-    tool({
-      name: 'search_web',
-      description: 'Search the web for information.',
-      parameters: z.object({ query: z.string() }),
-      async execute({ query }) {
-        if (webSearch) {
-          const r = await webSearch.execute({ query, maxResults: 5 });
-          return typeof r === 'string' ? r : JSON.stringify(r).slice(0, 2000);
-        }
-        return `[mock] results for: ${query}`;
-      },
-    }),
-  ];
-}
-```
-
-> You can also use `context.tools.all()` directly (provided `agents.framework: "openai-agents-sdk"` is set in `edgeone.json`); the platform pre-wraps tools so they're OpenAI Agents-compatible.
+> When `agents.framework: "openai-agents-sdk"` is set in `edgeone.json`, `context.tools.all()` returns tools already in OpenAI function tool format — no manual wrapping needed.
 
 ### 3. Session persistence (key: use the `openaiSession` adapter)
 ```typescript
@@ -180,7 +154,7 @@ export async function onRequest(context: any) {
   const agent = new Agent({
     name: 'Assistant',
     instructions: 'You are a helpful assistant.',
-    tools: createTools(context.tools),
+    tools: context.tools.all(),
     model,
   });
 

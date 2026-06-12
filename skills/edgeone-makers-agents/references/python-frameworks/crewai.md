@@ -506,11 +506,8 @@ async def handler(context):
     from crewai import BaseTool
     tools = context.tools.to_crewai_tools(BaseTool)
 
-    # Get one
-    web_search = context.tools.get("web_search")    # ⚠️ Using web_search requires WSA_API_KEY
-
     crew = Crew(
-        agents=[Agent(role="...", tools=[web_search], llm=llm)],
+        agents=[Agent(role="...", tools=tools, llm=llm)],
         tasks=[...],
     )
 ```
