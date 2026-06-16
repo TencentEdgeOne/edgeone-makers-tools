@@ -266,24 +266,6 @@ PAGES_SOURCE=skills edgeone makers dev
 
 This tells the platform that the command was triggered from an AI skill context.
 
-### package.json scripts (⚠️ must use `edgeone makers` commands)
-
-All agent projects must use `edgeone makers` commands in package.json. Do NOT use framework-specific dev servers (e.g., `next dev`, `vite dev`) — they won't start the agent runtime.
-
-```json
-{
-  "scripts": {
-    "dev": "edgeone makers dev",
-    "build": "edgeone makers build",
-    "deploy": "edgeone makers deploy"
-  }
-}
-```
-
-- `edgeone makers dev` — starts both the agent runtime (Node/Python) and the frontend dev server
-- `edgeone makers build` — builds agents + frontend into `.edgeone/` output
-- `edgeone makers deploy` — builds and deploys to EdgeOne Makers
-
 ### Environment variables for deployment
 
 **AI Gateway variables** (`AI_GATEWAY_API_KEY`, `AI_GATEWAY_BASE_URL`) are **auto-provisioned** by the CLI during deployment — no manual setup needed, as long as `.env.example` declares them:
