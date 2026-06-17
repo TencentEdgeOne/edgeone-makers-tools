@@ -1,0 +1,9 @@
+{
+  "mcpServers": {
+    "edgeone-makers": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["edgeone-makers-mcp"]
+    }
+  }
+}

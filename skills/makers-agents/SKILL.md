@@ -1,5 +1,5 @@
 ---
-name: edgeone-makers-agents
+name: makers-agents
 description: >-
   This skill guides building AI agent endpoints on EdgeOne Makers — five
   framework routes (DeepAgents, LangGraph, CrewAI, OpenAI Agents SDK,

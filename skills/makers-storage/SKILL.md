@@ -1,3 +1,13 @@
+---
+name: makers-storage
+description: >-
+  EdgeOne Makers Storage — KV (key-value) and Blob (object) storage.
+  Use when persisting data, files, or simple key-value pairs.
+metadata:
+  author: edgeone
+  version: "1.0.0"
+---
+
 # KV Storage
 
 EdgeOne Pages KV is a globally distributed **key-value persistent storage** service deployed across multiple edge nodes. Data follows an eventual consistency model and synchronizes globally within **60 seconds**.
@@ -280,3 +290,115 @@ curl http://localhost:8088/api/counter
    ```bash
    edgeone pages deploy
    ```
+
+---
+
+## Blob Storage
+
+Distributed object storage for Makers Functions. Ideal for images, documents, user uploads, AI-generated content.
+
+> **Limits**: 1GB storage per free-tier account. Currently **Node.js SDK only** (`@edgeone/pages-blob`).
+
+### Install
+
+```bash
+npm install @edgeone/pages-blob
+```
+
+### Get a Store
+
+```javascript
+import { getStore } from "@edgeone/pages-blob";
+
+// Inside Makers Functions (auto-configured)
+const store = getStore("my-store");
+
+// With strong consistency
+const store = getStore({ name: "my-store", consistency: "strong" });
+```
+
+### Consistency Model
+
+| Mode | Behavior | Use when |
+|------|----------|----------|
+| `"eventual"` (default) | Edge-cached, fastest, data syncs in seconds | Content display, tolerate brief staleness |
+| `"strong"` | Bypasses cache, reads from primary storage | Counters, state machines, must read latest |
+
+### API Reference
+
+| Method | Description |
+|--------|-------------|
+| `store.set(key, value, opts?)` | Write an object (string / ArrayBuffer / Blob / ReadableStream) |
+| `store.setJSON(key, value, opts?)` | Write JSON (auto-serialized) |
+| `store.get(key, opts?)` | Read an object (returns `null` if not found) |
+| `store.getWithHeaders(key, opts?)` | Read with response headers (etag, content-type) |
+| `store.delete(key)` | Delete an object |
+| `store.list(opts?)` | List objects (prefix filter, directory grouping, pagination) |
+| `store.createUploadUrl(key, opts?)` | Generate pre-signed PUT URL for client-side direct upload |
+
+### Write
+
+```javascript
+await store.set("photos/cat.jpg", imageBuffer);
+await store.set("notes/todo.txt", "Buy milk");
+await store.setJSON("user/preferences", { theme: "dark", lang: "zh-CN" });
+
+// Only write if key doesn't exist
+await store.set("init.json", data, { onlyIfNew: true });
+```
+
+### Read
+
+```javascript
+const text = await store.get("hello.txt");                              // string
+const json = await store.get("config.json", { type: "json" });         // parsed object
+const buffer = await store.get("image.png", { type: "arrayBuffer" });  // ArrayBuffer
+const stream = await store.get("large.zip", { type: "stream" });       // ReadableStream
+
+// Strong consistency read
+const fresh = await store.get("counter", { consistency: "strong" });
+```
+
+`type` options: `"text"` (default) | `"json"` | `"arrayBuffer"` | `"blob"` | `"stream"`
+
+### List
+
+```javascript
+// All objects
+const { blobs } = await store.list();
+
+// By prefix
+const { blobs } = await store.list({ prefix: "photos/" });
+
+// Directory grouping
+const { blobs, directories } = await store.list({ prefix: "photos/", directories: true });
+
+// Manual pagination
+const page1 = await store.list({ paginate: false });
+const page2 = await store.list({ paginate: false, cursor: page1.cursor });
+```
+
+### Client-Side Direct Upload
+
+Generate a pre-signed URL for large file uploads without going through Functions:
+
+```javascript
+const { url, key, expiresAt } = await store.createUploadUrl("files/photo.jpg", {
+  expireSeconds: 3600,
+  contentType: "image/jpeg",
+});
+// Client PUTs directly to `url`
+```
+
+### Delete
+
+```javascript
+await store.delete("photos/cat.jpg");  // silent if key doesn't exist
+```
+
+### List All Stores
+
+```javascript
+import { listStores } from "@edgeone/pages-blob";
+const { stores } = await listStores();  // [{ name: "my-store" }, ...]
+```

@@ -1,5 +1,5 @@
 ---
-name: edgeone-pages-deploy
+name: makers-deploy
 description: >-
   This skill deploys frontend and full-stack projects to EdgeOne Pages (Tencent EdgeOne).
   It should be used when the user's primary intent is to deploy, publish, ship, host, launch,
