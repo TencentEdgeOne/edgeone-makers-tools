@@ -168,7 +168,7 @@ Available values:
 
 ```json
 {
-  "buildCommand": "npm run build",  // your frontend build command
+  "buildCommand": "npm run build",
   "outputDirectory": "dist",
   "cloudFunctions": {
     "nodejs": {
@@ -180,6 +180,8 @@ Available values:
   }
 }
 ```
+
+> For pure backend projects (no frontend), set `"buildCommand": ""` and `"outputDirectory": ""`.
 
 ---
 
@@ -204,13 +206,13 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 
 ### Framework Comparison
 
-| Framework | Runtime | Best For |
-|-----------|---------|----------|
-| **DeepAgents** | Node + Python | Simple agent tasks, automatic context compression, sub-agent orchestration |
-| **LangGraph** | Node + Python | Fine-grained graph control, human-in-the-loop, persistent thread state |
-| **Claude Agent SDK** | Node + Python | Sandbox code execution, file processing, MCP tools, session memory |
-| **OpenAI Agents SDK** | Node + Python | Multi-agent handoff, guardrails, session auto-prepend |
-| **CrewAI** | Python only | Multi-agent role split (Sequential/Hierarchical), built-in skills/event_bus |
+| Framework | `agents.framework` | Runtime | Best For |
+|-----------|---------------------|---------|----------|
+| **DeepAgents** | `deepagents` | Node + Python | Simple agent tasks, automatic context compression, sub-agent orchestration |
+| **LangGraph** | `langgraph` | Node + Python | Fine-grained graph control, human-in-the-loop, persistent thread state |
+| **Claude Agent SDK** | `claude-agent-sdk` | Node + Python | Sandbox code execution, file processing, MCP tools, session memory |
+| **OpenAI Agents SDK** | `openai-agents-sdk` | Node + Python | Multi-agent handoff, guardrails, session auto-prepend |
+| **CrewAI** | `crewai` | Python only | Multi-agent role split (Sequential/Hierarchical), built-in skills/event_bus |
 
 ---
 
@@ -265,6 +267,21 @@ PAGES_SOURCE=skills edgeone makers dev
 ```
 
 This tells the platform that the command was triggered from an AI skill context.
+
+### Local development
+
+```bash
+# 1. Link to remote project (pulls project ID + env vars)
+edgeone makers link
+
+# 2. Pull remote environment variables to local .env
+edgeone makers env pull
+
+# 3. Start local dev server (agent runtime + frontend)
+edgeone makers dev
+```
+
+`edgeone makers dev` starts both the agent runtime (Node or Python, auto-detected from `agents/` file extensions) and the frontend dev server. All `agents/` endpoints become available at `http://localhost:<port>/<endpoint>`.
 
 ### Environment variables for deployment
 

@@ -49,8 +49,10 @@ interface ToolsContext {
 |----------|---------|-------|
 | **Direct tools** | `all()`, `get(name)`, `files()`, `browser()` | Returns tools pre-adapted for the current `framework`. Most frameworks just use `all()` directly. |
 | **Claude MCP helper** | `toClaudeMcpServer(name?, options?)` / `to_claude_mcp_server(...)` | Generates `{ name, tools, allowedTools }` for Claude Agent SDK MCP server registration |
-| **LangChain helper** | `toLangChainTools(toolFactory, names?)` | Injects LangChain `tool()` factory. Used by LangGraph / DeepAgents when explicit conversion is needed. |
-| **CrewAI helper** | `toCrewAITools(baseTool, names?)` | Injects CrewAI `BaseTool` class. Used by CrewAI when explicit conversion is needed. |
+| **LangChain helper** | `toLangChainTools(toolFactory, names?)` | Injects LangChain `tool()` factory. Used by LangGraph / DeepAgents. |
+| **CrewAI helper** | `toCrewAITools(baseTool, names?)` | Injects CrewAI `BaseTool` class. Used by CrewAI. |
+
+> **Why pass a factory?** The platform toolkit doesn't bundle `@langchain/core` or `crewai` directly (to avoid version conflicts with your project). Instead, you pass your project's `tool` function or `BaseTool` class, and the toolkit uses it to construct real framework-native tool instances.
 
 > **OpenAI Agents SDK has no dedicated `toXXX` helper** — `all()` already returns tools in OpenAI function format (`{ type:'function', name, parameters, execute }`), ready to pass to `new Agent({ tools })`.
 

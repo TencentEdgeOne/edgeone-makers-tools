@@ -7,8 +7,9 @@
 
 ## Prerequisites
 
-- `edgeone.json` must set `agents.framework` to `crewai`, `langgraph`, or `deepagents`
+- `edgeone.json` must set `agents.framework` to one of: `claude-agent-sdk`, `openai-agents-sdk`, `langgraph`, `crewai`, or `deepagents`
 - Dependencies go in `requirements.txt` (not `package.json`)
+- Python agent directories require `__init__.py` files for relative imports to work
 
 ---
 
@@ -25,6 +26,17 @@ async def handler(ctx):
 - The single parameter (`ctx`) is an `AgentContext` dataclass.
 - If handler is an **async generator** (`async def handler(ctx): ... yield ...`), the runtime auto-wraps it as a streaming response.
 - Internal modules use `_` prefix: `_llm.py`, `_tools.py`, `_state.py` etc. (same convention as TS `_shared.ts`).
+- **Directory-form agents must include `__init__.py`** for relative imports to work:
+
+```
+agents/
+├── chat/
+│   ├── __init__.py        # Required (can be empty)
+│   ├── index.py           # Entry: async def handler(ctx)
+│   ├── _llm.py            # Internal: from ._llm import get_model
+│   └── _tools.py
+└── stop.py                # Single-file agent (no __init__.py needed)
+```
 
 ---
 

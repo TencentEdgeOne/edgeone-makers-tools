@@ -246,7 +246,12 @@ export async function onRequest(context: any) {
       if (sig?.aborted) break;
       // First, drain SSE events pushed by custom tools
       while (sseQueue.length) yield sseQueue.shift()!;
-      // Then handle model text / tool messages (dispatch by msg.type to ai_response/tool_call/...)
+      // Dispatch by msg.type:
+      //   'text'        → ai_response (streaming text delta)
+      //   'tool_use'    → tool_call (model wants to call a tool)
+      //   'tool_result' → tool_result (tool execution completed)
+      //   'usage'       → usage stats (input/output tokens)
+      //   'error'       → error_message
       // ...
     }
     while (sseQueue.length) yield sseQueue.shift()!;

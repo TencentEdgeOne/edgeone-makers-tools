@@ -57,7 +57,7 @@ pip install -r requirements.txt
 # agents/<name>/_model.py
 from openai import OpenAI
 
-DEFAULT_MODEL = "@makers/hy3-preview"
+DEFAULT_MODEL = "@makers/deepseek-v4-flash"
 
 
 def build_client(env: dict) -> OpenAI:

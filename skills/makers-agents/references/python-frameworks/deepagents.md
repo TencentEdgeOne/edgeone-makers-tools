@@ -20,6 +20,8 @@ pydantic>=2.0.0
 pip install -r requirements.txt
 ```
 
+> **Note**: `deepagents` is a platform-provided package bundled with the EdgeOne Makers agent runtime. It is automatically available in the deployed environment. For local development, use `edgeone makers dev`.
+
 `edgeone.json`:
 ```json
 {

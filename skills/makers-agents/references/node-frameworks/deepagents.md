@@ -11,6 +11,8 @@
 npm install deepagents @langchain/openai @langchain/core zod
 ```
 
+> **Note**: `deepagents` is a platform-provided package bundled with the EdgeOne Makers agent runtime. It is automatically available in the deployed environment. For local development, use `edgeone makers dev` which sets up the runtime with all platform packages.
+
 `edgeone.json`:
 ```json
 {

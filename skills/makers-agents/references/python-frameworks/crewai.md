@@ -402,15 +402,9 @@ async def event_stream(context, body) -> AsyncIterator[str]:
         yield "data: [DONE]\n\n"
 
 
-async def handler(context):
-    body = getattr(getattr(context, "request", None), "body", None) or {}
-    return {
-        "headers": {
-            "Content-Type": "text/event-stream",
-            "Cache-Control": "no-cache",
-            "Connection": "keep-alive",
-            "X-Accel-Buffering": "no",
-        },
+async def handler(ctx):
+    body = ctx.request.body or {}
+    return ctx.utils.stream_sse(event_stream(ctx, body))
         "stream": event_stream(context, body),
     }
 ```
