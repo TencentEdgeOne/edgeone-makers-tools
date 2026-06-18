@@ -1,5 +1,5 @@
 ---
-name: edgeone-pages-deploy
+name: makers-deploy
 description: >-
   This skill deploys frontend and full-stack projects to EdgeOne Pages (Tencent EdgeOne).
   It should be used when the user's primary intent is to deploy, publish, ship, host, launch,
@@ -8,9 +8,9 @@ description: >-
   "go live", "release", "publish a new version", "redeploy",
   "上线", "发布", "发一版", "重新部署".
   Do NOT trigger when deployment is only mentioned as a secondary step
-  (e.g. "write an API and deploy it" — primary intent is writing code, use edgeone-pages-dev).
+  (e.g. "write an API and deploy it" — primary intent is writing code, use makers-cloud-functions).
   Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy —
-  use edgeone-pages-dev for troubleshooting).
+  use makers-cloud-functions or makers-edge-functions for troubleshooting).
 metadata:
   author: edgeone
   version: "2.0.0"

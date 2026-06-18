@@ -1,3 +1,13 @@
+---
+name: makers-edge-functions
+description: >-
+  EdgeOne Makers Edge Functions — V8 runtime, Web API, file-based routing.
+  Use when building lightweight APIs at the edge with ultra-low latency.
+metadata:
+  author: edgeone
+  version: "1.0.0"
+---
+
 # Edge Functions
 
 V8-based lightweight functions running at the edge. Ideal for simple APIs, KV storage access, and ultra-low latency responses.
