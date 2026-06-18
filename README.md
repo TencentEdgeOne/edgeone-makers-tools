@@ -1,6 +1,6 @@
 # EdgeOne Makers Tools
 
-Official AI Agent Skills for developing and deploying projects on [EdgeOne Makers](https://edgeone.ai/products/pages).
+Official AI Agent Skills for developing and deploying projects on [EdgeOne Makers](https://pages.edgeone.ai/).
 
 ## Installation
 
@@ -108,22 +108,6 @@ This repo includes plugin manifests for multiple AI platforms:
 - `.codebuddy-plugin/` — CodeBuddy
 
 Hooks (`hooks/`) provide context-aware skill injection via `UserPromptSubmit` and `PreToolUse` events.
-
-## MCP Integration
-
-The bundled `.mcp.json` references the EdgeOne Makers MCP Server for platform operations (deploy, env management):
-
-```json
-{
-  "mcpServers": {
-    "edgeone-makers": {
-      "type": "stdio",
-      "command": "npx",
-      "args": ["edgeone-makers-mcp"]
-    }
-  }
-}
-```
 
 ## Requirements
 
