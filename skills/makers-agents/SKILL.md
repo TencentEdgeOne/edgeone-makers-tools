@@ -11,8 +11,8 @@ description: >-
   agent endpoint", "wire LangGraph into Makers", "stream LLM responses with SSE",
   "review my agent template", "use context.store / context.sandbox / context.tools".
   Do NOT trigger for plain Edge Functions, Cloud Functions, or middleware
-  (those don't run AI logic — use edgeone-pages-dev instead).
-  Do NOT trigger for deployment workflows (use edgeone-pages-deploy).
+  (those don't run AI logic — use makers-cloud-functions or makers-edge-functions instead).
+  Do NOT trigger for deployment workflows (use makers-deploy).
   Do NOT trigger for generic AI framework development outside
   an EdgeOne Makers project.
 metadata:
@@ -37,8 +37,8 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 - Splitting AI inference (`agents/`) from data CRUD (`cloud-functions/`)
 
 **Do NOT use for:**
-- Plain Edge Functions / Cloud Functions / Middleware → use `edgeone-pages-dev`
-- Deployment workflows → use `edgeone-pages-deploy`
+- Plain Edge Functions / Cloud Functions / Middleware → use `makers-cloud-functions` / `makers-edge-functions` / `makers-middleware`
+- Deployment workflows → use `makers-deploy`
 - Generic AI framework development outside an EdgeOne Makers project
 - Other platforms (Cloudflare Workers AI, Vercel AI SDK, AWS Bedrock)
 
