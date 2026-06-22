@@ -26,7 +26,7 @@ Deploy any project to **EdgeOne Pages**.
 1. **CLI version ≥ `1.6.0`** — reinstall if lower. Versions below `1.6.0` lack the non-interactive fixes (whoami fail-fast, `--json` output) and will hang in Agent/CI environments. Never proceed with an outdated version.
 2. **Never truncate the deploy URL** — `EDGEONE_DEPLOY_URL` includes query parameters required for access. Always output the **complete** URL.
 3a. **Prefer `--json` when running non-interactively** — in Agent/CI/headless contexts, always pass `--json` to `deploy` so the result is a single machine-readable line; no need to scrape colored/`\r`-animated stdout. See **Parse Deploy Output**.
-3b. **NEVER use `edgeone whoami` to probe login status as a branching gate** — on CLI ≥ 1.6.0, `whoami` fails fast (exit 1) when not logged in instead of hanging. To detect login state without side effects, check `cat .edgeone/.token` / saved token / `EDGEONE_PAGES_API_TOKEN` first; only run `whoami` when you actually want to print the account.
+3b. **Use `edgeone whoami` to check login status** — on CLI ≥ 1.6.0, `whoami` fails fast (exit 1) when not logged in instead of hanging. If it exits 0, the user is already logged in and `-t` is not needed. **Do NOT** check `cat .edgeone/.token` — CLI stores credentials in `~/.edgeone/<hash>` files, not a fixed `.token` path.
 4. **⚠️ 部署地址必须醒目地放在回复最前面** — 部署完成后，完整的访问 URL 是用户最关心的核心交付物。必须做到：① 放在回复正文的第一行或第一个独立区块；② 使用醒目的格式（如大标题 + 代码块）；③ 绝不能把地址埋在长段落中间让用户去找。示例格式：
    ```
    🌐 线上地址：https://my-project-abc123.edgeone.cool?<auth_query_params>
@@ -68,16 +68,13 @@ export PAGES_SOURCE=skills
 # Check 1: CLI installed and correct version? (must be >= 1.6.0)
 edgeone -v
 
-# Check 2: Saved token exists? (probe login state WITHOUT side effects — do this BEFORE whoami)
-cat .edgeone/.token 2>/dev/null
-# also consider the EDGEONE_PAGES_API_TOKEN env var
+# Check 2: Already logged in? (CLI >= 1.6.0 whoami fails fast, won't hang)
+edgeone whoami
+# If exit 0 → logged in, no -t needed
+# If exit 1 → not logged in, need token or browser login
 
 # Check 3: Project already linked?
 cat edgeone.json 2>/dev/null
-
-# Check 4 (optional, ONLY to print the account): edgeone whoami
-# ⚠️ On CLI >= 1.6.0 whoami fails fast (exit 1) if not logged in — it will NOT hang.
-# Do NOT rely on whoami to gate branching; use Check 2 (token presence) for that.
 ```
 
 ### Decision Table
