@@ -188,4 +188,4 @@ LangGraph supports `interrupt` / `resume` for human-in-the-loop flows. When `int
 - [ ] `thread_id` = `context.conversation_id` in `configurable`
 - [ ] Signal forwarded and checked inside the loop
 - [ ] Stream ends with `data: [DONE]\n\n`
-- [ ] Model instance cached as module-level singleton; graph compiled per request with `context.store` checkpointer
+- [ ] Graph compiled at module level or cached (not rebuilt per request)

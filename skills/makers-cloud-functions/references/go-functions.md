@@ -165,7 +165,6 @@ Prerequisites: Go installed locally.
 ```bash
 npm install -g edgeone          # Install CLI
 edgeone pages dev               # Start local dev server
-# Push to remote repo to deploy
 ```
 
 ## Limits

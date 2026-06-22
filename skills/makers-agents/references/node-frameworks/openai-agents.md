@@ -46,7 +46,7 @@ npm install @openai/agents openai zod
 import OpenAI from 'openai';
 import { OpenAIChatCompletionsModel } from '@openai/agents';
 
-const DEFAULT_MODEL = '@makers/deepseek-v4-flash';
+const DEFAULT_MODEL = '@makers/hy3-preview';
 
 function buildModel(env: Record<string, string | undefined>) {
   const llmClient = new OpenAI({
@@ -126,7 +126,7 @@ import { createLogger, sseEvent, createSSEResponse } from '../_shared';
 import { createTools } from './_tools';
 
 const logger = createLogger('chat');
-const DEFAULT_MODEL = '@makers/deepseek-v4-flash';
+const DEFAULT_MODEL = '@makers/hy3-preview';
 
 export async function onRequest(context: any) {
   const message = (context.request.body ?? {}).message as string | undefined;

@@ -229,7 +229,6 @@ These are not scanned or copied to build output:
 ```bash
 npm install -g edgeone          # Install CLI
 edgeone pages dev               # Start local dev server
-# Push to remote repo to deploy
 ```
 
 ## Limits

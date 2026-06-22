@@ -1,13 +1,3 @@
----
-name: makers-recipes
-description: >-
-  EdgeOne Makers Recipes — project structure templates, scaffolding patterns.
-  Use when creating a new project or need a reference architecture.
-metadata:
-  author: edgeone
-  version: "1.0.0"
----
-
 # Common Recipes
 
 Project structure templates for typical EdgeOne Pages applications.

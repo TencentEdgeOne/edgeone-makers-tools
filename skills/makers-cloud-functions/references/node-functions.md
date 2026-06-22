@@ -241,7 +241,6 @@ export function onRequestGet(context) {
 ```bash
 npm install -g edgeone          # Install CLI
 edgeone pages dev               # Start local dev server on port 8088
-# Push to remote repo to deploy
 ```
 
 ## Limits

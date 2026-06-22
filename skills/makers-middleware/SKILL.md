@@ -1,13 +1,3 @@
----
-name: makers-middleware
-description: >-
-  EdgeOne Makers Middleware — request/response interception, routing, rewrites, A/B testing.
-  Use when adding auth, redirects, headers manipulation, or path rewriting.
-metadata:
-  author: edgeone
-  version: "1.0.0"
----
-
 # Middleware
 
 Lightweight request interception running at the edge (V8 runtime). Use for redirects, rewrites, auth guards, A/B testing, and header injection.
