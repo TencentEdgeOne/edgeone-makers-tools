@@ -8,7 +8,7 @@
 ## Dependencies
 
 ```bash
-npm install deepagents @langchain/openai @langchain/core zod
+npm install deepagents@^1.9.0 @langchain/openai @langchain/core zod
 ```
 
 `edgeone.json`:
