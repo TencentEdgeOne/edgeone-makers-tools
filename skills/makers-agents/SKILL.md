@@ -266,21 +266,37 @@ PAGES_SOURCE=skills edgeone makers dev
 
 This tells the platform that the command was triggered from an AI skill context.
 
-### package.json scripts (⚠️ must use `edgeone makers` commands)
+### package.json scripts (⚠️ avoid dev script recursion)
 
-All agent projects must use `edgeone makers` commands in package.json. Do NOT use framework-specific dev servers (e.g., `next dev`, `vite dev`) — they won't start the agent runtime.
+> ⛔ **NEVER set `"dev": "edgeone makers dev"` in package.json** — this causes infinite recursion.
+> When CLI starts, it reads `scripts.dev` to launch the frontend dev server. If that script is
+> `edgeone makers dev` itself, it recurses. CLI detects this and skips the frontend server entirely,
+> causing static files (e.g., `public/index.html`) to return 404.
+
+Correct patterns:
 
 ```json
 {
   "scripts": {
-    "dev": "edgeone makers dev",
     "build": "edgeone makers build",
     "deploy": "edgeone makers deploy"
   }
 }
 ```
 
-- `edgeone makers dev` — starts both the agent runtime (Node/Python) and the frontend dev server
+- **No `dev` script** (recommended for pure static frontend): CLI uses its built-in static server to host `public/`
+- **Framework frontend** (Next.js, Vite, etc.): set `dev` to the framework command:
+  ```json
+  { "dev": "next dev" }
+  ```
+  or
+  ```json
+  { "dev": "vite" }
+  ```
+
+**Do NOT** write `"dev": "edgeone makers dev"` or `"dev": "edgeone pages dev"` — both cause recursion.
+
+- `edgeone makers dev` — starts agent runtime + detects & launches frontend dev server (reads `scripts.dev` or auto-serves `public/`)
 - `edgeone makers build` — builds agents + frontend into `.edgeone/` output
 - `edgeone makers deploy` — builds and deploys to EdgeOne Makers
 
