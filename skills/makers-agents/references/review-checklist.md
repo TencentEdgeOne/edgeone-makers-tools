@@ -24,6 +24,8 @@
 
 - [ ] `edgeone.json` sets `agents.framework` (`claude-agent-sdk` / `openai-agents-sdk` / `langgraph` / `crewai` / `deepagents` — **no `basic`**, the schema enum does not include it) — **required for console icon display**
 
+- [ ] ⚠️ `package.json` keeps `dev` as the frontend dev server command only, and puts `edgeone makers dev` in a separate wrapper such as `makers:dev`; never set `dev` to `PAGES_SOURCE=skills npx --yes edgeone makers dev`
+
 - [ ] Frontend lives under `app/`, components under `app/components/`, global utilities under root `lib/`
 
 ---
@@ -193,6 +195,8 @@
 - [ ] The frontend reads SSE through a `ReadableStream`, splits on `data: `, filters out `ping` heartbeats so they are not rendered, and stops on `[DONE]`
 
 - [ ] `process.env` is allowed on the frontend (consistent with frontend frameworks), but **do not** expose backend secrets like `AI_GATEWAY_API_KEY` to the browser
+
+- [ ] Local testing is done through the Makers proxy URL printed by `edgeone makers dev` / `npm run makers:dev`; the raw frontend dev-server port does not serve `agents/` routes
 
 ---
 

@@ -268,20 +268,40 @@ PAGES_SOURCE=skills edgeone makers dev
 
 This tells the platform that the command was triggered from an AI skill context.
 
+### Package scripts for Agent projects
+
+When scaffolding an Agent project with a frontend, keep the package scripts split by responsibility:
+
+```json
+{
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "makers:dev": "PAGES_SOURCE=skills npx --yes edgeone makers dev",
+    "build": "npm run typecheck",
+    "makers:build": "PAGES_SOURCE=skills npx --yes edgeone makers build",
+    "deploy": "PAGES_SOURCE=skills npx --yes edgeone makers deploy"
+  }
+}
+```
+
+**Critical:** do not put `edgeone makers dev` in `package.json`'s `dev` script. During local development, `edgeone makers dev` uses the project's frontend dev command (commonly `npm run dev -- --port <port>`) behind the 8088 Makers proxy. If `dev` wraps `edgeone makers dev`, the CLI recursively invokes itself and may pass `PAGES_SOURCE=skills` into `npm exec` as a package name, causing `EINVALIDTAGNAME`; the frontend port then fails and the 8088 proxy reports `ECONNREFUSED`.
+
+Use the Makers entry URL printed by `npm run makers:dev` (for example `http://localhost:8088`) when testing Agent endpoints. The raw frontend port (for example 6699) is only the frontend server and does not serve `agents/` routes such as `/chat`.
+
 ### Local development
 
 ```bash
 # 1. Link to remote project (pulls project ID + env vars)
-edgeone makers link
+PAGES_SOURCE=skills edgeone makers link
 
 # 2. Pull remote environment variables to local .env
-edgeone makers env pull
+PAGES_SOURCE=skills edgeone makers env pull
 
 # 3. Start local dev server (agent runtime + frontend)
-edgeone makers dev
+npm run makers:dev
 ```
 
-`edgeone makers dev` starts both the agent runtime (Node or Python, auto-detected from `agents/` file extensions) and the frontend dev server. All `agents/` endpoints become available at `http://localhost:<port>/<endpoint>`.
+`npm run makers:dev` starts `edgeone makers dev`, which starts both the agent runtime (Node or Python, auto-detected from `agents/` file extensions) and the frontend dev server. Test through the Makers entry URL printed by the CLI. Agent endpoints are available through that Makers proxy, not through the raw frontend dev-server port.
 
 ### Environment variables for deployment
 
@@ -344,7 +364,8 @@ edgeone makers env pull
 2. Copy the skeleton from the matching framework reference doc.
 3. Configure `edgeone.json`: set `agents.framework` correctly.
 4. Frontend: `getOrCreateConversationId` + `fetch` with `makers-conversation-id` header.
-5. Get it running → self-check against the Critical Rules → run through `references/review-checklist.md`.
+5. Package scripts: keep `dev` as the frontend dev server, and put the Makers wrapper in `makers:dev`.
+6. Get it running → self-check against the Critical Rules → run through `references/review-checklist.md`.
 
 ### Pre-Deploy SOP (⚠️ MUST execute before `edgeone makers deploy`)
 

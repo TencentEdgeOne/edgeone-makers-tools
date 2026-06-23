@@ -48,15 +48,38 @@ export PAGES_SOURCE=skills
 
 Or inline: `PAGES_SOURCE=skills edgeone makers dev`
 
+## Package Scripts For Agent Projects
+
+For projects that contain `agents/` plus a frontend, do not put `edgeone makers dev` in `package.json`'s `dev` script. The Makers CLI uses `npm run dev -- --port <port>` as the frontend dev server command, so `dev` must be a real frontend server:
+
+```json
+{
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "makers:dev": "PAGES_SOURCE=skills npx --yes edgeone makers dev",
+    "makers:build": "PAGES_SOURCE=skills npx --yes edgeone makers build",
+    "deploy": "PAGES_SOURCE=skills npx --yes edgeone makers deploy"
+  }
+}
+```
+
+Run `npm run makers:dev` to start Makers local development, then test through the Makers URL it prints (usually `http://localhost:8088`). Do not test Agent endpoints through the raw frontend port; that server only serves frontend assets.
+
 ## Common Workflows
 
 ### First-time setup
 ```bash
 npm install -g edgeone
 edgeone login
-edgeone makers link
-edgeone makers env pull
-edgeone makers dev
+PAGES_SOURCE=skills edgeone makers link
+PAGES_SOURCE=skills edgeone makers env pull
+PAGES_SOURCE=skills edgeone makers dev
+```
+
+### Project script workflow
+```bash
+npm install
+npm run makers:dev
 ```
 
 ### Deploy
