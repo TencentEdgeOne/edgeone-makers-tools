@@ -22,6 +22,8 @@ npm install @openai/agents openai zod
 
 > If you encounter build errors like `Dynamic require` or `Cannot find module`, add `"externalNodeModules": ["openai", "@openai/agents"]` to the `agents` config. Unlike `deepagents` / `@langchain/*` / `claude-agent-sdk`, these are not auto-externalized.
 
+> **Package scripts note**: if the project has a frontend, keep `package.json`'s `dev` script for the frontend dev server only (for example `vite --host 127.0.0.1` or `next dev`). Put the Makers wrapper in `makers:dev` (`PAGES_SOURCE=skills npx --yes edgeone makers dev`).
+
 ---
 
 ## When to use Route C

@@ -19,6 +19,8 @@ pydantic>=2.0.0
 pip install -r requirements.txt
 ```
 
+> **Package scripts note**: if the project has a frontend, keep `package.json`'s `dev` script for the frontend dev server only (for example `vite --host 127.0.0.1` or `next dev`). Put the Makers wrapper in `makers:dev` (`PAGES_SOURCE=skills npx --yes edgeone makers dev`).
+
 `edgeone.json`:
 ```json
 {

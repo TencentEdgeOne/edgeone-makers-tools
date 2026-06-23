@@ -292,6 +292,21 @@ CLI will automatically serve `public/` as static files during `edgeone makers de
 - `edgeone makers build` — builds agents + frontend into `.edgeone/` output
 - `edgeone makers deploy` — builds and deploys to EdgeOne Makers
 
+### Local development
+
+```bash
+# 1. Link to remote project (pulls project ID + env vars)
+PAGES_SOURCE=skills edgeone makers link
+
+# 2. Pull remote environment variables to local .env
+PAGES_SOURCE=skills edgeone makers env pull
+
+# 3. Start local dev server (agent runtime + frontend)
+npm run makers:dev
+```
+
+`npm run makers:dev` starts `edgeone makers dev`, which starts both the agent runtime (Node or Python, auto-detected from `agents/` file extensions) and the frontend dev server. Test through the Makers entry URL printed by the CLI. Agent endpoints are available through that Makers proxy, not through the raw frontend dev-server port.
+
 ### Environment variables for deployment
 
 **AI Gateway variables** (`AI_GATEWAY_API_KEY`, `AI_GATEWAY_BASE_URL`) are **auto-provisioned** by the CLI during deployment — no manual setup needed, as long as `.env.example` declares them:
@@ -353,7 +368,8 @@ edgeone makers env pull
 2. Copy the skeleton from the matching framework reference doc.
 3. Configure `edgeone.json`: set `agents.framework` correctly.
 4. Frontend: `getOrCreateConversationId` + `fetch` with `makers-conversation-id` header.
-5. Get it running → self-check against the Critical Rules → run through `references/review-checklist.md`.
+5. Package scripts: keep `dev` as the frontend dev server, and put the Makers wrapper in `makers:dev`.
+6. Get it running → self-check against the Critical Rules → run through `references/review-checklist.md`.
 
 ### Pre-Deploy SOP (⚠️ MUST execute before `edgeone makers deploy`)
 

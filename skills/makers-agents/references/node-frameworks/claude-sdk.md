@@ -22,6 +22,8 @@ npm install @anthropic-ai/claude-agent-sdk zod
 
 > `@anthropic-ai/claude-agent-sdk` is **auto-externalized** by the CLI — no manual `externalNodeModules` config needed.
 
+> **Package scripts note**: if the project has a frontend, keep `package.json`'s `dev` script for the frontend dev server only (for example `vite --host 127.0.0.1` or `next dev`). Put the Makers wrapper in `makers:dev` (`PAGES_SOURCE=skills npx --yes edgeone makers dev`).
+
 ---
 
 ## When to Use Route B

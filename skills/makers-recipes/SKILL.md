@@ -14,6 +14,24 @@ metadata:
 
 Project structure templates for typical EdgeOne Makers applications.
 
+## Agent project package scripts
+
+For any recipe that creates an Agent project with a frontend, keep the frontend dev script and Makers wrapper script separate:
+
+```json
+{
+  "scripts": {
+    "dev": "vite --host 127.0.0.1",
+    "makers:dev": "PAGES_SOURCE=skills npx --yes edgeone makers dev",
+    "build": "npm run typecheck",
+    "makers:build": "PAGES_SOURCE=skills npx --yes edgeone makers build",
+    "deploy": "PAGES_SOURCE=skills npx --yes edgeone makers deploy"
+  }
+}
+```
+
+`dev` is reserved for the frontend dev server because `edgeone makers dev` invokes it behind the Makers proxy with a chosen port. Put the EdgeOne Makers CLI command in `makers:dev` and tell users to open the Makers proxy URL, not the raw frontend port, when testing `agents/` endpoints.
+
 ## Full-stack app — Node.js (static + API)
 
 ```
