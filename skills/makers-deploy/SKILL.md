@@ -134,7 +134,7 @@ is meant to happen here in the conversation, not inside the CLI.
 
 | Condition | Method |
 |-----------|--------|
-| Local desktop IDE (VS Code, Cursor, etc.) | **Browser Login** |
+| Local desktop IDE (VS Code, Cursor, WorkBuddy, etc.) | **Browser Login** |
 | Remote / SSH / container / CI / cloud IDE / headless | **Token Login** |
 | User explicitly requests token | **Token Login** |
 
