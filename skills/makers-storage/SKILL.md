@@ -1,6 +1,6 @@
-# EdgeOne Pages Storage
+# EdgeOne Makers Storage
 
-EdgeOne Pages provides two storage services. **Choose based on your runtime and data type:**
+EdgeOne Makers provides two storage services. **Choose based on your runtime and data type:**
 
 | Storage | Runtime | Data Type | SDK | Use Case |
 |---------|---------|-----------|-----|----------|

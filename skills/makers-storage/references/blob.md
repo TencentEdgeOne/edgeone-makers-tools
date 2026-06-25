@@ -1,6 +1,6 @@
 # Blob Storage
 
-EdgeOne Pages Blob is a distributed **object storage** service for Makers Functions. Suitable for storing images, documents, user uploads, AI-generated content, and structured data sets.
+EdgeOne Makers Blob is a distributed **object storage** service for Makers Functions. Suitable for storing images, documents, user uploads, AI-generated content, and structured data sets.
 
 > ⚠️ Blob is for **Makers Functions (Cloud Functions)** — uses the `@edgeone/pages-blob` npm SDK (NOT a global variable like KV).
 
@@ -76,7 +76,7 @@ const store = getStore({ name: "my-store", consistency: "strong" });
 ```javascript
 const store = getStore({
   name: "my-store",
-  projectId: "pages-urtsvuwmfvli",
+  projectId: "makers-urtsvuwmfvli",
   token: "your-api-token",
 });
 ```
@@ -255,7 +255,7 @@ const { stores } = await listStores();
 
 // External access
 const { stores } = await listStores({
-  projectId: "pages-urtsvuwmfvli",
+  projectId: "makers-urtsvuwmfvli",
   token: "your-api-token",
 });
 ```
