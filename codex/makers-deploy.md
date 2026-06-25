@@ -232,9 +232,9 @@ After `edgeone makers deploy` succeeds, the CLI outputs:
 [cli][✔] Deploy Success
 EDGEONE_DEPLOY_URL=https://my-project-abc123.edgeone.cool?<auth_query_params>
 EDGEONE_DEPLOY_TYPE=preset
-EDGEONE_PROJECT_ID=pages-xxxxxxxx
+EDGEONE_PROJECT_ID=makers-xxxxxxxx
 [cli][✔] You can view your deployment in the EdgeOne Makers Console at:
-https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deployment/xxxxxxx
+https://console.cloud.tencent.com/edgeone/pages/project/makers-xxxxxxxx/deployment/xxxxxxx
 ```
 
 **Extraction rules:**

@@ -48,7 +48,7 @@ export function onRequest(context) {
     uuid,       // EO-LOG-UUID unique request identifier
     request,    // Standard Request object
     params,     // Dynamic route params, e.g. { id: "123" }
-    env,        // Environment variables from Pages console
+    env,        // Environment variables from Makers console
     clientIp,   // Client IP address
     server,     // { region: string, requestId: string }
     geo,        // Client geolocation info
@@ -155,7 +155,7 @@ export default app;
 ```
 cloud-functions/
 ├── index.js
-├── hello-pages.js
+├── hello-makers.js
 ├── api/
 │   ├── users/
 │   │   ├── list.js
@@ -169,13 +169,13 @@ cloud-functions/
 | File path | Route |
 |-----------|-------|
 | `cloud-functions/index.js` | `example.com/` |
-| `cloud-functions/hello-pages.js` | `example.com/hello-pages` |
+| `cloud-functions/hello-makers.js` | `example.com/hello-makers` |
 | `cloud-functions/api/users/list.js` | `example.com/api/users/list` |
 | `cloud-functions/api/users/[id].js` | `example.com/api/users/:id` |
 | `cloud-functions/api/[[default]].js` | `example.com/api/*` (catch-all) |
 
 > **Notes:**
-> - Trailing slash `/` is optional: `/hello-pages` and `/hello-pages/` both route to `cloud-functions/hello-pages.js`
+> - Trailing slash `/` is optional: `/hello-makers` and `/hello-makers/` both route to `cloud-functions/hello-makers.js`
 > - If a Node.js route conflicts with a static asset route, the static asset takes priority
 > - Routes are case-sensitive
 
@@ -240,7 +240,7 @@ export function onRequestGet(context) {
 
 ```bash
 npm install -g edgeone          # Install CLI
-edgeone pages dev               # Start local dev server on port 8088
+edgeone makers dev               # Start local dev server on port 8088
 ```
 
 ## Limits
@@ -259,4 +259,4 @@ edgeone pages dev               # Start local dev server on port 8088
 - **MySQL connection**: [mysql-template](https://github.com/TencentEdgeOne/mysql-template/) | [Preview](https://mysql-template.edgeone.run)
 - **Express**: [express-template](https://github.com/TencentEdgeOne/express-template/) | [Preview](https://express-template.edgeone.run)
 - **Koa**: [koa-template](https://github.com/TencentEdgeOne/koa-template/) | [Preview](https://koa-template.edgeone.run)
-- **AI Voice Chat (WebSocket)**: [pages-ai-voice-chat](https://github.com/TencentEdgeOne/pages-ai-voice-chat) | [Preview](https://pages-ai-voice-chat.edgeone.site)
+- **AI Voice Chat (WebSocket)**: [makers-ai-voice-chat](https://github.com/TencentEdgeOne/pages-ai-voice-chat) | [Preview](https://pages-ai-voice-chat.edgeone.site)

@@ -6,10 +6,10 @@
 
 ## 0. First Principle: Use Runtime Injection, Don't Roll Your Own
 
-- Inside Pages Agent templates, **always use the injected `context.sandbox` / `context.tools`** (Python: `ctx.sandbox` / `ctx.tools`).
+- Inside Makers Agent templates, **always use the injected `context.sandbox` / `context.tools`** (Python: `ctx.sandbox` / `ctx.tools`).
 - **Do not** re-parse tokens, hand-write `/v1/sandbox/*` requests, or manually construct a sandbox in business code.
 - `context.sandbox` is **lazily loaded** on first access; auth / ProjectId / control-plane env are injected by the runtime or the CLI deploy pipeline. Template `.env` files **do not** need to carry sandbox tickets, PROJECT_ID, SANDBOX_API_BASE, or API_ENV.
-- Only use `buildSandboxProxy` / `build_sandbox` for manual construction when **outside the Pages Agent runtime** and connecting an SDK directly to the control plane.
+- Only use `buildSandboxProxy` / `build_sandbox` for manual construction when **outside the Makers Agent runtime** and connecting an SDK directly to the control plane.
 
 > ⚠️ Distinguish two classes of env:
 > - `AI_GATEWAY_API_KEY` / `AI_GATEWAY_BASE_URL` are **business variables for the LLM gateway** (required by the agent)

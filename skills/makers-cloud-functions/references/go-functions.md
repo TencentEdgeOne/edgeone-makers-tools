@@ -30,7 +30,7 @@ import (
 func Handler(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "application/json")
     json.NewEncoder(w).Encode(map[string]string{
-        "message": "Hello from Go Functions on EdgeOne Pages!",
+        "message": "Hello from Go Functions on EdgeOne Makers!",
     })
 }
 ```
@@ -63,7 +63,7 @@ func main() {
     {
         v1.GET("/hello", func(c *gin.Context) {
             c.JSON(http.StatusOK, gin.H{
-                "message": "Hello from Gin on EdgeOne Pages!",
+                "message": "Hello from Gin on EdgeOne Makers!",
             })
         })
 
@@ -121,7 +121,7 @@ func main() {
 ```
 cloud-functions/
 ├── index.go
-├── hello-pages.go
+├── hello-makers.go
 ├── helloworld.go
 ├── api/
 │   ├── users/
@@ -136,7 +136,7 @@ cloud-functions/
 | File path | Route |
 |-----------|-------|
 | `cloud-functions/index.go` | `example.com/` |
-| `cloud-functions/hello-pages.go` | `example.com/hello-pages` |
+| `cloud-functions/hello-makers.go` | `example.com/hello-makers` |
 | `cloud-functions/api/users/list.go` | `example.com/api/users/list` |
 | `cloud-functions/api/users/[id].go` | `example.com/api/users/:id` |
 | `cloud-functions/api/[[default]].go` | `example.com/api/*` (catch-all) |
@@ -164,7 +164,7 @@ Prerequisites: Go installed locally.
 
 ```bash
 npm install -g edgeone          # Install CLI
-edgeone pages dev               # Start local dev server
+edgeone makers dev               # Start local dev server
 ```
 
 ## Limits

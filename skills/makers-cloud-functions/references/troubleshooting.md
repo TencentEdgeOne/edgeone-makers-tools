@@ -6,7 +6,7 @@
 > **CodeBuddy 等其他宿主未验证，行为可能不同**——在 CodeBuddy 中遇到本机 dev server
 > 验证问题时，请按下方「定位流程」用探针 + 服务端日志实测，再判断是否适用，切勿直接套用。
 
-⚠️ 在 **WorkBuddy** 中验证 `edgeone pages dev` 起的本机服务时，**绝不要用 WorkBuddy 沙箱里的 Bash `curl` 判断成败**。
+⚠️ 在 **WorkBuddy** 中验证 `edgeone makers dev` 起的本机服务时，**绝不要用 WorkBuddy 沙箱里的 Bash `curl` 判断成败**。
 
 ### 现象（WorkBuddy 实测）
 - 在 WorkBuddy 的 Bash 工具里 `curl http://localhost:8088/`，任何路径
@@ -47,8 +47,8 @@ WorkBuddy 的 **Bash 工具运行在隔离沙箱网络**，与 dev server 所在
 | Issue | Solution |
 |-------|----------|
 | Function not found / 404 | Check file location matches expected route path under `cloud-functions/` |
-| Env vars not available | Run `edgeone pages env pull` and restart dev server |
-| Hot reload not working | Check you're using `edgeone pages dev`, not a custom dev server |
+| Env vars not available | Run `edgeone makers env pull` and restart dev server |
+| Hot reload not working | Check you're using `edgeone makers dev`, not a custom dev server |
 | Middleware runs on static assets | Add `config.matcher` to limit middleware to specific paths |
 
 ## Edge Functions
@@ -64,7 +64,7 @@ WorkBuddy 的 **Bash 工具运行在隔离沙箱网络**，与 dev server 所在
 
 | Issue | Solution |
 |-------|----------|
-| KV returns `undefined` | Run `edgeone pages link` first to connect your project |
+| KV returns `undefined` | Run `edgeone makers link` first to connect your project |
 | `ReferenceError: my_kv is not defined` | KV not enabled or namespace not bound — enable KV in the console, create namespace, and bind to project |
 | Accessing `context.env.KV` returns `undefined` | KV is a **global variable**, not on `context.env` — use `my_kv.get(...)` directly |
 | KV `get()` returns a Promise | Missing `await` — always `await` KV operations |

@@ -10,17 +10,17 @@ metadata:
 
 # KV Storage
 
-EdgeOne Pages KV is a globally distributed **key-value persistent storage** service deployed across multiple edge nodes. Data follows an eventual consistency model and synchronizes globally within **60 seconds**.
+EdgeOne Makers KV is a globally distributed **key-value persistent storage** service deployed across multiple edge nodes. Data follows an eventual consistency model and synchronizes globally within **60 seconds**.
 
 > ⚠️ KV Storage is **only available in Edge Functions** — NOT supported in Node Functions.
 
 ## Prerequisites (MUST complete before using KV)
 
-**You must enable KV Storage in the EdgeOne Pages console before writing any code.**
+**You must enable KV Storage in the EdgeOne Makers console before writing any code.**
 
 ### Step 1 — Enable KV Storage
 
-1. Log in to the [EdgeOne Pages console](https://console.cloud.tencent.com/edgeone/pages)
+1. Log in to the [EdgeOne Makers console](https://console.cloud.tencent.com/edgeone/pages)
 2. Navigate to the **"KV Storage"** page
 3. Click **"Apply Now"** to activate (free tier includes 1 GB storage)
 
@@ -36,7 +36,7 @@ A namespace is the unit of data isolation (like a separate database):
 
 ### Step 3 — Bind Namespace to Project
 
-After creating a namespace, bind it to your EdgeOne Pages project and assign a **variable name**.
+After creating a namespace, bind it to your EdgeOne Makers project and assign a **variable name**.
 
 **Option A — From KV Storage page:**
 1. Open the namespace → **"Associated Projects"** tab
@@ -239,7 +239,7 @@ export async function onRequestGet() {
 | `ReferenceError: my_kv is not defined` | KV not enabled or namespace not bound | Enable KV in console → create namespace → bind to project |
 | Accessing `context.env.KV` returns `undefined` | KV is a **global variable**, not on `context.env` | Use `my_kv.get(...)` directly (global) |
 | `get()` returns a Promise object, not the value | Missing `await` | Always `await` KV operations |
-| KV works in production but fails locally | Project not linked | Run `edgeone pages link` |
+| KV works in production but fails locally | Project not linked | Run `edgeone makers link` |
 | KV not available in Node Functions | KV only works in Edge Functions | Move KV logic to Edge Functions, or use an external database in Node Functions |
 
 ---
@@ -272,10 +272,10 @@ export async function onRequestGet() {
 
 ```bash
 # 1. Link to a remote project (required for KV access)
-edgeone pages link
+edgeone makers link
 
 # 2. Start dev server
-edgeone pages dev
+edgeone makers dev
 
 # 3. Test
 curl http://localhost:8088/api/counter
@@ -288,7 +288,7 @@ curl http://localhost:8088/api/counter
 3. Bind it to the project (set the variable name)
 4. Deploy:
    ```bash
-   edgeone pages deploy
+   edgeone makers deploy
    ```
 
 ---

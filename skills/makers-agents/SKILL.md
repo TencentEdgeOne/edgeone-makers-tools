@@ -268,7 +268,7 @@ This tells the platform that the command was triggered from an AI skill context.
 
 ### package.json scripts (⚠️ avoid dev script recursion)
 
-> ⛔ **NEVER set `"dev": "edgeone makers dev"` or `"dev": "edgeone pages dev"` in package.json** — this causes infinite recursion.
+> ⛔ **NEVER set `"dev": "edgeone makers dev"` or `"dev": "edgeone makers dev"` in package.json** — this causes infinite recursion.
 > When CLI starts, it reads `scripts.dev` to launch the frontend dev server. If that script is
 > `edgeone makers dev` itself, it recurses. CLI detects this and skips the frontend server entirely,
 > causing static files (e.g., `public/index.html`) to return 404.

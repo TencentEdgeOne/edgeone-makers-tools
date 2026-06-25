@@ -1,25 +1,25 @@
 ---
-name: edgeone-pages-deploy
+name: edgeone-makers-deploy
 description: >-
-  This skill deploys frontend and full-stack projects to EdgeOne Pages (Tencent EdgeOne).
+  This skill deploys frontend and full-stack projects to EdgeOne Makers (Tencent EdgeOne).
   Trigger this skill whenever deployment is part of the task — whether as the primary intent
   or a secondary step. Examples: "deploy my app", "publish this site", "push this live",
   "create a preview deployment", "deploy to EdgeOne", "ship to production",
   "go live", "release", "publish a new version", "redeploy",
   "上线", "发布", "发一版", "重新部署",
   "搭建并部署", "开发并上线", "build and deploy", "create and deploy".
-  ⚠️ Also trigger when any agent is about to execute `edgeone makers deploy` or `edgeone pages deploy`
+  ⚠️ Also trigger when any agent is about to execute `edgeone makers deploy` or `edgeone makers deploy`
   commands — the skill contains critical rules for parsing deploy output and presenting access URLs.
   Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy —
-  use edgeone-pages-dev for troubleshooting).
+  use edgeone-makers-dev for troubleshooting).
 metadata:
   author: edgeone
   version: "2.1.0"
 ---
 
-# EdgeOne Pages Deployment Skill
+# EdgeOne Makers Deployment Skill
 
-Deploy any project to **EdgeOne Pages**.
+Deploy any project to **EdgeOne Makers**.
 
 ## ⛔ Critical Rules (never skip)
 
@@ -50,7 +50,7 @@ export PAGES_SOURCE=skills
 Or prefix each command inline:
 
 ```bash
-PAGES_SOURCE=skills edgeone pages deploy
+PAGES_SOURCE=skills edgeone makers deploy
 ```
 
 This tells the platform that the deployment is triggered from an AI skill context.
@@ -107,9 +107,9 @@ Before triggering any login flow, explain to the user **why** this step is neede
 
 Tell the user:
 
-> You need to log in or register an EdgeOne Pages account. Here's what to expect:
+> You need to log in or register an EdgeOne Makers account. Here's what to expect:
 > - **Why login is required**: Deployment uploads your build output to your own account, generating a unique access URL and project record.
-> - **What you get for free**: EdgeOne Pages offers a free tier with global CDN acceleration, automatic HTTPS, and custom domain binding — typically more than enough for personal projects.
+> - **What you get for free**: EdgeOne Makers offers a free tier with global CDN acceleration, automatic HTTPS, and custom domain binding — typically more than enough for personal projects.
 > - **What happens next**: I'll run `edgeone login`, and your default browser will open the Tencent Cloud login page. Please complete the login/registration and authorize access, then come back here.
 > - **If you get stuck**: If the browser doesn't open, or the CLI keeps waiting after you've logged in, let me know — I'll switch to Token login instead.
 
@@ -119,7 +119,7 @@ If the user does not respond for an extended period (e.g., more than 1–2 minut
 
 Use the IDE's selection control (`ask_followup_question`) before running any login command:
 
-> Choose your EdgeOne Pages site:
+> Choose your EdgeOne Makers site:
 > - **China** — For users in mainland China (console.cloud.tencent.com)
 > - **Global** — For users outside China (console.intl.cloud.tencent.com)
 
@@ -173,7 +173,7 @@ Auto-detects china/global from the token — no `--site` flag needed. Persists l
 Token is used for that single deploy only; no persistent login state is saved.
 
 ```bash
-edgeone pages deploy -t <token>
+edgeone makers deploy -t <token>
 ```
 
 ⚠️ **Important**: `edgeone whoami` does NOT support a `-t` flag. Do NOT attempt to verify a token with `whoami -t <token>`. When the user provides a token, skip login checks entirely and go straight to deploy.
@@ -208,19 +208,19 @@ Confirm to the user: "✅ Token saved to `.edgeone/.token` and added to `.gitign
 
 ## Deploy
 
-### Browser-authenticated deploy (Pages projects)
+### Browser-authenticated deploy (Makers projects)
 
 ```bash
 # Project already linked (edgeone.json exists)
-edgeone pages deploy
+edgeone makers deploy
 
 # New project (no edgeone.json)
-edgeone pages deploy -n <project-name>
+edgeone makers deploy -n <project-name>
 ```
 
 `<project-name>`: auto-generate from the project directory name. The first deploy creates `edgeone.json` automatically.
 
-### Token-based deploy (Pages projects)
+### Token-based deploy (Makers projects)
 
 First check for a saved token:
 
@@ -233,10 +233,10 @@ cat .edgeone/.token 2>/dev/null
 
 ```bash
 # Project already linked
-edgeone pages deploy -t <token>
+edgeone makers deploy -t <token>
 
 # New project
-edgeone pages deploy -n <project-name> -t <token>
+edgeone makers deploy -n <project-name> -t <token>
 ```
 
 The token already contains site info — no `--site` flag needed.
@@ -246,7 +246,7 @@ After a successful deploy with a manually-entered token, ask if the user wants t
 ### Deploy to preview environment
 
 ```bash
-edgeone pages deploy -e preview
+edgeone makers deploy -e preview
 ```
 
 ### Non-interactive / Agent / CI deploy (recommended: `--json`)
@@ -255,8 +255,8 @@ When running inside an Agent, CI, or any non-TTY context, **add `--json`** so th
 result is emitted as a single machine-readable line — no scraping of colored stdout:
 
 ```bash
-edgeone pages deploy -n <project-name> --json
-edgeone pages deploy -n <project-name> -t <token> --json
+edgeone makers deploy -n <project-name> --json
+edgeone makers deploy -n <project-name> -t <token> --json
 ```
 
 ### Makers Agent Projects deploy
@@ -284,7 +284,7 @@ When deploy is run with `--json`, the **last line** of stdout is a single JSON o
 parse that directly, no regex / ANSI cleanup needed:
 
 ```json
-{"status":"success","url":"https://my-project-abc123.edgeone.cool?<auth_query_params>","type":"preset","projectId":"pages-xxxxxxxx","deploymentId":"dp-xxxx","consoleUrl":"https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deployment/xxxxxxx"}
+{"status":"success","url":"https://my-project-abc123.edgeone.cool?<auth_query_params>","type":"preset","projectId":"makers-xxxxxxxx","deploymentId":"dp-xxxx","consoleUrl":"https://console.cloud.tencent.com/edgeone/pages/project/makers-xxxxxxxx/deployment/xxxxxxx"}
 ```
 
 On failure the last line is `{"status":"error","error":"<message>"}` and the process exits non-zero.
@@ -293,14 +293,14 @@ Use `url` (full, with query string), `projectId`, and `consoleUrl` directly.
 
 ### Fallback: text output (no `--json`)
 
-After `edgeone pages deploy` succeeds, the CLI outputs:
+After `edgeone makers deploy` succeeds, the CLI outputs:
 
 ```
 [cli][✔] Deploy Success
 EDGEONE_DEPLOY_URL=https://my-project-abc123.edgeone.cool?<auth_query_params>
 EDGEONE_DEPLOY_TYPE=preset
-EDGEONE_PROJECT_ID=pages-xxxxxxxx
-[cli][✔] You can view your deployment in the EdgeOne Pages Console at:
+EDGEONE_PROJECT_ID=makers-xxxxxxxx
+[cli][✔] You can view your deployment in the EdgeOne Makers Console at:
 https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deployment/xxxxxxx
 ```
 
