@@ -61,7 +61,7 @@ export function onRequest(context) {
   const {
     request,    // Standard Request object
     params,     // Dynamic route params, e.g. { id: "123" }
-    env,        // Environment variables from Pages console
+    env,        // Environment variables from makers console
     waitUntil,  // Extend function lifetime for async tasks
   } = context;
 
@@ -98,7 +98,7 @@ export function onRequest(context) {
 
 ## KV Storage (Edge Functions only)
 
-⚠️ **Prerequisites**: You must enable KV Storage in the EdgeOne Pages console, create a namespace, and bind it to your project before using KV. See [kv-storage.md](kv-storage.md) for full setup instructions (same directory).
+⚠️ **Prerequisites**: You must enable KV Storage in the EdgeOne Makers console, create a namespace, and bind it to your project before using KV. See [kv-storage.md](kv-storage.md) for full setup instructions (same directory).
 
 The KV namespace is a **global variable** (name is set when binding in the console) — it is **NOT** on `context.env`.
 

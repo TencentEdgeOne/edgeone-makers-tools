@@ -1,4 +1,4 @@
-# EdgeOne Makers Tools
+# EdgeOne Makers
 
 Official AI Agent Skills for developing and deploying projects on [EdgeOne Makers](https://pages.edgeone.ai/).
 
