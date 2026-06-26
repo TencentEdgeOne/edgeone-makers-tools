@@ -15,6 +15,12 @@ description: >-
   Do NOT trigger for deployment workflows (use makers-deploy).
   Do NOT trigger for generic AI framework development outside
   an EdgeOne Makers project.
+pathPatterns:
+  - agents/**
+chainTo:
+  - pattern: "\\bKV\\b|context\\.store"
+    skill: makers-storage
+    reason: "Code references KV or store APIs."
 metadata:
   author: edgeone
   version: "1.0.0"

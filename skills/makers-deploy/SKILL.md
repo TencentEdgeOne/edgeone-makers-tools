@@ -11,6 +11,11 @@ description: >-
   (e.g. "write an API and deploy it" — primary intent is writing code, use makers-cloud-functions).
   Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy —
   use makers-cloud-functions or makers-edge-functions for troubleshooting).
+pathPatterns:
+  - edgeone.json
+bashPatterns:
+  - "\\bedgeone\\s+pages\\s+deploy\\b"
+  - "\\bedgeone\\s+makers\\s+deploy\\b"
 metadata:
   author: edgeone
   version: "2.0.0"

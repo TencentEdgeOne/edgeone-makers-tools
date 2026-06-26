@@ -3,6 +3,19 @@ name: makers-edge-functions
 description: >-
   EdgeOne Makers Edge Functions — V8 runtime, Web API, file-based routing.
   Use when building lightweight APIs at the edge with ultra-low latency.
+pathPatterns:
+  - functions/**
+validate:
+  - pattern: "process\\.env"
+    message: "Use context.env in EdgeOne Makers runtime code."
+  - pattern: "new\\s+Headers\\s*\\("
+    message: "Use plain object headers for this runtime surface."
+  - pattern: "fs\\.writeFile"
+    message: "Edge Functions do not support filesystem writes."
+chainTo:
+  - pattern: "\\bKV\\b|context\\.store"
+    skill: makers-storage
+    reason: "Code references KV or store APIs."
 metadata:
   author: edgeone
   version: "1.0.0"

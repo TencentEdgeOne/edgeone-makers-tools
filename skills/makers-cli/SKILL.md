@@ -3,6 +3,8 @@ name: makers-cli
 description: >-
   EdgeOne Makers CLI command reference.
   Use when running edgeone CLI commands for dev, build, deploy, env management.
+bashPatterns:
+  - "\\bedgeone\\s+"
 metadata:
   author: edgeone
   version: "1.0.0"
