@@ -5,3 +5,14 @@ node_modules/
 .env.*
 .git
 eval
+
+# Claude Code local config
+.claude/
+skills/.claude/
+
+# Internal docs (research, plans, reports)
+docs/
+
+# Export script and output
+scripts/export-clean.sh
+edgeone-makers-tools-clean/
