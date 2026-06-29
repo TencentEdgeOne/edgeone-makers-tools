@@ -1,5 +1,5 @@
 ---
-name: makers-agents
+name: edgeone-makers-agents
 description: >-
   This skill guides building AI agent endpoints on EdgeOne Makers — five
   framework routes (DeepAgents, LangGraph, CrewAI, OpenAI Agents SDK,
@@ -11,8 +11,8 @@ description: >-
   agent endpoint", "wire LangGraph into Makers", "stream LLM responses with SSE",
   "review my agent template", "use context.store / context.sandbox / context.tools".
   Do NOT trigger for plain Edge Functions, Cloud Functions, or middleware
-  (those don't run AI logic — use makers-cloud-functions or makers-edge-functions instead).
-  Do NOT trigger for deployment workflows (use makers-deploy).
+  (those don't run AI logic — use edgeone-pages-dev instead).
+  Do NOT trigger for deployment workflows (use edgeone-pages-deploy).
   Do NOT trigger for generic AI framework development outside
   an EdgeOne Makers project.
 metadata:
@@ -37,8 +37,8 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 - Splitting AI inference (`agents/`) from data CRUD (`cloud-functions/`)
 
 **Do NOT use for:**
-- Plain Edge Functions / Cloud Functions / Middleware → use `makers-cloud-functions` / `makers-edge-functions` / `makers-middleware`
-- Deployment workflows → use `makers-deploy`
+- Plain Edge Functions / Cloud Functions / Middleware → use `edgeone-pages-dev`
+- Deployment workflows → use `edgeone-pages-deploy`
 - Generic AI framework development outside an EdgeOne Makers project
 - Other platforms (Cloudflare Workers AI, Vercel AI SDK, AWS Bedrock)
 
@@ -168,7 +168,7 @@ Available values:
 
 ```json
 {
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build",  // your frontend build command
   "outputDirectory": "dist",
   "cloudFunctions": {
     "nodejs": {
@@ -180,8 +180,6 @@ Available values:
   }
 }
 ```
-
-> For pure backend projects (no frontend), set `"buildCommand": ""` and `"outputDirectory": ""`.
 
 ---
 
@@ -206,13 +204,13 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 
 ### Framework Comparison
 
-| Framework | `agents.framework` | Runtime | Best For |
-|-----------|---------------------|---------|----------|
-| **DeepAgents** | `deepagents` | Node + Python | Simple agent tasks, automatic context compression, sub-agent orchestration |
-| **LangGraph** | `langgraph` | Node + Python | Fine-grained graph control, human-in-the-loop, persistent thread state |
-| **Claude Agent SDK** | `claude-agent-sdk` | Node + Python | Sandbox code execution, file processing, MCP tools, session memory |
-| **OpenAI Agents SDK** | `openai-agents-sdk` | Node + Python | Multi-agent handoff, guardrails, session auto-prepend |
-| **CrewAI** | `crewai` | Python only | Multi-agent role split (Sequential/Hierarchical), built-in skills/event_bus |
+| Framework | Runtime | Best For |
+|-----------|---------|----------|
+| **DeepAgents** | Node + Python | Simple agent tasks, automatic context compression, sub-agent orchestration |
+| **LangGraph** | Node + Python | Fine-grained graph control, human-in-the-loop, persistent thread state |
+| **Claude Agent SDK** | Node + Python | Sandbox code execution, file processing, MCP tools, session memory |
+| **OpenAI Agents SDK** | Node + Python | Multi-agent handoff, guardrails, session auto-prepend |
+| **CrewAI** | Python only | Multi-agent role split (Sequential/Hierarchical), built-in skills/event_bus |
 
 ---
 
@@ -268,20 +266,29 @@ PAGES_SOURCE=skills edgeone makers dev
 
 This tells the platform that the command was triggered from an AI skill context.
 
-### Local development
+### package.json scripts (⚠️ avoid dev script recursion)
 
-```bash
-# 1. Link to remote project (pulls project ID + env vars)
-edgeone makers link
+> ⛔ **NEVER set `"dev": "edgeone makers dev"` or `"dev": "edgeone makers dev"` in package.json** — this causes infinite recursion.
+> When CLI starts, it reads `scripts.dev` to launch the frontend dev server. If that script is
+> `edgeone makers dev` itself, it recurses. CLI detects this and skips the frontend server entirely,
+> causing static files (e.g., `public/index.html`) to return 404.
 
-# 2. Pull remote environment variables to local .env
-edgeone makers env pull
+Correct pattern — **do not include a `dev` script**:
 
-# 3. Start local dev server (agent runtime + frontend)
-edgeone makers dev
+```json
+{
+  "scripts": {
+    "build": "edgeone makers build",
+    "deploy": "edgeone makers deploy"
+  }
+}
 ```
 
-`edgeone makers dev` starts both the agent runtime (Node or Python, auto-detected from `agents/` file extensions) and the frontend dev server. All `agents/` endpoints become available at `http://localhost:<port>/<endpoint>`.
+CLI will automatically serve `public/` as static files during `edgeone makers dev`. No `dev` script needed.
+
+- `edgeone makers dev` — starts agent runtime + detects & launches frontend dev server (reads `scripts.dev` or auto-serves `public/`)
+- `edgeone makers build` — builds agents + frontend into `.edgeone/` output
+- `edgeone makers deploy` — builds and deploys to EdgeOne Makers
 
 ### Environment variables for deployment
 

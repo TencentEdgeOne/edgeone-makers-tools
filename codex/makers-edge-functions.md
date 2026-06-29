@@ -1,8 +1,18 @@
 ---
-name: makers-edge-functions
+name: edgeone-makers-edge-functions
 description: >-
-  EdgeOne Makers Edge Functions — V8 runtime, Web API, file-based routing.
-  Use when building lightweight APIs at the edge with ultra-low latency.
+  V8-based lightweight edge functions on EdgeOne Makers. Covers routing, KV storage access,
+  request/response handling, and environment variables at the edge.
+metadata:
+  author: edgeone
+  version: "1.0.0"
+---
+
+---
+name: edgeone-makers-edge-functions
+description: >-
+  V8-based lightweight edge functions on EdgeOne Makers. Covers routing, KV storage access,
+  request/response handling, and environment variables at the edge.
 metadata:
   author: edgeone
   version: "1.0.0"
@@ -61,7 +71,7 @@ export function onRequest(context) {
   const {
     request,    // Standard Request object
     params,     // Dynamic route params, e.g. { id: "123" }
-    env,        // Environment variables from makers console
+    env,        // Environment variables from Makers console
     waitUntil,  // Extend function lifetime for async tasks
   } = context;
 
