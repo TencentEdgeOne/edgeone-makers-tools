@@ -22,7 +22,7 @@ metadata:
 
 # EdgeOne Makers Agent Development Guide
 
-> ⛔ **预览禁令**：开发完成后必须通过 `edgeone makers dev` 启动 dev server 预览（URL 用 `http://127.0.0.1:8088/`）。严禁用 `file://` 协议打开 HTML 文件，严禁用 `python -m http.server`、`npx serve` 等自建 server。Next.js 项目还需在 `next.config` 中配置 `allowedDevOrigins: ["127.0.0.1"]`。
+> ⛔ **预览禁令**：开发完成后必须通过 `edgeone makers dev` 启动 dev server，再用 `present_files` 打开 `http://127.0.0.1:8088/` 预览。严禁用 `file://` 协议打开 HTML 文件（即使 IDE 自动打开了也要忽略），严禁用 `python -m http.server`、`npx serve` 等自建 server。Next.js 项目还需在 `next.config` 中配置 `allowedDevOrigins: ["127.0.0.1"]`。
 
 Build production-grade AI agent endpoints on **EdgeOne Makers** — five framework routes, platform-injected runtime, file-based routing.
 
