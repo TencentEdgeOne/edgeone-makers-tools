@@ -6,16 +6,48 @@ description: >-
   Trigger when: the user is working in WorkBuddy, a sandboxed IDE, or any
   non-interactive/CI environment where CLI commands may hang or network is isolated.
   Covers: non-interactive CLI flags, network isolation workarounds, login in sandbox,
-  proxy bypass, file preview constraints, dev server requirements.
+  proxy bypass, file preview constraints (MUST use http:// via dev server, NEVER file://,
+  NEVER python -m http.server / npx serve), dev server requirements.
 metadata:
   author: edgeone
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # 运行环境适配指南
 
 > 本文档说明 EdgeOne Makers Skills 在不同 AI 编码环境中的特殊约束和适配规则。
 > 当前覆盖：**WorkBuddy**（腾讯沙箱 IDE）
+
+---
+
+## 🚦 Quick Reference：预览决策树
+
+进入"展示 / 预览"环节时，**先看这里再决定怎么 `present_files`**：
+
+```
+            ┌─ 任务完成要交付？── 是 ──→ present_files(部署后的 EdgeOne URL) ✅
+            │
+进入预览 ───┤
+            │                      ┌─ dev server 已起？─ 是 ──→ present_files(http://127.0.0.1:8088/) ✅
+            └─ 还要继续改？ ──────┤
+                                    └─ 否 ──→ 启 edgeone makers dev → present_files(...)
+```
+
+| 想做的事 | 正确做法 | 错误做法（会坏） |
+|---|---|---|
+| 预览本地 dev server | `present_files("http://127.0.0.1:8088/")` | ❌ 传 `/path/to/index.html`（IDE 内部以 file:// 打开） |
+| 预览已部署项目 | `present_files(deploy_url)` 含 `?eo_token=...` | ❌ 传本地 `dist/index.html` 路径 |
+| 启 dev server | `edgeone makers dev --name <p> --skip-env-sync` | ❌ `python -m http.server` / `npx serve` |
+| 验证 dev server 起来了 | `present_files(http://...)` 或用户系统终端 | ❌ Bash `curl localhost`（沙箱网络隔离） |
+
+**核心铁律**：在 Makers 项目里，**任何 HTML / URL 预览都必须经过 HTTP 协议**。`file://` 看似省事，但 fetch / SSE / Blob / KV 全部失效。
+
+### 违规症状自查（看到立即回看上面）
+
+- 浏览器 Console：`TypeError: Failed to fetch` / `CORS policy` 报错
+- 页面 HTML 正常加载但 JS 请求全部 404
+- SSE / EventSource 一连接就断开
+- 本地能跑、部署到线上就坏（或反过来）
 
 ---
 
@@ -142,41 +174,48 @@ curl http://127.0.0.1:8088/api/chat
 | `edgeone makers dev` | **后台异步** (`run_in_background`) | 长驻进程，不阻塞对话 |
 | `edgeone makers deploy` | **前台同步** | 1-3 分钟，结果是核心交付物，必须立即展示 |
 
-### 7.1 开发完成后自动预览
+### 7.1 预览 & Dev Server 全流程（必走 HTTP，禁止 file://）
 
-开发完成后**直接启动 dev server 预览**，不需要询问用户是否要预览。流程：
+开发完成后**直接启动 dev server 预览**，不要询问"是否要预览"。完整流程：
 
-1. 确认 Next.js 项目已配置 `allowedDevOrigins`（见第 10 节）
-2. 启动 `edgeone makers dev`（后台异步）
-3. 用 `present_files` 展示 `http://127.0.0.1:8088/` 预览
+> ⚠️ **WorkBuddy 默认行为**：创建 HTML 文件时平台可能自动用 file:// 打开预览——**忽略它**，这不是有效预览。必须等 `edgeone makers dev` 启动后，通过 HTTP URL 重新打开覆盖。
+
+1. 启动 `edgeone makers dev --name <project> --skip-env-sync`（**后台异步**，见 §7）
+2. 等待 2-3 秒让 dev server 就绪
+3. **`present_files` 传 `http://127.0.0.1:8088/`**（注意是 `127.0.0.1`，**不是** `localhost` —— 见 §4）
 4. 告知用户："项目已启动本地预览，请查看效果。如果没有问题，我可以直接帮你部署到线上。"
 
-用户确认后再执行部署，减少不必要的交互等待。
+用户确认后再执行 `edgeone makers deploy -n <project> --json`（**前台同步**，见 §7）。
 
----
+#### ⛔ 严禁 file:// 预览
 
-### 8. 禁止 file:// 预览
-
-不可将 HTML 文件路径传给 `present_files`，会以 `file://` 协议打开，导致 fetch/SSE 全部失败。
+**严禁**把本地 HTML 路径传给 `present_files` —— IDE 内部会用 `file://` 协议打开，导致 fetch / SSE / Blob / KV 全部失败。**没有例外，没有"只是临时看看"的场景**。
 
 ```bash
-# 正确
-present_files: http://127.0.0.1:8088/
+# ✅ 正确
+present_files("http://127.0.0.1:8088/")                                       # dev server
+present_files("https://my-app-w9t0lxe8.edgeone.cool?eo_token=...")            # 部署后
 
-# 错误
-present_files: /path/to/index.html
+# ❌ 错误（IDE 会以 file:// 协议打开，所有 API 失效）
+present_files("/Users/foo/dist/index.html")
+present_files("./dist/index.html")
+present_files("file:///Users/foo/dist/index.html")
 ```
 
----
+**违规症状**（一旦看到立即自查 § Quick Reference）：
+- Console: `TypeError: Failed to fetch` / `Cross-Origin Request Blocked`
+- 页面 DOM 正常但所有 `fetch` / `XMLHttpRequest` 返回失败
+- SSE / EventSource 连接立即断开
+- `@edgeone/pages-blob` 调用报 `Missing: deployCredential`（即使项目已 link，因为 file:// 下无 HTTP 上下文）
 
-### 9. 禁止自建 HTTP Server
+#### ⛔ 严禁自建 HTTP Server
 
-必须使用 `edgeone makers dev`，不可用以下替代方案：
+`edgeone makers dev` **不可被**以下命令替代：
 - `python -m http.server`
 - `npx serve` / `npx http-server`
-- Node.js `createServer`
+- Node.js `http.createServer` / `express` 起本地服务
 
-**原因**：`edgeone makers dev` 提供 Blob 凭证注入、Cloud Functions 路由模拟、Edge Functions 处理，自建 server 只能托管静态文件，行为与生产不一致。
+**原因**：`edgeone makers dev` 注入 Blob 凭证、模拟 Cloud Functions 路由、处理 Edge Functions、中间件链。自建 server 只能托管静态文件，行为与生产不一致，会出现"本地能跑部署就坏"或反过来的玄学问题。
 
 ---
 
