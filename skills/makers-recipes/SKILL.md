@@ -8,17 +8,9 @@ metadata:
   version: "1.0.0"
 ---
 
----
-name: edgeone-makers-recipes
-description: >-
-  Project structure templates and scaffolding recipes for typical EdgeOne Makers
-  applications — full-stack apps, static sites, API services, and AI agent projects.
-metadata:
-  author: edgeone
-  version: "1.0.0"
----
-
 # Common Recipes
+
+> ⛔ **预览禁令**：开发完成后必须通过 `edgeone makers dev` 启动 dev server 预览（URL 用 `http://127.0.0.1:8088/`）。严禁用 `file://` 协议打开 HTML 文件，严禁用 `python -m http.server`、`npx serve` 等自建 server。Next.js 项目还需在 `next.config` 中配置 `allowedDevOrigins: ["127.0.0.1"]`。
 
 Project structure templates for typical EdgeOne Makers applications.
 

@@ -142,6 +142,17 @@ curl http://127.0.0.1:8088/api/chat
 | `edgeone makers dev` | **后台异步** (`run_in_background`) | 长驻进程，不阻塞对话 |
 | `edgeone makers deploy` | **前台同步** | 1-3 分钟，结果是核心交付物，必须立即展示 |
 
+### 7.1 开发完成后自动预览
+
+开发完成后**直接启动 dev server 预览**，不需要询问用户是否要预览。流程：
+
+1. 确认 Next.js 项目已配置 `allowedDevOrigins`（见第 10 节）
+2. 启动 `edgeone makers dev`（后台异步）
+3. 用 `present_files` 展示 `http://127.0.0.1:8088/` 预览
+4. 告知用户："项目已启动本地预览，请查看效果。如果没有问题，我可以直接帮你部署到线上。"
+
+用户确认后再执行部署，减少不必要的交互等待。
+
 ---
 
 ### 8. 禁止 file:// 预览
