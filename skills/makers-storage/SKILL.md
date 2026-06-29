@@ -1,3 +1,13 @@
+---
+name: edgeone-makers-storage
+description: >-
+  KV and Blob storage services on EdgeOne Makers. KV for edge key-value pairs,
+  Blob for file/object storage in Cloud Functions. Covers SDK usage, setup, and troubleshooting.
+metadata:
+  author: edgeone
+  version: "1.0.0"
+---
+
 # EdgeOne Makers Storage
 
 EdgeOne Makers provides two storage services. **Choose based on your runtime and data type:**

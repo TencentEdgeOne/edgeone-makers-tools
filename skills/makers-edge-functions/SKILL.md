@@ -1,3 +1,23 @@
+---
+name: edgeone-makers-edge-functions
+description: >-
+  V8-based lightweight edge functions on EdgeOne Makers. Covers routing, KV storage access,
+  request/response handling, and environment variables at the edge.
+metadata:
+  author: edgeone
+  version: "1.0.0"
+---
+
+---
+name: edgeone-makers-edge-functions
+description: >-
+  V8-based lightweight edge functions on EdgeOne Makers. Covers routing, KV storage access,
+  request/response handling, and environment variables at the edge.
+metadata:
+  author: edgeone
+  version: "1.0.0"
+---
+
 # Edge Functions
 
 V8-based lightweight functions running at the edge. Ideal for simple APIs, KV storage access, and ultra-low latency responses.

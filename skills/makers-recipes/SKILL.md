@@ -1,3 +1,23 @@
+---
+name: edgeone-makers-recipes
+description: >-
+  Project structure templates and scaffolding recipes for typical EdgeOne Makers
+  applications — full-stack apps, static sites, API services, and AI agent projects.
+metadata:
+  author: edgeone
+  version: "1.0.0"
+---
+
+---
+name: edgeone-makers-recipes
+description: >-
+  Project structure templates and scaffolding recipes for typical EdgeOne Makers
+  applications — full-stack apps, static sites, API services, and AI agent projects.
+metadata:
+  author: edgeone
+  version: "1.0.0"
+---
+
 # Common Recipes
 
 Project structure templates for typical EdgeOne Makers applications.
