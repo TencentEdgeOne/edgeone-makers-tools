@@ -12,5 +12,6 @@ When you need EdgeOne Makers platform development guidance, read the matching Sk
 | Middleware (auth, rewrites, routing) | skills/makers-middleware/SKILL.md |
 | CLI command reference | skills/makers-cli/SKILL.md |
 | Project structure / scaffolding | skills/makers-recipes/SKILL.md |
+| Environment adaptation (WorkBuddy / sandbox / CI) | skills/makers-env-adaption/SKILL.md |
 
 ⚠️ Only read the Skill relevant to the current task. Do not load all skills at once.
