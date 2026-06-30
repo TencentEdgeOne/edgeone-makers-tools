@@ -1,14 +1,14 @@
 name: Publish to SkillHub
 
 # 触发策略：
-# 1. workflow_run — 等 `Build Multi-Platform Output` 在 main 上跑完且成功，再发布。
-#    这样可以保证 cursor/ codex/ 自动生成的内容已经合入 main，避免重复触发。
-# 2. workflow_dispatch — 手动触发兜底，支持自定义 changelog。
+# 1. push 到 main —— 任意 .md / _meta.json / SKILL.md 变更都会尝试发布。
+#    SkillHub 拒绝重复版本号 —— 没 bump _meta.json.version 时会自动跳过（fail）。
+#    跳过 build.yml 自己 push 的 "auto-generate multi-platform output" commit
+#    避免无意义的循环发布尝试。
+# 2. workflow_dispatch —— 手动触发兜底，支持自定义 changelog。
 on:
-  workflow_run:
-    workflows: ["Build Multi-Platform Output"]
+  push:
     branches: [main]
-    types: [completed]
   workflow_dispatch:
     inputs:
       changelog:
@@ -27,26 +27,22 @@ jobs:
   publish:
     # 触发条件：
     #   1. 手动触发：总是允许
-    #   2. workflow_run（由 build.yml 触发）：要求 build 成功，且触发 build 的那次
-    #      commit 不是 build 自己 push 的 "auto-generate multi-platform output"
-    #      commit —— 否则会无限循环触发 publish。
+    #   2. push 到 main：跳过 build.yml 自己 push 的 "auto-generate multi-platform
+    #      output" commit（否则会产生无意义的 publish 尝试）。
     if: |
       github.event_name == 'workflow_dispatch' ||
-      (github.event.workflow_run.conclusion == 'success' &&
-       !contains(github.event.workflow_run.head_commit.message, 'auto-generate multi-platform output'))
+      (github.event_name == 'push' &&
+       !contains(github.event.head_commit.message, 'auto-generate multi-platform output'))
 
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout (full history, pinned to trigger SHA)
-        # 关键：workflow_run 默认 checkout 的是 default branch 当前 HEAD，
-        # 而不是触发它的那次 commit。如果 publish 排队跑、main 又有新提交，
-        # 会拿到不一致的内容。这里显式指定 head_sha 锁定。
-        # 手动触发时退化为 main。
+      - name: Checkout (full history)
+        # push 触发：actions/checkout 默认 ref 就是触发那次 commit，无需显式指定。
+        # 手动触发：默认 ref 是 default branch HEAD（即 main 最新），也合理。
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: ${{ github.event.workflow_run.head_sha || 'main' }}
 
       - name: Configure git
         run: |
@@ -75,10 +71,6 @@ jobs:
         run: |
           which skillhub
           skillhub --version
-          echo "==== skillhub --help ===="
-          skillhub --help || true
-          echo "==== skillhub publish --help ===="
-          skillhub publish --help || true
 
       - name: Login to SkillHub
         env:
@@ -88,12 +80,15 @@ jobs:
           skillhub auth whoami
 
       - name: Compute version
-        # 用 skillhub 分支的 commit 数生成自动递增的 patch 版本号，避免每次手动 bump。
-        # 形如 1.0.<commit_count>，每次提交后单调递增；任何手动改动也跟着推进。
-        # 仓库里 _meta.json / SKILL.md 留的 1.0.0 仅作占位，发布前在 publish 目录里覆写。
+        # 直接读 _meta.json 顶层 'version' 字段作为本次发布的版本号。
+        # 发版规则：编辑 _meta.json 的 version (SemVer)，commit、push 即可。
+        # SkillHub 拒绝重复版本号 —— 这就是天然的"忘记 bump"门禁。
         run: |
-          PATCH=$(git rev-list --count HEAD)
-          VERSION="1.0.${PATCH}"
+          VERSION=$(jq -r '.version' _meta.json)
+          if [ -z "$VERSION" ] || [ "$VERSION" = "null" ]; then
+            echo "::error file=_meta.json::_meta.json 缺少 'version' 字段"
+            exit 1
+          fi
           echo "VERSION=$VERSION" >> "$GITHUB_ENV"
           echo "==> Publishing version: $VERSION"
 
@@ -161,16 +156,22 @@ jobs:
           echo "✓ Version bump OK, ready to publish $EXPECTED"
 
       - name: Publish (dry-run)
-        run: skillhub publish "$PUBLISH_DIR" --dry-run
+        # --version 显式覆盖 SKILL.md 里的 version（CLI 帮助文档明文：
+        # "覆盖 SKILL.md 中的 version"）。这是 SkillHub 真正用来定版本号的入口；
+        # publish 目录里 SKILL.md/_meta.json 的 version 字段 CLI 实际不读。
+        run: skillhub publish "$PUBLISH_DIR" --version "$VERSION" --dry-run
 
       - name: Publish
         env:
-          # 优先级：手动输入 > 触发 build 的那次 commit message > 默认值
+          # 优先级：手动输入 > 本次 push 的 commit message > 默认值
           MANUAL_CHANGELOG: ${{ inputs.changelog }}
-          DEFAULT_CHANGELOG: ${{ github.event.workflow_run.head_commit.message }}
+          DEFAULT_CHANGELOG: ${{ github.event.head_commit.message }}
         run: |
           CHANGELOG="${MANUAL_CHANGELOG:-${DEFAULT_CHANGELOG:-auto release on $(date +%F)}}"
           # 多行 commit message 只取第一行作为 changelog
           CHANGELOG="$(printf '%s' "$CHANGELOG" | head -n 1)"
           echo "Changelog: $CHANGELOG"
-          skillhub publish "$PUBLISH_DIR" --changelog "$CHANGELOG"
+          echo "Version:   $VERSION"
+          skillhub publish "$PUBLISH_DIR" \
+            --version "$VERSION" \
+            --changelog "$CHANGELOG"
