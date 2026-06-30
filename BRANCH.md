@@ -2,8 +2,15 @@
 
 This branch is the **publishing branch** for CodeBuddy plugin marketplace and
 SkillHub. Its **only** difference from `main` is that the root `SKILL.md`
-carries a valid YAML frontmatter (`name: edgeone-makers`), which those two
-platforms require.
+carries a valid YAML frontmatter combining two sets of fields:
+
+- **SkillHub fields** (`slug`, `displayName`, `version`, `summary`, `license`) —
+  required by SkillHub's CLI (`skillhub publish`).
+- **Claude Code / npx skills fields** (`name`, `description`) — required by
+  `npx skills add` and CodeBuddy plugin marketplace.
+
+YAML frontmatter is key-value, both sets coexist without conflict — each tool
+reads only the keys it knows.
 
 ## Why a separate branch?
 
@@ -38,5 +45,5 @@ the 9 sub-skills correctly).
 | Target | Command / Source |
 |--------|------------------|
 | `npx skills add` (Claude Code / Cursor / Codex / CodeBuddy CLI …) | `npx skills add TencentEdgeOne/edgeone-makers-tools` — uses `main` |
-| CodeBuddy plugin marketplace | Install `edgeone-makers` — backed by `skillhub` |
+| CodeBuddy plugin marketplace | Install `edgeone-makers-tools` — backed by `skillhub` |
 | SkillHub | Upload `skillhub` branch as the source |
