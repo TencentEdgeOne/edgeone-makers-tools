@@ -1,25 +1,14 @@
 ---
-# --- SkillHub platform fields ---
+# --- SkillHub & Claude Code / npx skills 共用 frontmatter ---
 slug: edgeone-makers-tools
+name: edgeone-makers-tools
 displayName: EdgeOne Makers
 version: 1.0.0
 license: MIT
-summary: >-
+description: >-
   EdgeOne Makers 全栈开发技能包 —— 涵盖 AI Agent 开发（DeepAgents、LangGraph、
   Claude SDK、OpenAI Agents、CrewAI）、云函数（Node.js/Go/Python）、边缘函数、
   KV 存储、中间件及快速部署，帮助 AI 编程助手准确高效地在 EdgeOne 平台上构建和发布应用。
-
-# --- Claude Code / npx skills fields ---
-name: edgeone-makers-tools
-description: >-
-  EdgeOne Makers platform skill index. This is a router/index skill that points
-  to specialized sub-skills under `skills/<name>/SKILL.md` for: AI Agent
-  development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI),
-  deployment, Edge Functions (V8), Cloud Functions (Node.js / Go / Python),
-  KV + Blob Storage, Middleware, CLI usage, project scaffolding, and
-  environment adaptation (WorkBuddy / sandbox / CI). When the user mentions
-  EdgeOne / EdgeOne Pages / EdgeOne Makers, consult this index first and load
-  only the matching sub-skill — do NOT load every sub-skill at once.
 metadata:
   author: edgeone
   version: "1.0.0"
