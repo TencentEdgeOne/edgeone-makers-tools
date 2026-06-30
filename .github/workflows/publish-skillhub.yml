@@ -75,6 +75,10 @@ jobs:
         run: |
           which skillhub
           skillhub --version
+          echo "==== skillhub --help ===="
+          skillhub --help || true
+          echo "==== skillhub publish --help ===="
+          skillhub publish --help || true
 
       - name: Login to SkillHub
         env:
