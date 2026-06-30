@@ -74,8 +74,26 @@ jobs:
           skillhub login --key "$SKILLHUB_API_TOKEN" --host https://api.skillhub.cn
           skillhub auth whoami
 
+      - name: Prepare publish directory
+        # SkillHub 拒绝隐藏文件（如 .gitignore）和未在白名单的扩展名。
+        # 我们按 _meta.json 的 files 字段精确复制需要发布的文件到一个干净目录，
+        # 避免 .github/, .gitignore, .claude-plugin/, scripts/, hooks/ 等被一起上传。
+        run: |
+          PUBLISH_DIR="$RUNNER_TEMP/skillhub-publish"
+          mkdir -p "$PUBLISH_DIR"
+          # 把 _meta.json 自身也带过去，让 SkillHub 知道清单和 slug
+          cp _meta.json "$PUBLISH_DIR/"
+          # 按 _meta.json 的 files 列表逐个复制（jq 解析 JSON）
+          jq -r '.files[]' _meta.json | while read -r f; do
+            mkdir -p "$PUBLISH_DIR/$(dirname "$f")"
+            cp "$f" "$PUBLISH_DIR/$f"
+          done
+          echo "==> Publish dir contents:"
+          find "$PUBLISH_DIR" -type f | sort
+          echo "PUBLISH_DIR=$PUBLISH_DIR" >> "$GITHUB_ENV"
+
       - name: Publish (dry-run)
-        run: skillhub publish . --dry-run
+        run: skillhub publish "$PUBLISH_DIR" --dry-run
 
       - name: Publish
         env:
@@ -87,4 +105,4 @@ jobs:
           # 多行 commit message 只取第一行作为 changelog
           CHANGELOG="$(printf '%s' "$CHANGELOG" | head -n 1)"
           echo "Changelog: $CHANGELOG"
-          skillhub publish . --changelog "$CHANGELOG"
+          skillhub publish "$PUBLISH_DIR" --changelog "$CHANGELOG"
