@@ -4,9 +4,32 @@ Official AI Agent Skills for developing and deploying projects on [EdgeOne Maker
 
 ## Installation
 
+### Option A — `npx skills` (Claude Code / Cursor / Codex / CodeBuddy CLI 等)
+
 ```bash
 npx skills add TencentEdgeOne/edgeone-makers-tools
 ```
+
+This installs **9 independent sub-skills** (one per capability) into your
+agent's skills directory (`.codebuddy/skills/<name>/`, `.claude/skills/<name>/`,
+`.cursor/skills/<name>/`, …). Your agent loads only the matching skill per
+task — no router indirection.
+
+### Option B — CodeBuddy plugin marketplace / SkillHub
+
+Search and install `edgeone-makers` from the CodeBuddy plugin marketplace or
+SkillHub. These platforms install the skill from the
+[`skillhub`](https://github.com/TencentEdgeOne/edgeone-makers-tools/tree/skillhub)
+branch, which adds a frontmatter to the root `SKILL.md` so the platform can
+register it as a single root skill (it then routes to the same 9 sub-skills
+internally).
+
+> Why two branches? The two install ecosystems have **incompatible
+> requirements** on the root `SKILL.md` (one wants no frontmatter, the other
+> requires one). The `main` branch is optimized for `npx skills add`; the
+> `skillhub` branch is optimized for CodeBuddy / SkillHub. See
+> [`BRANCH.md`](https://github.com/TencentEdgeOne/edgeone-makers-tools/blob/skillhub/BRANCH.md)
+> on the `skillhub` branch for the maintenance flow.
 
 After installation, your AI coding agent will automatically detect relevant tasks and load the right skill.
 
