@@ -17,7 +17,7 @@ task — no router indirection.
 
 ### Option B — CodeBuddy plugin marketplace / SkillHub
 
-Search and install `edgeone-makers` from the CodeBuddy plugin marketplace or
+Search and install `edgeone-makers-tools` from the CodeBuddy plugin marketplace or
 SkillHub. These platforms install the skill from the
 [`skillhub`](https://github.com/TencentEdgeOne/edgeone-makers-tools/tree/skillhub)
 branch, which adds a frontmatter to the root `SKILL.md` so the platform can
