@@ -1,3 +1,19 @@
+---
+name: edgeone-makers
+description: >-
+  EdgeOne Makers platform skill index. This is a router/index skill that points
+  to specialized sub-skills under `skills/<name>/SKILL.md` for: AI Agent
+  development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI),
+  deployment, Edge Functions (V8), Cloud Functions (Node.js / Go / Python),
+  KV + Blob Storage, Middleware, CLI usage, project scaffolding, and
+  environment adaptation (WorkBuddy / sandbox / CI). When the user mentions
+  EdgeOne / EdgeOne Pages / EdgeOne Makers, consult this index first and load
+  only the matching sub-skill — do NOT load every sub-skill at once.
+metadata:
+  author: edgeone
+  version: "1.0.0"
+---
+
 # EdgeOne Makers Skills
 
 When you need EdgeOne Makers platform development guidance, read the matching Skill based on the task:
