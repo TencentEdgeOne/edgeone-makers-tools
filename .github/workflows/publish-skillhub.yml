@@ -86,29 +86,44 @@ jobs:
 
       - name: Prepare publish directory
         # SkillHub 拒绝隐藏文件（如 .gitignore）和未在白名单的扩展名。
-        # 我们按 _meta.json 的 files 字段精确复制需要发布的文件到一个干净目录，
-        # 避免 .github/, .gitignore, .claude-plugin/, scripts/, hooks/ 等被一起上传。
+        # 按 _meta.json 的 files 字段精确复制需要发布的文件到一个干净目录，
+        # 然后用自动版本号覆写 publish 目录里 SKILL.md 和 _meta.json 的 version。
         run: |
           PUBLISH_DIR="$RUNNER_TEMP/skillhub-publish"
           mkdir -p "$PUBLISH_DIR"
-          # 1. 把 _meta.json 复制过去，并用自动版本号覆写顶层 version
+
+          # 1. 复制 _meta.json，并用自动版本号覆写顶层 version
           jq --arg v "$VERSION" '.version = $v' _meta.json > "$PUBLISH_DIR/_meta.json"
+
           # 2. 按 _meta.json 的 files 列表逐个复制
           jq -r '.files[]' _meta.json | while read -r f; do
             mkdir -p "$PUBLISH_DIR/$(dirname "$f")"
             cp "$f" "$PUBLISH_DIR/$f"
           done
-          # 3. 把根 SKILL.md frontmatter 里的 'version:' 也替换成自动版本号
-          #    （只动 publish 目录里的副本，不污染仓库）
+
+          # 3. 覆写根 SKILL.md frontmatter 里"顶层" version 行（不动 metadata.version）。
+          #    用 awk 替换，跨平台兼容（GNU/BSD sed 行为不一致，awk 更稳）。
           if [ -f "$PUBLISH_DIR/SKILL.md" ]; then
-            sed -i -E "0,/^version:.*/s//version: ${VERSION}/" "$PUBLISH_DIR/SKILL.md"
+            awk -v ver="$VERSION" '
+              BEGIN { done = 0 }
+              /^version:[[:space:]]/ && !done { print "version: " ver; done = 1; next }
+              { print }
+            ' "$PUBLISH_DIR/SKILL.md" > "$PUBLISH_DIR/SKILL.md.new"
+            mv "$PUBLISH_DIR/SKILL.md.new" "$PUBLISH_DIR/SKILL.md"
           fi
+
           echo "==> Publish dir contents:"
           find "$PUBLISH_DIR" -type f | sort
+          echo ""
           echo "==> Effective _meta.json version:"
           jq '.version' "$PUBLISH_DIR/_meta.json"
-          echo "==> Effective SKILL.md frontmatter:"
-          sed -n '1,15p' "$PUBLISH_DIR/SKILL.md"
+          echo ""
+          echo "==> Effective SKILL.md frontmatter (first 20 lines):"
+          sed -n '1,20p' "$PUBLISH_DIR/SKILL.md"
+          echo ""
+          echo "==> All 'version:' lines in publish dir (must all be $VERSION at top-level, ignore metadata.version):"
+          grep -rn '^version:' "$PUBLISH_DIR" || true
+
           echo "PUBLISH_DIR=$PUBLISH_DIR" >> "$GITHUB_ENV"
 
       - name: Publish (dry-run)
