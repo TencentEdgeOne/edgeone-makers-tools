@@ -1,0 +1,90 @@
+name: Publish to SkillHub
+
+# 触发策略：
+# 1. workflow_run — 等 `Build Multi-Platform Output` 在 main 上跑完且成功，再发布。
+#    这样可以保证 cursor/ codex/ 自动生成的内容已经合入 main，避免重复触发。
+# 2. workflow_dispatch — 手动触发兜底，支持自定义 changelog。
+on:
+  workflow_run:
+    workflows: ["Build Multi-Platform Output"]
+    branches: [main]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      changelog:
+        description: 'Changelog (覆盖默认的 commit message)'
+        required: false
+        type: string
+
+permissions:
+  contents: write   # 需要 push 到 skillhub 分支
+
+concurrency:
+  group: publish-skillhub
+  cancel-in-progress: false   # 发布按队列顺序跑完，不并发
+
+jobs:
+  publish:
+    # 仅当 build 成功时才继续；手动触发时无 workflow_run 上下文，conclusion 为空字符串
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      github.event.workflow_run.conclusion == 'success'
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout (full history)
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: main
+
+      - name: Configure git
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+      - name: Sync main into skillhub
+        run: |
+          git fetch origin skillhub:skillhub
+          git checkout skillhub
+          # 把 main 合进来；skillhub 唯一独有的差异是根 SKILL.md 的 frontmatter
+          git merge --no-ff main -m "chore(skillhub): sync from main (${GITHUB_SHA::7})"
+          git push origin skillhub
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install SkillHub CLI
+        run: |
+          curl -fsSL https://skillhub.cn/install/install.sh | bash -s -- --cli-only
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+
+      - name: Verify CLI
+        run: |
+          which skillhub
+          skillhub --version
+
+      - name: Login to SkillHub
+        env:
+          SKILLHUB_API_TOKEN: ${{ secrets.SKILLHUB_API_TOKEN }}
+        run: |
+          skillhub login --key "$SKILLHUB_API_TOKEN" --host https://api.skillhub.cn
+          skillhub auth whoami
+
+      - name: Publish (dry-run)
+        run: skillhub publish . --dry-run
+
+      - name: Publish
+        env:
+          # 优先级：手动输入 > 触发 build 的那次 commit message > 默认值
+          MANUAL_CHANGELOG: ${{ inputs.changelog }}
+          DEFAULT_CHANGELOG: ${{ github.event.workflow_run.head_commit.message }}
+        run: |
+          CHANGELOG="${MANUAL_CHANGELOG:-${DEFAULT_CHANGELOG:-auto release on $(date +%F)}}"
+          # 多行 commit message 只取第一行作为 changelog
+          CHANGELOG="$(printf '%s' "$CHANGELOG" | head -n 1)"
+          echo "Changelog: $CHANGELOG"
+          skillhub publish . --changelog "$CHANGELOG"
