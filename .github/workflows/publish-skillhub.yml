@@ -75,10 +75,6 @@ jobs:
         run: |
           which skillhub
           skillhub --version
-          echo "==== skillhub --help ===="
-          skillhub --help || true
-          echo "==== skillhub publish --help ===="
-          skillhub publish --help || true
 
       - name: Login to SkillHub
         env:
@@ -161,7 +157,10 @@ jobs:
           echo "✓ Version bump OK, ready to publish $EXPECTED"
 
       - name: Publish (dry-run)
-        run: skillhub publish "$PUBLISH_DIR" --dry-run
+        # --version 显式覆盖 SKILL.md 里的 version（CLI 帮助文档明文：
+        # "覆盖 SKILL.md 中的 version"）。这是 SkillHub 真正用来定版本号的入口；
+        # publish 目录里 SKILL.md/_meta.json 的 version 字段 CLI 实际不读。
+        run: skillhub publish "$PUBLISH_DIR" --version "$VERSION" --dry-run
 
       - name: Publish
         env:
@@ -173,4 +172,7 @@ jobs:
           # 多行 commit message 只取第一行作为 changelog
           CHANGELOG="$(printf '%s' "$CHANGELOG" | head -n 1)"
           echo "Changelog: $CHANGELOG"
-          skillhub publish "$PUBLISH_DIR" --changelog "$CHANGELOG"
+          echo "Version:   $VERSION"
+          skillhub publish "$PUBLISH_DIR" \
+            --version "$VERSION" \
+            --changelog "$CHANGELOG"
