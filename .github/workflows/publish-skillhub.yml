@@ -74,6 +74,16 @@ jobs:
           skillhub login --key "$SKILLHUB_API_TOKEN" --host https://api.skillhub.cn
           skillhub auth whoami
 
+      - name: Compute version
+        # 用 skillhub 分支的 commit 数生成自动递增的 patch 版本号，避免每次手动 bump。
+        # 形如 1.0.<commit_count>，每次提交后单调递增；任何手动改动也跟着推进。
+        # 仓库里 _meta.json / SKILL.md 留的 1.0.0 仅作占位，发布前在 publish 目录里覆写。
+        run: |
+          PATCH=$(git rev-list --count HEAD)
+          VERSION="1.0.${PATCH}"
+          echo "VERSION=$VERSION" >> "$GITHUB_ENV"
+          echo "==> Publishing version: $VERSION"
+
       - name: Prepare publish directory
         # SkillHub 拒绝隐藏文件（如 .gitignore）和未在白名单的扩展名。
         # 我们按 _meta.json 的 files 字段精确复制需要发布的文件到一个干净目录，
@@ -81,15 +91,24 @@ jobs:
         run: |
           PUBLISH_DIR="$RUNNER_TEMP/skillhub-publish"
           mkdir -p "$PUBLISH_DIR"
-          # 把 _meta.json 自身也带过去，让 SkillHub 知道清单和 slug
-          cp _meta.json "$PUBLISH_DIR/"
-          # 按 _meta.json 的 files 列表逐个复制（jq 解析 JSON）
+          # 1. 把 _meta.json 复制过去，并用自动版本号覆写顶层 version
+          jq --arg v "$VERSION" '.version = $v' _meta.json > "$PUBLISH_DIR/_meta.json"
+          # 2. 按 _meta.json 的 files 列表逐个复制
           jq -r '.files[]' _meta.json | while read -r f; do
             mkdir -p "$PUBLISH_DIR/$(dirname "$f")"
             cp "$f" "$PUBLISH_DIR/$f"
           done
+          # 3. 把根 SKILL.md frontmatter 里的 'version:' 也替换成自动版本号
+          #    （只动 publish 目录里的副本，不污染仓库）
+          if [ -f "$PUBLISH_DIR/SKILL.md" ]; then
+            sed -i -E "0,/^version:.*/s//version: ${VERSION}/" "$PUBLISH_DIR/SKILL.md"
+          fi
           echo "==> Publish dir contents:"
           find "$PUBLISH_DIR" -type f | sort
+          echo "==> Effective _meta.json version:"
+          jq '.version' "$PUBLISH_DIR/_meta.json"
+          echo "==> Effective SKILL.md frontmatter:"
+          sed -n '1,15p' "$PUBLISH_DIR/SKILL.md"
           echo "PUBLISH_DIR=$PUBLISH_DIR" >> "$GITHUB_ENV"
 
       - name: Publish (dry-run)
