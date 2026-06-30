@@ -25,19 +25,28 @@ concurrency:
 
 jobs:
   publish:
-    # 仅当 build 成功时才继续；手动触发时无 workflow_run 上下文，conclusion 为空字符串
+    # 触发条件：
+    #   1. 手动触发：总是允许
+    #   2. workflow_run（由 build.yml 触发）：要求 build 成功，且触发 build 的那次
+    #      commit 不是 build 自己 push 的 "auto-generate multi-platform output"
+    #      commit —— 否则会无限循环触发 publish。
     if: |
       github.event_name == 'workflow_dispatch' ||
-      github.event.workflow_run.conclusion == 'success'
+      (github.event.workflow_run.conclusion == 'success' &&
+       !contains(github.event.workflow_run.head_commit.message, 'auto-generate multi-platform output'))
 
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout (full history)
+      - name: Checkout (full history, pinned to trigger SHA)
+        # 关键：workflow_run 默认 checkout 的是 default branch 当前 HEAD，
+        # 而不是触发它的那次 commit。如果 publish 排队跑、main 又有新提交，
+        # 会拿到不一致的内容。这里显式指定 head_sha 锁定。
+        # 手动触发时退化为 main。
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
-          ref: main
+          ref: ${{ github.event.workflow_run.head_sha || 'main' }}
 
       - name: Configure git
         run: |
