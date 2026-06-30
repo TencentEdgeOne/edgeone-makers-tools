@@ -126,6 +126,27 @@ jobs:
 
           echo "PUBLISH_DIR=$PUBLISH_DIR" >> "$GITHUB_ENV"
 
+      - name: Sanity check version bump
+        # 强校验：publish 目录里 SKILL.md 顶层 version 必须等于 $VERSION，
+        # _meta.json 顶层 version 也必须等于 $VERSION。否则立刻失败，
+        # 避免发布到一个仍带占位 1.0.0 的产物，浪费 SkillHub 的版本号。
+        run: |
+          EXPECTED="$VERSION"
+          ACTUAL_SKILL=$(awk '/^version:[[:space:]]/ {print $2; exit}' "$PUBLISH_DIR/SKILL.md")
+          ACTUAL_META=$(jq -r '.version' "$PUBLISH_DIR/_meta.json")
+          echo "Expected:        $EXPECTED"
+          echo "SKILL.md actual: $ACTUAL_SKILL"
+          echo "_meta.json:      $ACTUAL_META"
+          if [ "$ACTUAL_SKILL" != "$EXPECTED" ] || [ "$ACTUAL_META" != "$EXPECTED" ]; then
+            echo "::error::Version bump failed — publish dir still has wrong version. Aborting before SkillHub publish."
+            echo "----- SKILL.md (first 30 lines) -----"
+            sed -n '1,30p' "$PUBLISH_DIR/SKILL.md"
+            echo "----- _meta.json (first 10 lines) -----"
+            head -n 10 "$PUBLISH_DIR/_meta.json"
+            exit 1
+          fi
+          echo "✓ Version bump OK, ready to publish $EXPECTED"
+
       - name: Publish (dry-run)
         run: skillhub publish "$PUBLISH_DIR" --dry-run
 
