@@ -4,6 +4,7 @@ description: >-
   V8-based lightweight edge functions on EdgeOne Makers. Covers routing, KV storage access,
   request/response handling, and environment variables at the edge.
 pathPatterns:
+  - edge-functions/**
   - functions/**
 validate:
   - pattern: "process\\.env"

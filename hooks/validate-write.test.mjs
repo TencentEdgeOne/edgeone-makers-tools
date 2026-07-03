@@ -117,6 +117,23 @@ test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.6 does not warn for
   );
 });
 
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.6 matches edge-functions path after pathPatterns fix', () => {
+  const output = buildValidateWriteOutput({
+    tool_name: 'Write',
+    tool_input: {
+      file_path: 'edge-functions/api/hello.js',
+      content: 'export default () => process.env.API_KEY;',
+    },
+  });
+
+  assert.deepEqual(output, {
+    hookSpecificOutput: {
+      hookEventName: 'PreToolUse',
+      additionalContext: 'Validation reminder:\n- Use context.env in EdgeOne Makers runtime code.',
+    },
+  });
+});
+
 test('plugin-skill-injection-optimization.DOMESTIC_IDE_ADAPTATION.5 supports CodeBuddy replace_in_file validate with new_str', () => {
   const output = buildValidateWriteOutput({
     tool_name: 'replace_in_file',
