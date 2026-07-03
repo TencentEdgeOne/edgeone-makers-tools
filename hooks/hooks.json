@@ -1,37 +1,13 @@
 {
   "hooks": {
-    "SessionStart": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/on-session-start.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/on-prompt.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
-        "matcher": "Read|Edit|Write|Bash|read_file|replace_in_file|write_to_file|execute_command",
+        "matcher": "Edit|Write|replace_in_file|write_to_file",
         "hooks": [
           {
             "type": "command",
-            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/pretooluse-skill-inject.mjs\"",
-            "timeout": 5
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-write.mjs\"",
+            "timeout": 3
           }
         ]
       }

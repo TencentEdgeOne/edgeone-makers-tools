@@ -1,8 +1,0 @@
-#!/bin/bash
-# UserPromptSubmit hook: route prompts to Skill loading instructions.
-set -euo pipefail
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PLUGIN_ROOT="${EDGEONE_MAKERS_PLUGIN_ROOT:-${CLAUDE_PLUGIN_ROOT:-$(cd "$SCRIPT_DIR/.." && pwd)}}"
-
-node "$PLUGIN_ROOT/hooks/userprompt-skill-inject.mjs"

@@ -12,11 +12,6 @@ description: >-
   commands — the skill contains critical rules for parsing deploy output and presenting access URLs.
   Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy —
   use edgeone-makers-dev for troubleshooting).
-pathPatterns:
-  - edgeone.json
-bashPatterns:
-  - "\\bedgeone\\s+pages\\s+deploy\\b"
-  - "\\bedgeone\\s+makers\\s+deploy\\b"
 metadata:
   author: edgeone
   version: "2.1.0"

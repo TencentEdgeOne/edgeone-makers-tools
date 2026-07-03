@@ -19,4 +19,3 @@ edgeone-makers-tools-clean/
 
 # EdgeOne Makers hook signal log and state
 .edgeone/signal-log.jsonl
-.edgeone/pretooluse-injected-skills.json

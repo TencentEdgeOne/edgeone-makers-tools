@@ -1,0 +1,129 @@
+feature:
+  name: plugin-skill-injection-optimization
+  product: edgeone-makers-tools
+  description: 优化 EdgeOne Makers Tools 插件的 Skill 注入、Hook 路由、平台降级和信号观测，减少上下文占用并提高 Skill 触发准确性。【2026-07-03 决策：采纳 docs/plugin-hooks-vs-context-and-tools.md 方案A，废弃 #6 UserPromptSubmit/#7 SessionStart/#9 pathPatterns+bashPatterns/#12 chainTo 的运行时注入；#8 路由注入+去重废弃（validate 保留见#10）；#11 路由降级废弃（写入工具名兼容保留）；#10 validate 精简为独立 hook 保留；#13 signal-log 保留供诊断；AI 改由 CLAUDE.md 路由表自主选 skill】
+
+components:
+  INSTRUCTION_INJECTION:
+    description: "#6 Plugin 改为指令注入模式。【DEPRECATED 2026-07-03：方案A，UserPromptSubmit hook 整体废弃，AI 改由 CLAUDE.md 路由表自主选 skill】"
+    requirements:
+      1: 命中 Skill 后，插件只向 `additionalContext` 注入加载该 Skill 的短指令，不注入 `SKILL.md` 全文。
+      1-note: 2026-06-24 初查当前仓库时，`hooks/on-prompt.sh` 未读取 `SKILL.md` 全文，而是硬编码注入一段读取 `skills/makers-agents/SKILL.md` 的说明；实现前需要确认全文注入来自外部打包流程、旧版本脚本，还是待迁移设计。
+      2: 插件保留现有提示词评分和 Skill 选择机制，输出格式变化不改变命中结果。
+      2-note: 2026-06-24 讨论确认：#6 的目标定义为统一所有命中 Skill 的输出为平台化加载指令；旧版全文注入只作为背景假设保留。
+      2-note-implementation: 2026-06-24 实现选择：新增 `hooks/userprompt-skill-inject.mjs` 承载提示词评分、平台检测和指令生成；`hooks/on-prompt.sh` 仅定位插件根目录并转发 stdin，便于后续 #8/#9/#12 复用。
+      2-note-trial: 2026-06-24 试改已加入 `selectSkillForPrompt`、`detectPlatform`、`renderSkillInstruction` 和 `buildHookOutput`；当前评分规则仍是脚本内静态规则，后续 #9 可迁移为读取 Skill frontmatter。
+      3: Claude Code 平台的注入指令格式为 `You must run the Skill(<skill-name>) tool.`。
+      4: Cursor 平台的注入指令格式为 `Load the /<skill-name> skill.`。
+      5: 指令注入路径不再执行 10KB 预算裁剪。
+      6: 验证用例必须证明触发 Skill 时上下文只包含加载指令，且 Agent 能继续加载正确 Skill 内容。
+      6-note-verified: 2026-06-24 已运行 `node --test hooks/userprompt-skill-inject.test.mjs`，退出码为 0；Hook 样例验证部署 prompt 输出 `You must run the Skill(makers-deploy) tool.`，Cursor Edge Function prompt 输出 `Load the /makers-edge-functions skill.`。
+      7: 不支持 Skill tool 的平台不在 #6 中降级注入全文，相关 Push 模式 fallback 由 #11 覆盖。
+
+  MINIMAL_SESSION_START:
+    description: "#7 SessionStart 极简化。【DEPRECATED 2026-07-03：方案A，SessionStart hook 删除，CLAUDE.md 已作为项目指令自动加载】"
+    requirements:
+      1: `SessionStart` 只注入少量行为原则和 Skill 路由提示，不注入知识图谱全文。
+      2: 合并后的 `CLAUDE.md` 作为 Agent 可读取的 Skill 路由表。
+      3:
+        requirement: profiler 逻辑继续扫描项目设置并设置环境变量。
+        deprecated: true
+        reason: 2026-06-24 用户确认 profiler 属于旧插件仓库，新仓库没有该逻辑；#7 按无 profiler 的新仓库实现。
+      4: 验证用例必须记录优化后新会话的上下文占用下降。
+      5: 新仓库的 `SessionStart` 实现不新增或模拟 profiler 入口。
+      5-note-implementation: 2026-06-24 已新增 `hooks/sessionstart-minimal-context.mjs`，并通过 `hooks/on-session-start.sh` 和 `hooks/hooks.json` 注册到 `SessionStart`；输出内容保持为 5 行路由原则，不读取 `SKILL.md`、`references/` 或 profiler 数据。
+      5-note-verified: 2026-06-24 已运行 `node --test hooks/sessionstart-minimal-context.test.mjs`，覆盖上下文行数、`CLAUDE.md` / `AGENTS.md` 路由提示、禁止启动时加载全部 Skills，以及不包含 DeepAgents、`context.store`、`PAGES_SOURCE`、profiler 等知识图谱内容。
+
+  PRETOOLUSE_HOOK:
+    description: "#8 新增 PreToolUse Hook。【2026-07-03 部分废弃：路由注入+去重删除；PreToolUse hook 精简为仅 validate，拆为独立 hooks/validate-write.mjs（见#10）】"
+    requirements:
+      1: 插件在 `hooks.json` 中注册 `PreToolUse` hook。
+      2: 插件提供 `pretooluse-skill-inject.mjs`，并从 stdin 解析 `tool_name` 和 `tool_input`。
+      3: `Read`、`Edit`、`Write` 工具调用根据文件路径匹配 Skill 的 `pathPatterns`。
+      4: `Bash` 工具调用根据命令字符串匹配 Skill 的 `bashPatterns`。
+      5: 命中 Skill 后输出对应平台的 Skill 加载指令。
+      6: 同一会话中已经注入过的 Skill 不重复注入。
+      7: 验证用例必须覆盖读取 `functions/index.ts` 触发 `makers-edge-functions`。
+      8: 验证用例必须覆盖执行 `edgeone pages deploy` 触发 `makers-deploy`。
+      8-note-implementation: 2026-06-24 初始实现新增 `hooks/pretooluse-skill-inject.mjs` 和对应测试；路径与命令规则暂时内置在脚本中，后续 #9 再迁移到 Skill frontmatter 的 `pathPatterns` / `bashPatterns`。
+      8-note-verified: 2026-06-24 已运行 `node --test hooks/pretooluse-skill-inject.test.mjs`，并通过 stdin smoke test 验证 `Read functions/index.ts` 输出 `makers-edge-functions` 加载指令、`Bash edgeone pages deploy` 输出 `makers-deploy` 加载指令，重复读取同一 Skill 时不再输出。
+
+  MULTI_SIGNAL_MATCHING:
+    description: "#9 增加 pathPatterns 和 bashPatterns 多维匹配。【DEPRECATED 2026-07-03：方案A，pathPatterns/bashPatterns 从 frontmatter 移除，路由交还 AI】"
+    requirements:
+      1: Skill frontmatter 支持 `pathPatterns` 字段，用于声明文件路径触发规则。
+      2: Skill frontmatter 支持 `bashPatterns` 字段，用于声明命令触发正则。
+      3: `makers-deploy` 至少匹配 `edgeone.json` 和 `\bedgeone\s+pages\s+deploy\b`。
+      4: `makers-edge-functions` 至少匹配 `functions/**`。
+      5: `makers-cloud-functions` 至少匹配 `cloud-functions/**`。
+      6: `makers-agents` 至少匹配 `agents/**`。
+      7: `makers-middleware` 至少匹配 `middleware.*`。
+      8: `makers-cli` 至少匹配 `\bedgeone\s+`。
+      9: Hook 将 glob 编译为正则后执行路径匹配。
+      10: 验证用例必须覆盖每个新增 pattern 的正向命中。
+      10-note-decision: 2026-06-24 #9 实现按真实仓库 Skill 名称使用 `makers-cloud-functions`，不新增不存在的 `makers-node-functions`；`makers-storage` 暂不声明虚构目录 pathPatterns，KV import / `context.store` 触发留给 #12 `chainTo`。
+      10-note-priority: 2026-06-24 `edgeone pages deploy` 会同时匹配 `makers-deploy` 与更泛的 `makers-cli`，Hook 需要按规则具体度选择最具体命中，避免 CLI 泛规则抢占部署 Skill。
+      10-note-implementation: 2026-06-24 已在 `makers-deploy`、`makers-edge-functions`、`makers-cloud-functions`、`makers-agents`、`makers-middleware` 和 `makers-cli` 的 `SKILL.md` frontmatter 中增加 `pathPatterns` / `bashPatterns`；`hooks/pretooluse-skill-inject.mjs` 改为扫描真实 Skill frontmatter 生成触发规则。
+      10-note-verified: 2026-06-24 已运行 `node --test hooks/pretooluse-skill-inject.test.mjs`，覆盖从 frontmatter 读取 path/bash patterns、`edgeone pages deploy` 具体度优先命中 `makers-deploy`、泛 `edgeone` 命令命中 `makers-cli`，以及所有新增路径 pattern 的正向命中。
+
+  VALIDATE_RED_LINES:
+    description: "#10 增加 validate 红线规则。【2026-07-03 保留并精简：validate 拆为独立 hook hooks/validate-write.mjs，仅做写入内容检查，无状态无注入】"
+    requirements:
+      1: Skill frontmatter 支持 `validate` 字段，用于声明写入内容的违规 pattern 和纠错提示。
+      2: `PreToolUse` 在 `Edit` 和 `Write` 时检测拟写入内容。
+      3: 写入 `process.env` 时提示 EdgeOne Makers 运行时代码应使用 `context.env`。
+      4: 写入 `new Headers()` 时提示当前运行时 surface 使用普通对象 headers。
+      5: 写入 `fs.writeFile` 时提示 Edge Function 不支持文件系统写入。
+      6: 初始实现中 validate 命中只追加纠错提示，不阻断写入。
+      6-note: 是否对关键违规执行阻断，需要在实现前继续讨论。
+      6-note-implementation: 2026-06-24 已在 `makers-edge-functions` frontmatter 中增加 `validate` 规则，并让 `hooks/pretooluse-skill-inject.mjs` 在 `Edit` / `Write` 的拟写入内容中匹配规则后追加纠错提醒；Skill 已经去重注入过时仍会继续输出 validate 提醒。
+      6-note-verified: 2026-06-24 已运行 `node --test hooks/pretooluse-skill-inject.test.mjs`，覆盖 validate frontmatter 解析、`process.env`、`new Headers()`、`fs.writeFile` 三条提醒，以及 `Read` 不触发 validate 的只读路径。
+
+  DOMESTIC_IDE_ADAPTATION:
+    description: "#11 CodeBuddy 等国内 IDE 适配。【2026-07-03 部分废弃：路由降级/Push 模式 fallback 删除；写入工具名兼容（read_file/write_to_file/replace_in_file/execute_command）保留在 validate-write.mjs】"
+    requirements:
+      1: 插件记录各平台对 `SessionStart`、`UserPromptSubmit`、`PreToolUse` 的支持差异。
+      2: 插件记录各平台是否支持 Skill tool。
+      3: 不支持 `PreToolUse` 的平台降级为仅使用 `UserPromptSubmit`。
+      4: 不支持 Skill tool 的平台降级为 Push 模式，注入必要 Skill 内容。
+      5: 插件通过现有或扩展后的 `detectPlatform` 选择平台分支。
+      6: 验证用例必须覆盖 CodeBuddy 从开发到部署的完整流程。
+      6-note-implementation: 2026-06-25 CodeBuddy 回归发现其工具名为 `read_file`、`write_to_file`、`replace_in_file`、`execute_command`，路径字段为 `filePath`，增量替换内容字段为 `new_str`；已扩展 `hooks/hooks.json` 的 `PreToolUse` matcher，并在 `hooks/pretooluse-skill-inject.mjs` 中将这些工具名映射到既有 Read/Edit/Write/Bash 逻辑。
+      6-note-verified: 2026-06-25 已运行 `node --test hooks/pretooluse-skill-inject.test.mjs`，覆盖 CodeBuddy `read_file` 路径触发、`execute_command` 命令触发、`write_to_file` 的 chainTo 触发，以及 `replace_in_file` 使用 `new_str` 的 validate 触发。
+
+  CHAIN_TO_LOADING:
+    description: "#12 增加 chainTo 链式加载。【DEPRECATED 2026-07-03：方案A，chainTo 从 frontmatter 移除，交叉引用迁入 SKILL.md 正文】"
+    requirements:
+      1: Skill frontmatter 支持 `chainTo` 字段，用于声明代码 pattern 到关联 Skill 的加载规则。
+      2: `PreToolUse` 在 `Edit` 和 `Write` 时检测 `chainTo` pattern。
+      3: 命中 `chainTo` 后额外注入关联 Skill 的加载指令。
+      4: 链式加载使用与直接命中相同的去重机制。
+      5: 验证用例必须覆盖编辑包含 KV import 或 `context.store` 的代码时触发 `makers-storage`。
+      5-note-implementation: 2026-06-25 已在 `makers-edge-functions` 与 `makers-agents` frontmatter 中增加 `chainTo` 规则，并让 `hooks/pretooluse-skill-inject.mjs` 对 `Edit` / `Write` 拟写入内容执行一跳链式匹配；命中后追加关联 Skill 加载指令，复用直接命中的去重状态，并写入 `trigger: "chainTo"` 信号日志。
+      5-note-verified: 2026-06-25 已运行 `node --test hooks/pretooluse-skill-inject.test.mjs`，覆盖 `chainTo` frontmatter 解析、KV 代码触发 `makers-storage`、`context.store` 触发 `makers-storage`、已注入 Skill 不重复输出，以及 chainTo 日志原因。
+
+  SIGNAL_LOGGING:
+    description: "#13 信号观测日志。【2026-07-03 保留：signal-log.mjs 供 validate-write.mjs 记录 validate 命中；UserPromptSubmit/PreToolUse 路由信号删除】"
+    requirements:
+      1: 插件将 Skill 触发信号追加写入 `.edgeone/signal-log.jsonl`。
+      2: 每条日志至少包含 `timestamp`、`hook`、`trigger`、`matchedSkill` 和 `reason`。
+      3: `PreToolUse` 记录路径、命令、validate 和 chainTo 触发原因。
+      4: `UserPromptSubmit` 记录提示词评分命中原因。
+      5: 验证用例必须检查日志文件中存在正确的触发记录。
+      5-note-implementation: 2026-06-25 已新增 `hooks/signal-log.mjs`，支持向 `.edgeone/signal-log.jsonl` append JSONL，并在 `UserPromptSubmit` 命中提示词评分、`PreToolUse` 命中 `pathPatterns` / `bashPatterns` / `validate` 时记录信号；`chainTo` 的实际触发日志随 #12 链式加载实现接入。
+      5-note-verified: 2026-06-25 已运行 `node --test hooks/signal-log.test.mjs hooks/userprompt-skill-inject.test.mjs hooks/pretooluse-skill-inject.test.mjs`，覆盖必填字段、JSONL 写入、prompt score、路径、命令和 validate 信号日志；`.gitignore` 已忽略 `.edgeone/signal-log.jsonl`。
+
+constraints:
+  CONTEXT_BUDGET:
+    description: 上下文预算和加载策略约束。
+    requirements:
+      1: 默认路径应优先使用指令加载模式，避免把大型 Skill 文档直接塞入上下文。
+      2: 只有平台不支持 Skill tool 或显式要求 Push 模式时，才允许注入 Skill 全文。
+
+  SPEC_MAINTENANCE:
+    description: 规格维护约束。
+    requirements:
+      1: 讨论中确认的新决策必须先更新本规格，再进入实现。
+      2: 实现、测试和文档中的关键行为应引用完整 ACID。
+      3: 已发布或已讨论确认的 requirement 不应重编号；需要变更时使用 note 或 deprecated 标记。
+

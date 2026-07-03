@@ -15,12 +15,6 @@ description: >-
   Do NOT trigger for deployment workflows (use edgeone-pages-deploy).
   Do NOT trigger for generic AI framework development outside
   an EdgeOne Makers project.
-pathPatterns:
-  - agents/**
-chainTo:
-  - pattern: "\\bKV\\b|context\\.store"
-    skill: makers-storage
-    reason: "Code references KV or store APIs."
 metadata:
   author: edgeone
   version: "1.0.0"
@@ -43,6 +37,8 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 - Persisting conversation state via `context.store` (LangGraph checkpointer / OpenAI session / Claude session)
 - Calling sandbox or platform tools via `context.sandbox` / `context.tools`
 - Splitting AI inference (`agents/`) from data CRUD (`cloud-functions/`)
+
+> Cross-reference: if your code uses `context.store` or KV APIs, also read `skills/makers-storage/SKILL.md`.
 
 **Do NOT use for:**
 - Plain Edge Functions / Cloud Functions / Middleware → use `edgeone-pages-dev`
