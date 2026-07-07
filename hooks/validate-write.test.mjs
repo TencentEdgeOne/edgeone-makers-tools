@@ -8,7 +8,7 @@ import { buildValidateWriteOutput, loadSkillValidateRules } from './validate-wri
 
 test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.1 loads validate rules from Skill frontmatter', async () => {
   const rules = await loadSkillValidateRules();
-  const edgeFunctions = rules.find((rule) => rule.skill === 'makers-edge-functions');
+  const edgeFunctions = rules.find((rule) => rule.skill === 'edgeone-makers-edge-functions');
 
   assert.ok(edgeFunctions);
   assert.deepEqual(edgeFunctions.validate, [
@@ -192,7 +192,7 @@ test('plugin-skill-injection-optimization.SIGNAL_LOGGING.3 logs validate matches
       timestamp: '2026-07-03T00:00:00.000Z',
       hook: 'PreToolUse',
       trigger: 'validate',
-      matchedSkill: 'makers-edge-functions',
+      matchedSkill: 'edgeone-makers-edge-functions',
       reason: 'Use context.env in EdgeOne Makers runtime code.',
       toolName: 'Write',
     });
