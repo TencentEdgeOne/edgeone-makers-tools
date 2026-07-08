@@ -31,6 +31,13 @@ internally).
 > [`BRANCH.md`](https://github.com/TencentEdgeOne/edgeone-makers-tools/blob/skillhub/BRANCH.md)
 > on the `skillhub` branch for the maintenance flow.
 
+### Option C — Claude Code plugin marketplace
+
+```text
+/plugin marketplace add TencentEdgeOne/edgeone-makers-tools
+/plugin install edgeone-makers-tools@edgeone-makers
+```
+
 After installation, your AI coding agent will automatically detect relevant tasks and load the right skill.
 
 ## Skills

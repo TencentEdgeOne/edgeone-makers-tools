@@ -270,30 +270,6 @@ PAGES_SOURCE=skills edgeone makers dev
 
 This tells the platform that the command was triggered from an AI skill context.
 
-### package.json scripts (⚠️ avoid dev script recursion)
-
-> ⛔ **NEVER set `"dev": "edgeone makers dev"` or `"dev": "edgeone makers dev"` in package.json** — this causes infinite recursion.
-> When CLI starts, it reads `scripts.dev` to launch the frontend dev server. If that script is
-> `edgeone makers dev` itself, it recurses. CLI detects this and skips the frontend server entirely,
-> causing static files (e.g., `public/index.html`) to return 404.
-
-Correct pattern — **do not include a `dev` script**:
-
-```json
-{
-  "scripts": {
-    "build": "edgeone makers build",
-    "deploy": "edgeone makers deploy"
-  }
-}
-```
-
-CLI will automatically serve `public/` as static files during `edgeone makers dev`. No `dev` script needed.
-
-- `edgeone makers dev` — starts agent runtime + detects & launches frontend dev server (reads `scripts.dev` or auto-serves `public/`)
-- `edgeone makers build` — builds agents + frontend into `.edgeone/` output
-- `edgeone makers deploy` — builds and deploys to EdgeOne Makers
-
 ### Local development
 
 ```bash
@@ -302,12 +278,7 @@ PAGES_SOURCE=skills edgeone makers link
 
 # 2. Pull remote environment variables to local .env
 PAGES_SOURCE=skills edgeone makers env pull
-
-# 3. Start local dev server (agent runtime + frontend)
-npm run makers:dev
 ```
-
-`npm run makers:dev` starts `edgeone makers dev`, which starts both the agent runtime (Node or Python, auto-detected from `agents/` file extensions) and the frontend dev server. Test through the Makers entry URL printed by the CLI. Agent endpoints are available through that Makers proxy, not through the raw frontend dev-server port.
 
 ### Environment variables for deployment
 
@@ -370,8 +341,7 @@ edgeone makers env pull
 2. Copy the skeleton from the matching framework reference doc.
 3. Configure `edgeone.json`: set `agents.framework` correctly.
 4. Frontend: `getOrCreateConversationId` + `fetch` with `makers-conversation-id` header.
-5. Package scripts: keep `dev` as the frontend dev server, and put the Makers wrapper in `makers:dev`.
-6. Get it running → self-check against the Critical Rules → run through `references/review-checklist.md`.
+5. Get it running → self-check against the Critical Rules → run through `references/review-checklist.md`.
 
 ### Pre-Deploy SOP (⚠️ MUST execute before `edgeone makers deploy`)
 
