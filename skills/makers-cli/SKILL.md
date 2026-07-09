@@ -54,9 +54,9 @@ Or inline: `PAGES_SOURCE=skills edgeone makers dev`
 ```bash
 npm install -g edgeone
 edgeone login
-edgeone makers link
-edgeone makers env pull
-edgeone makers dev
+PAGES_SOURCE=skills edgeone makers link
+PAGES_SOURCE=skills edgeone makers env pull
+PAGES_SOURCE=skills edgeone makers dev
 ```
 
 ### Deploy

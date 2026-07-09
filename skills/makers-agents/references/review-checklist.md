@@ -194,6 +194,8 @@
 
 - [ ] `process.env` is allowed on the frontend (consistent with frontend frameworks), but **do not** expose backend secrets like `AI_GATEWAY_API_KEY` to the browser
 
+- [ ] Local testing is done through the Makers proxy URL printed by `edgeone makers dev`; the raw frontend dev-server port does not serve `agents/` routes
+
 ---
 
 ## Remediation Table: from "generic Vercel style" → "EdgeOne Makers style"

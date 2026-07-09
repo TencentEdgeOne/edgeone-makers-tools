@@ -1,0 +1,20 @@
+{
+  "name": "edgeone-makers",
+  "owner": {
+    "name": "EdgeOne"
+  },
+  "description": "EdgeOne Makers platform development skills marketplace.",
+  "plugins": [
+    {
+      "name": "edgeone-makers-tools",
+      "source": "./",
+      "description": "EdgeOne Makers platform development skills — AI Agents, Cloud Functions, Edge Functions, Storage, Middleware, and Deployment.",
+      "version": "1.0.0",
+      "author": {
+        "name": "EdgeOne"
+      },
+      "category": "edge-one",
+      "tags": ["edgeone", "makers", "edge-functions", "cloud-functions", "agents", "deployment"]
+    }
+  ]
+}
