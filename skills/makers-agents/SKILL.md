@@ -38,6 +38,8 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 - Calling sandbox or platform tools via `context.sandbox` / `context.tools`
 - Splitting AI inference (`agents/`) from data CRUD (`cloud-functions/`)
 
+> Cross-reference: if your code uses `context.store` or KV APIs, also read `skills/makers-storage/SKILL.md`.
+
 **Do NOT use for:**
 - Plain Edge Functions / Cloud Functions / Middleware → use `edgeone-pages-dev`
 - Deployment workflows → use `edgeone-pages-deploy`
@@ -268,29 +270,15 @@ PAGES_SOURCE=skills edgeone makers dev
 
 This tells the platform that the command was triggered from an AI skill context.
 
-### package.json scripts (⚠️ avoid dev script recursion)
+### Local development
 
-> ⛔ **NEVER set `"dev": "edgeone makers dev"` or `"dev": "edgeone makers dev"` in package.json** — this causes infinite recursion.
-> When CLI starts, it reads `scripts.dev` to launch the frontend dev server. If that script is
-> `edgeone makers dev` itself, it recurses. CLI detects this and skips the frontend server entirely,
-> causing static files (e.g., `public/index.html`) to return 404.
+```bash
+# 1. Link to remote project (pulls project ID + env vars)
+PAGES_SOURCE=skills edgeone makers link
 
-Correct pattern — **do not include a `dev` script**:
-
-```json
-{
-  "scripts": {
-    "build": "edgeone makers build",
-    "deploy": "edgeone makers deploy"
-  }
-}
+# 2. Pull remote environment variables to local .env
+PAGES_SOURCE=skills edgeone makers env pull
 ```
-
-CLI will automatically serve `public/` as static files during `edgeone makers dev`. No `dev` script needed.
-
-- `edgeone makers dev` — starts agent runtime + detects & launches frontend dev server (reads `scripts.dev` or auto-serves `public/`)
-- `edgeone makers build` — builds agents + frontend into `.edgeone/` output
-- `edgeone makers deploy` — builds and deploys to EdgeOne Makers
 
 ### Environment variables for deployment
 

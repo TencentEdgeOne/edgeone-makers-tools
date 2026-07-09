@@ -1,37 +1,13 @@
 {
   "hooks": {
-    "UserPromptSubmit": [
-      {
-        "matcher": "",
-        "hooks": [
-          {
-            "type": "command",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/on-prompt.sh",
-            "timeout": 5
-          }
-        ]
-      }
-    ],
     "PreToolUse": [
       {
-        "matcher": "Write|Edit",
+        "matcher": "Edit|Write|replace_in_file|write_to_file",
         "hooks": [
           {
             "type": "command",
-            "if": "Write(agents/*)|Edit(agents/*)",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/on-agent-write.sh",
-            "timeout": 5
-          }
-        ]
-      },
-      {
-        "matcher": "Bash",
-        "hooks": [
-          {
-            "type": "command",
-            "if": "Bash(edgeone *)",
-            "command": "${CLAUDE_PLUGIN_ROOT}/hooks/on-edgeone-cmd.sh",
-            "timeout": 5
+            "command": "node \"${CLAUDE_PLUGIN_ROOT}/hooks/validate-write.mjs\"",
+            "timeout": 3
           }
         ]
       }

@@ -16,3 +16,6 @@ docs/
 # Export script and output
 scripts/export-clean.sh
 edgeone-makers-tools-clean/
+
+# EdgeOne Makers hook signal log and state
+.edgeone/signal-log.jsonl
