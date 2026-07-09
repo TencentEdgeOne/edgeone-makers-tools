@@ -3,16 +3,16 @@ name: edgeone-makers-edge-functions
 description: >-
   V8-based lightweight edge functions on EdgeOne Makers. Covers routing, KV storage access,
   request/response handling, and environment variables at the edge.
-metadata:
-  author: edgeone
-  version: "1.0.0"
----
-
----
-name: edgeone-makers-edge-functions
-description: >-
-  V8-based lightweight edge functions on EdgeOne Makers. Covers routing, KV storage access,
-  request/response handling, and environment variables at the edge.
+pathPatterns:
+  - edge-functions/**
+  - functions/**
+validate:
+  - pattern: "process\\.env"
+    message: "Use context.env in EdgeOne Makers runtime code."
+  - pattern: "new\\s+Headers\\s*\\("
+    message: "Use plain object headers for this runtime surface."
+  - pattern: "fs\\.writeFile"
+    message: "Edge Functions do not support filesystem writes."
 metadata:
   author: edgeone
   version: "1.0.0"
@@ -107,6 +107,8 @@ export function onRequest(context) {
 ```
 
 ## KV Storage (Edge Functions only)
+
+> Cross-reference: if your code uses `context.store` or KV APIs, also read `skills/makers-storage/SKILL.md`.
 
 ⚠️ **Prerequisites**: You must enable KV Storage in the EdgeOne Makers console, create a namespace, and bind it to your project before using KV. See [kv-storage.md](kv-storage.md) for full setup instructions (same directory).
 
