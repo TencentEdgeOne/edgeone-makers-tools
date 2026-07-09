@@ -8,16 +8,6 @@ metadata:
   version: "1.0.0"
 ---
 
----
-name: edgeone-makers-middleware
-description: >-
-  Edge middleware for EdgeOne Makers — request interception, redirects, rewrites,
-  auth guards, A/B testing, and header injection at the edge (V8 runtime).
-metadata:
-  author: edgeone
-  version: "1.0.0"
----
-
 # Middleware
 
 Lightweight request interception running at the edge (V8 runtime). Use for redirects, rewrites, auth guards, A/B testing, and header injection.
