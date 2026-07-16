@@ -22,7 +22,7 @@ metadata:
 
 # EdgeOne Makers Agent Development Guide
 
-> ⛔ **预览禁令**：开发完成后必须通过 `edgeone makers dev` 启动 dev server，再用 `present_files` 打开 `http://127.0.0.1:8088/` 预览。严禁用 `file://` 协议打开 HTML 文件（即使 IDE 自动打开了也要忽略），严禁用 `python -m http.server`、`npx serve` 等自建 server。Next.js 项目还需在 `next.config` 中配置 `allowedDevOrigins: ["127.0.0.1"]`。
+> ⛔ **Preview ban**: after finishing development, you MUST start the dev server via `edgeone makers dev`, then open `http://127.0.0.1:8088/` with `present_files` to preview. Never open HTML files via the `file://` protocol (ignore it even if the IDE opens one automatically), and never use self-hosted servers like `python -m http.server` or `npx serve`. Next.js projects must also set `allowedDevOrigins: ["127.0.0.1"]` in `next.config`.
 
 Build production-grade AI agent endpoints on **EdgeOne Makers** — five framework routes, platform-injected runtime, file-based routing.
 
@@ -123,6 +123,7 @@ EdgeOne Makers Agent **is not** a generic API route pattern (not Vercel AI SDK's
 ├── .edgeone/
 │   └── project.json                 # { Name, ProjectId }
 ├── edgeone.json                     # Deployment config + agents.framework
+├── .env.example                     # ⚠️ MUST exist: declares AI_GATEWAY_API_KEY= and AI_GATEWAY_BASE_URL=
 ├── package.json                     # TS routes (A/B/C/D)
 ├── requirements.txt                 # ⭐ Python route (E) only
 └── README.md
@@ -282,10 +283,12 @@ PAGES_SOURCE=skills edgeone makers env pull
 
 ### Environment variables for deployment
 
+> ⛔ **You MUST create a `.env.example` file**: the CLI uses this file to decide which variables to auto-inject. If the project has no `.env.example`, or it does not declare `AI_GATEWAY_*`, the environment variables will not be injected after deployment, and the Agent will error at runtime due to the missing API Key.
+
 **AI Gateway variables** (`AI_GATEWAY_API_KEY`, `AI_GATEWAY_BASE_URL`) are **auto-provisioned** by the CLI during deployment — no manual setup needed, as long as `.env.example` declares them:
 
 ```env
-# .env.example (commit this to repo)
+# .env.example (MUST be committed to the repo)
 AI_GATEWAY_API_KEY=
 AI_GATEWAY_BASE_URL=
 ```
