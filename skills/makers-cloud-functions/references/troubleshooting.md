@@ -1,46 +1,46 @@
 # Debugging & Troubleshooting
 
-## Local Preview / Dev Server Verification（本地预览验证规范）
+## Local Preview / Dev Server Verification
 
-> **适用范围：仅 WorkBuddy。** 以下现象与结论在 **WorkBuddy** 环境实测验证过。
-> **CodeBuddy 等其他宿主未验证，行为可能不同**——在 CodeBuddy 中遇到本机 dev server
-> 验证问题时，请按下方「定位流程」用探针 + 服务端日志实测，再判断是否适用，切勿直接套用。
+> **Scope: WorkBuddy only.** The symptoms and conclusions below were verified by hands-on testing in the **WorkBuddy** environment.
+> **Other hosts such as CodeBuddy are unverified and may behave differently** — when you hit a local dev-server
+> verification issue in CodeBuddy, follow the "Diagnosis procedure" below to test with a probe + server-side logs, then decide whether this applies. Do not apply it blindly.
 
-⚠️ 在 **WorkBuddy** 中验证 `edgeone makers dev` 起的本机服务时，**绝不要用 WorkBuddy 沙箱里的 Bash `curl` 判断成败**。
+⚠️ When verifying the local service started by `edgeone makers dev` in **WorkBuddy**, **never use the Bash `curl` inside the WorkBuddy sandbox to judge success or failure**.
 
-### 现象（WorkBuddy 实测）
-- 在 WorkBuddy 的 Bash 工具里 `curl http://localhost:8088/`，任何路径
-  （`/`、`index.html`、`style.css`、`/api/*`）都返回 `404` + 一个 HTML 兜底页。
-- 但同一时刻：用户系统终端 `curl` 同地址是 `200`，浏览器 / WorkBuddy 内置浏览器预览页面完全正常。
+### Symptom (observed in WorkBuddy)
+- Running `curl http://localhost:8088/` in WorkBuddy's Bash tool returns `404` + an HTML fallback page for any path
+  (`/`, `index.html`, `style.css`, `/api/*`).
+- Yet at the same moment: `curl` to the same address from the user's system terminal returns `200`, and the browser / WorkBuddy built-in browser preview renders the page perfectly.
 
-### 真因（WorkBuddy）
-WorkBuddy 的 **Bash 工具运行在隔离沙箱网络**，与 dev server 所在的宿主机网络**不互通**。
-沙箱内的 `localhost:8088` 被路由到沙箱内部兜底服务，对任意路径回 `404`，
-**请求根本到不了真实 dev server**（dev server 访问日志里看不到这些请求即为铁证）。
-这与项目代码、静态托管、`setLocalData` 的 EPERM **均无关**。
+### Root cause (WorkBuddy)
+WorkBuddy's **Bash tool runs in an isolated sandbox network** that **cannot reach** the host network where the dev server lives.
+Inside the sandbox, `localhost:8088` is routed to an internal sandbox fallback service that returns `404` for any path —
+**the request never reaches the real dev server** (the proof: these requests never appear in the dev server's access log).
+This is **unrelated** to project code, static hosting, or the `setLocalData` EPERM.
 
-### 正确验证方法（WorkBuddy，按优先级）
-1. **WorkBuddy 内置浏览器预览**（`present_files` 传 `http://localhost:8088/`）——走宿主机网络，可靠。
-2. **让用户在系统终端验证**：`curl -I http://localhost:8088/` 或直接浏览器打开。
-3. **直接部署到线上**用真实 URL 验证（最接近生产环境）。
+### Correct verification methods (WorkBuddy, in priority order)
+1. **WorkBuddy built-in browser preview** (pass `http://localhost:8088/` to `present_files`) — uses the host network, reliable.
+2. **Have the user verify from their system terminal**: `curl -I http://localhost:8088/` or just open it in a browser.
+3. **Deploy live directly** and verify with the real URL (closest to the production environment).
 
-### 禁止 / 误区（WorkBuddy）
-- ❌ 不要用 WorkBuddy 沙箱 Bash `curl localhost:<port>` 的状态码判断 dev server 死活。
-- ❌ 不要把"`setLocalData` EPERM 先打印"脑补成"它拖垮了静态服务"——
-  日志里 `Development server is running` / `Running at: 8088` 已证明服务正常起来了。
+### Forbidden / misconceptions (WorkBuddy)
+- ❌ Do not judge whether the dev server is alive by the status code of WorkBuddy sandbox Bash `curl localhost:<port>`.
+- ❌ Do not rationalize "`setLocalData` EPERM printed first" into "it dragged down the static service" —
+  `Development server is running` / `Running at: 8088` in the logs already proves the service started fine.
 
-### 定位流程（任何宿主通用，必须用日志证据，不靠因果脑补）
-1. 发一个带唯一标记的探针：`curl ".../__probe_unique_xxx__"`。
-2. 看 dev server 访问日志**有没有**这条 `__probe_unique_xxx__`：
-   - 有 → 请求到达了，404 是它发的，再查静态路由 / 目录配置。
-   - 无 → 请求没到达（在 WorkBuddy 即沙箱网络隔离），换内置浏览器预览或系统终端，问题不在项目。
+### Diagnosis procedure (host-agnostic; must use log evidence, not causal guesswork)
+1. Send a probe with a unique marker: `curl ".../__probe_unique_xxx__"`.
+2. Check **whether** this `__probe_unique_xxx__` appears in the dev server's access log:
+   - Present → the request arrived, the 404 came from the server; check static routing / directory config next.
+   - Absent → the request never arrived (in WorkBuddy this means sandbox network isolation); switch to the built-in browser preview or the system terminal — the problem is not in the project.
 
-### 附：`setLocalData` EPERM（WorkBuddy 观察到，独立问题，不影响静态服务）
-- 现象：`[File] setLocalData error [EPERM ... open '~/.edgeone/...']`。
-- 原因：WorkBuddy 沙箱隔离禁止写 home 下的 `~/.edgeone`（非项目目录），但允许写当前项目目录。
-- 影响：仅影响 CLI 本地状态持久化（登录态 / 每日选择记忆），**不影响**静态托管与页面访问。
-- 若需 CLI 在沙箱 / CI / 只读 home 下健壮：可在写入失败（EPERM/EACCES）时回退到项目目录下
-  的 `.edgeone/` 或 `EDGEONE_STATE_DIR` 指定路径，但应保留 `~/.edgeone` 作为首选以维持跨项目共享登录态。
+### Appendix: `setLocalData` EPERM (observed in WorkBuddy; a separate issue that does not affect static serving)
+- Symptom: `[File] setLocalData error [EPERM ... open '~/.edgeone/...']`.
+- Cause: WorkBuddy sandbox isolation forbids writing to `~/.edgeone` under home (not the project directory), but allows writing to the current project directory.
+- Impact: affects only the CLI's local state persistence (login state / daily-choice memory); it does **not** affect static hosting or page access.
+- To make the CLI robust in sandbox / CI / read-only-home environments: on a write failure (EPERM/EACCES) it can fall back to
+  the `.edgeone/` under the project directory or the path given by `EDGEONE_STATE_DIR`, but it should keep `~/.edgeone` as the preferred location to preserve cross-project shared login state.
 
 ## General Issues
 
