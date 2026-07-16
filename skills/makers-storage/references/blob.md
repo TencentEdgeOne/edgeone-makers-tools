@@ -12,7 +12,7 @@ EdgeOne Makers Blob is a distributed **object storage** service for Makers Funct
 npm install @edgeone/pages-blob@^0.0.14
 ```
 
-> ⚠️ 版本要求：≥ 0.0.14（低版本有已知 bug）。
+> ⚠️ Version requirement: ≥ 0.0.14 (older versions have known bugs).
 
 ### 2. Basic Usage
 

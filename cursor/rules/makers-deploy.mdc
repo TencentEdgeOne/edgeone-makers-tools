@@ -14,7 +14,7 @@ description: >-
   use edgeone-makers-dev for troubleshooting).
 metadata:
   author: edgeone
-  version: "2.1.0"
+  version: "2.2.0"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -24,14 +24,26 @@ Deploy any project to **EdgeOne Makers**.
 ## ⛔ Critical Rules (never skip)
 
 1. **CLI version ≥ `1.6.0`** — reinstall if lower. Versions below `1.6.0` lack the non-interactive fixes (whoami fail-fast, `--json` output) and will hang in Agent/CI environments. Never proceed with an outdated version.
-2. **Never truncate the deploy URL** — `EDGEONE_DEPLOY_URL` includes query parameters required for access. Always output the **complete** URL.
+2. **Never truncate the deploy URL — this applies to EVERY mention** — `EDGEONE_DEPLOY_URL` includes query parameters (`?eo_token=...&eo_time=...`) required for access. Without them the page returns 401. Always output the **complete** URL with full query string. This rule applies to: the primary display, summary tables, footnotes, comparisons, code blocks, `present_files` calls — **every single occurrence** of the URL in your reply. Truncation is any removal of the `?` and everything after it.
+
+   ❌ WRONG (truncated — will 401):
+   ```
+   https://my-app-w9t0lxe8.edgeone.cool
+   ```
+
+   ✅ CORRECT (full URL):
+   ```
+   https://my-app-w9t0lxe8.edgeone.cool?eo_token=abc123&eo_time=1234567890
+   ```
+
+   **Self-check after writing your reply**: scan for every instance of the `.edgeone.cool` domain. Does each one include `?eo_token=`? If any doesn't, fix it NOW — the user will get a 401.
 3a. **Prefer `--json` when running non-interactively** — in Agent/CI/headless contexts, always pass `--json` to `deploy` so the result is a single machine-readable line; no need to scrape colored/`\r`-animated stdout. See **Parse Deploy Output**.
 3b. **Use `edgeone whoami` to check login status** — on CLI ≥ 1.6.0, `whoami` fails fast (exit 1) when not logged in instead of hanging. If it exits 0, the user is already logged in and `-t` is not needed. **Do NOT** check `cat .edgeone/.token` — CLI stores credentials in `~/.edgeone/<hash>` files, not a fixed `.token` path.
-4. **⚠️ 部署地址必须醒目地放在回复最前面** — 部署完成后，完整的访问 URL 是用户最关心的核心交付物。必须做到：① 放在回复正文的第一行或第一个独立区块；② 使用醒目的格式（如大标题 + 代码块）；③ 绝不能把地址埋在长段落中间让用户去找。示例格式：
+4. **⚠️ The deploy URL MUST be placed prominently at the very top of your reply** — once deployment finishes, the complete access URL is the core deliverable the user cares about most. You MUST: ① place it on the first line or in the first standalone block of your reply body; ② use a prominent format (e.g. a large heading + code block); ③ never bury the URL in the middle of a long paragraph where the user has to hunt for it. Example format:
    ```
-   🌐 线上地址：https://my-project-abc123.edgeone.cool?<auth_query_params>
+   🌐 Live URL: https://my-project-abc123.edgeone.cool?<auth_query_params>
    ```
-   然后再附上其他说明（控制台地址、注意事项等）。
+   Then append any other notes (console URL, caveats, etc.).
 5. **Ask the user to choose China or Global site** before browser login. Never assume. (Token login via `edgeone login --token` auto-detects site, no need to ask.)
 6. **Auto-detect the login method** — browser login in desktop environments, token login in headless/remote/CI environments. Follow the decision table below.
 7. **After token login, ask if the user wants to save the token locally** for future use.
@@ -312,9 +324,18 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 | **Project ID** | Value after `EDGEONE_PROJECT_ID=` | — |
 | **Console URL** | Line after "You can view your deployment..." | — |
 
-**Show the user — 部署地址必须放在回复最前面、最醒目的位置：**
+**Show the user — the deploy URL MUST be placed at the very top of your reply, in the most prominent position:**
 
-> 🌐 **线上地址**：`https://my-project-abc123.edgeone.cool?<auth_query_params>`
+⚠️ **URL Integrity Rules (read before composing your reply):**
+
+| Rule | Detail |
+|------|--------|
+| **Every mention must be complete** | If you write the URL in a table, a list, a footnote, a comparison, or any secondary location — it MUST still include the full query string. No exceptions. |
+| **No visual "cleanup"** | Do not shorten the URL to make a table look nicer. A truncated URL is broken, not clean. |
+| **Concrete, not abstract** | Use the actual URL from deploy output. Do not replace query params with `...` or `(params omitted)` or any placeholder in user-facing text. |
+| **Self-check before sending** | Search your draft for `.edgeone.cool` — every hit must have `?eo_token=`. |
+
+> 🌐 **Live URL**: `https://my-project-abc123.edgeone.cool?eo_token=abc123&eo_time=1234567890`
 >
 > ---
 >
