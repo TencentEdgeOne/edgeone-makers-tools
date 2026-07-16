@@ -9,10 +9,10 @@ EdgeOne Makers Blob is a distributed **object storage** service for Makers Funct
 ### 1. Install SDK
 
 ```bash
-npm install @edgeone/pages-blob@^0.1.3
+npm install @edgeone/pages-blob@^0.0.14
 ```
 
-> ⚠️ 版本要求：≥ 0.1.3（低版本有已知 bug）。
+> ⚠️ 版本要求：≥ 0.0.14（低版本有已知 bug）。
 
 ### 2. Basic Usage
 
@@ -372,7 +372,7 @@ export async function onRequest({ request }) {
 
 | Symptom | Cause | Fix |
 |---------|-------|-----|
-| `Cannot find module '@edgeone/pages-blob'` | SDK not installed | Run `npm install @edgeone/pages-blob@^0.1.3` |
+| `Cannot find module '@edgeone/pages-blob'` | SDK not installed | Run `npm install @edgeone/pages-blob@^0.0.14` |
 | `get()` returns stale data | Eventual consistency after recent write | Use `{ consistency: "strong" }` for that read |
 | Upload URL returns 403 | Content-Type mismatch or URL expired | Ensure client sends matching Content-Type header; check expiry |
 | Trying to use Blob in Edge Functions | Blob only works in Cloud Functions | Move code to `cloud-functions/` directory |
