@@ -10,7 +10,9 @@ metadata:
 
 # Common Recipes
 
-> ⛔ **预览禁令**：开发完成后必须通过 `edgeone makers dev` 启动 dev server，再用 `present_files` 打开 `http://127.0.0.1:8088/` 预览。严禁用 `file://` 协议打开 HTML 文件（即使 IDE 自动打开了也要忽略），严禁用 `python -m http.server`、`npx serve` 等自建 server。Next.js 项目还需在 `next.config` 中配置 `allowedDevOrigins: ["127.0.0.1"]`。
+> ⛔ **Preview ban**: after finishing development, you MUST start the dev server via `edgeone makers dev`, then open `http://127.0.0.1:8088/` with `present_files` to preview. Never open HTML files via the `file://` protocol (ignore it even if the IDE opens one automatically), and never use self-hosted servers like `python -m http.server` or `npx serve`. Next.js projects must also set `allowedDevOrigins: ["127.0.0.1"]` in `next.config`.
+
+> ⚠️ **`.env.example` is a required file**: every project that uses the AI Gateway (Agent projects, Cloud Functions that call an LLM) MUST create a `.env.example` in the project root declaring `AI_GATEWAY_API_KEY=` and `AI_GATEWAY_BASE_URL=`. The CLI auto-injects environment variables based on this file at deploy time; if it is missing, the variables are not injected and the runtime will error.
 
 Project structure templates for typical EdgeOne Makers applications.
 
