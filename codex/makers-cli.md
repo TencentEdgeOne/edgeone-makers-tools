@@ -29,6 +29,7 @@ Verify: `edgeone -v`
 | `edgeone makers deploy -t <token>` | Deploy with API token (CI/headless) |
 | `edgeone makers deploy -e preview` | Deploy to preview environment |
 | `edgeone makers deploy --anonymous --json` | Deploy without login; claim later (CLI ≥ 1.6.21) |
+| `edgeone makers deploy --anonymous --site china\|global --json` | Anonymous deploy to a specific site (omit `--site` to auto-detect by IP) |
 | `edgeone makers claim --sid <token>` | Claim an anonymously-deployed project (requires login) |
 | `edgeone makers link` | Link local project to remote EdgeOne project |
 | `edgeone makers env pull` | Pull remote env vars to local `.env` |
