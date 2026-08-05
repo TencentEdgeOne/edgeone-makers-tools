@@ -42,7 +42,7 @@ Deploy any project to **EdgeOne Makers**.
 
    **Self-check after writing your reply**: scan for every instance of the `.edgeone.cool` domain. Does each one include `?eo_token=`? If any doesn't, fix it NOW — the user will get a 401.
 3a. **Prefer `--json` when running non-interactively** — in Agent/CI/headless contexts, always pass `--json` to `deploy` so the result is a single machine-readable line; no need to scrape colored/`\r`-animated stdout. See **Parse Deploy Output**.
-3b. **Use `edgeone whoami` to check login status** — on CLI ≥ 1.6.0, `whoami` fails fast (exit 1) when not logged in instead of hanging. If it exits 0, the user is already logged in and `-t` is not needed. **Do NOT** check `cat .edgeone/.token` — CLI stores credentials in `~/.edgeone/<hash>` files, not a fixed `.token` path.
+3b. **Use `edgeone whoami` to check login status** — `whoami` fails fast (exit 1) when not logged in instead of hanging. If it exits 0, the user is already logged in and `-t` is not needed. **Do NOT** check `cat .edgeone/.token` — CLI stores credentials in `~/.edgeone/<hash>` files, not a fixed `.token` path.
 4. **⚠️ The deploy URL MUST be placed prominently at the very top of your reply** — once deployment finishes, the complete access URL is the core deliverable the user cares about most. You MUST: ① place it on the first line or in the first standalone block of your reply body; ② use a prominent format (e.g. a large heading + code block); ③ never bury the URL in the middle of a long paragraph where the user has to hunt for it. Example format:
    ```
    🌐 Live URL: https://my-project-abc123.edgeone.cool?<auth_query_params>
