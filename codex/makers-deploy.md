@@ -310,17 +310,27 @@ Anonymous deploy builds with an empty environment: it skips remote env-var pull 
 # Is this an Agent project?
 ls agents/ 2>/dev/null && echo "AGENT_PROJECT"
 
-# Does it use platform storage?
-grep -rl "@edgeone/pages-blob\|@edgeone/pages-kv" \
-  --include="*.ts" --include="*.js" --include="*.tsx" --include="*.jsx" \
+# Does it use Blob storage? (checks source files and the dependency declaration)
+grep -rEl "@edgeone/pages-blob" \
+  --include="*.ts" --include="*.js" --include="*.mjs" --include="*.cjs" \
+  --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.svelte" \
   . 2>/dev/null | head -1
+grep -l '"@edgeone/pages-blob"' package.json 2>/dev/null
 ```
 
-If either check hits, **do not deploy anonymously.** Go to **Login** and tell the user why:
+Non-empty output from either grep means the project uses Blob.
 
-> This project needs environment variables / AI gateway credentials, which anonymous deploy cannot inject. The site would load but the AI features would fail. Let's log in so it works properly.
+**KV cannot be detected this way — you must ask.** A KV namespace is bound in the console and exposed as a *global variable* whose name the user chose (e.g. `my_kv`), so there is no package import to grep for. There is no `@edgeone/pages-kv` package. Ask the user directly:
+
+> Does this project use KV storage?
+
+If either check hits, or the user says the project uses KV, **do not deploy anonymously.** Go to **Login** and tell the user why:
+
+> This project needs environment variables / AI gateway credentials or a storage binding, which anonymous deploy cannot provide. The site would load but those features would fail. Let's log in so it works properly.
 
 Plain static sites and frontend-framework projects with no such dependency may proceed.
+
+If the user acknowledges the limitation and still wants an anonymous deploy, you may proceed — but state prominently in your result that AI and storage features will not work until the project is claimed and configured.
 
 ### Step 2: Ask the user — do not deploy anonymously without asking
 

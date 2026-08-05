@@ -216,9 +216,11 @@ Consequences:
 |--------------|------------------|
 | Static site / frontend framework | Works correctly. |
 | Project with `agents/` (AI Agent endpoints) | Site loads, but AI conversations fail — no model credentials. |
-| Project importing `@edgeone/pages-blob` or using KV | Site loads, but storage calls fail with `Missing: deployCredential`. |
+| Project importing `@edgeone/pages-blob`, or bound to a KV namespace | Site loads, but storage calls fail — Blob reports `Missing: deployCredential`, and a KV global is undefined because an anonymous project has no namespace binding. |
 
 A site that loads but breaks on first interaction is worse than an explicit login prompt, so route these project types to login. Detection and wording are in [SKILL.md](../SKILL.md).
+
+⚠️ Blob is detectable by grepping for its package import; **KV is not**. A KV namespace is bound in the console and surfaces as a global variable whose name the user chose, so there is no import to find and there is no `@edgeone/pages-kv` package. Ask the user whether the project uses KV rather than relying on a search.
 
 ---
 
