@@ -8,13 +8,17 @@ description: >-
   "go live", "release", "publish a new version", "redeploy",
   "上线", "发布", "发一版", "重新部署",
   "搭建并部署", "开发并上线", "build and deploy", "create and deploy".
+  Also trigger for login-free deployment and project claiming:
+  "deploy without login", "no account yet", "try it first", "anonymous deploy",
+  "claim project", "claim my deployment",
+  "免登录部署", "匿名部署", "还没有账号", "先看看效果", "认领项目".
   ⚠️ Also trigger when any agent is about to execute `edgeone makers deploy` or `edgeone makers deploy`
   commands — the skill contains critical rules for parsing deploy output and presenting access URLs.
   Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy —
   use edgeone-makers-dev for troubleshooting).
 metadata:
   author: edgeone
-  version: "2.2.0"
+  version: "2.3.0"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -48,6 +52,8 @@ Deploy any project to **EdgeOne Makers**.
 6. **Auto-detect the login method** — browser login in desktop environments, token login in headless/remote/CI environments. Follow the decision table below.
 7. **After token login, ask if the user wants to save the token locally** for future use.
 8. **Before triggering any browser popup (login / registration), explain the reason and the benefits to the user first** — never silently launch a browser window.
+9. **The claim command's parameter is `--sid`, NOT `--token`** — `edgeone makers claim --sid <anonymous-token>`. The `-t` / `--token` flag on `claim` is the **account API token**, an entirely different credential. Passing the anonymous token to `-t` fails. Product documentation showing `claim --token <anonymous-token>` is wrong; trust this rule.
+10. **Never state a fixed expiry for anonymous deployments** — do not say "60 minutes" or any other duration. Read the actual `expiresAt` value from the deploy output and show that. Measured token lifetimes do not match the documented 60 minutes, so a hardcoded number misinforms the user.
 
 ---
 
