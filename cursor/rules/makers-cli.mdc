@@ -5,7 +5,7 @@ description: >-
   Use when running edgeone CLI commands for dev, build, deploy, env management.
 metadata:
   author: edgeone
-  version: "1.0.0"
+  version: "1.1.0"
 ---
 
 # EdgeOne Makers CLI Reference
@@ -28,6 +28,8 @@ Verify: `edgeone -v`
 | `edgeone makers deploy -n <name>` | Deploy as a new project |
 | `edgeone makers deploy -t <token>` | Deploy with API token (CI/headless) |
 | `edgeone makers deploy -e preview` | Deploy to preview environment |
+| `edgeone makers deploy --anonymous --json` | Deploy without login; claim later (CLI ≥ 1.6.21) |
+| `edgeone makers claim --sid <token>` | Claim an anonymously-deployed project (requires login) |
 | `edgeone makers link` | Link local project to remote EdgeOne project |
 | `edgeone makers env pull` | Pull remote env vars to local `.env` |
 | `edgeone makers env set <KEY> <VALUE>` | Set a remote environment variable |
@@ -37,6 +39,8 @@ Verify: `edgeone -v`
 | `edgeone login --site china` | Login to China site |
 | `edgeone login --site global` | Login to Global site |
 | `edgeone whoami` | Check current login status |
+
+> Anonymous deploy and `claim` require CLI `>= 1.6.21` (the general CLI floor is `1.6.0`). The claim parameter is `--sid` (the anonymous token); `-t` is the account API token — they are different credentials. Never quote a fixed expiry: read `expiresAt` from `--json` output. Details: [makers-deploy/references/anonymous-deploy.md](../makers-deploy/references/anonymous-deploy.md).
 
 ## Environment Variable
 
