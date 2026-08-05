@@ -52,7 +52,9 @@ Deploy any project to **EdgeOne Makers**.
 6. **Auto-detect the login method** — browser login in desktop environments, token login in headless/remote/CI environments. Follow the decision table below.
 7. **After token login, ask if the user wants to save the token locally** for future use.
 8. **Before triggering any browser popup (login / registration), explain the reason and the benefits to the user first** — never silently launch a browser window.
+
 **Rules 9-10 apply to the anonymous deploy / claim flow only:**
+
 9. **The claim command's parameter is `--sid`, NOT `--token`** — `edgeone makers claim --sid <anonymous-token>`. The `-t` / `--token` flag on `claim` is the **account API token**, an entirely different credential. Passing the anonymous token to `-t` fails. Product documentation showing `claim --token <anonymous-token>` is wrong; trust this rule.
 10. **Never state a fixed expiry for anonymous deployments** — do not say "60 minutes" or any other duration. Read the actual `expiresAt` value from the deploy output and show that; if the field is absent, say the deadline is unknown and advise claiming promptly. Measured token lifetimes do not match the documented 60 minutes, so a hardcoded number misinforms the user.
 
