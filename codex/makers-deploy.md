@@ -298,6 +298,92 @@ The CLI auto-detects the framework, runs the build, and uploads the output direc
 
 ---
 
+## Anonymous Deploy (no login required)
+
+When the user is not logged in and has no token, they can deploy anonymously and claim the project later. Requires CLI `>= 1.6.21`. On `1.6.0`–`1.6.20` this feature does not exist — use **Login** or a token instead.
+
+### Step 1: Exclusion check — run this FIRST
+
+Anonymous deploy builds with an empty environment: it skips remote env-var pull and AI-gateway credential injection, because both need authentication. Projects depending on either will deploy successfully but break at runtime.
+
+```bash
+# Is this an Agent project?
+ls agents/ 2>/dev/null && echo "AGENT_PROJECT"
+
+# Does it use platform storage?
+grep -rl "@edgeone/pages-blob\|@edgeone/pages-kv" \
+  --include="*.ts" --include="*.js" --include="*.tsx" --include="*.jsx" \
+  . 2>/dev/null | head -1
+```
+
+If either check hits, **do not deploy anonymously.** Go to **Login** and tell the user why:
+
+> This project needs environment variables / AI gateway credentials, which anonymous deploy cannot inject. The site would load but the AI features would fail. Let's log in so it works properly.
+
+Plain static sites and frontend-framework projects with no such dependency may proceed.
+
+### Step 2: Ask the user — do not deploy anonymously without asking
+
+In an interactive environment, present the choice (use the IDE's selection control, e.g. `ask_followup_question`):
+
+> You're not logged in to EdgeOne Makers. Two options:
+> - **Deploy anonymously (no login)** — you get a working URL immediately. You'll need to log in and claim the project before it expires, or it is removed; the exact deadline is shown once the deploy finishes. Until claimed, the link has visitor-count and IP restrictions, so it isn't suitable for wide sharing.
+> - **Log in now** — the project is saved permanently to your account with no time limit or access restrictions.
+
+⛔ Do not state a specific duration here. See critical rule 10 — the real deadline comes from `expiresAt` in the deploy output.
+
+Only skip this question when the environment genuinely cannot ask (CI, headless, no TTY). In that case deploy anonymously and make the claim info and deadline unmissable in your result — the user had no chance to be warned in advance.
+
+### Step 3: Deploy
+
+```bash
+export PAGES_SOURCE=skills
+edgeone makers deploy --anonymous --json
+```
+
+Add `--site china` or `--site global` when you need a specific site; otherwise it is auto-detected from the egress IP.
+
+Do **not** pass `-n`, `-e`, or `--area` — they are ignored under `--anonymous`. The project name is generated automatically.
+
+### Step 4: Present the result — all three parts are mandatory
+
+Parse the **last line** of stdout as JSON (human-readable output precedes it). Fields are **camelCase**: `url`, `projectId`, `deploymentId`, `anonymousToken`, `claimUrl`, `claimCommand`, `expiresAt`, `site`.
+
+Your reply must contain all three of the following. The URL alone is not enough — an unclaimed project disappears.
+
+1. **The full access URL**, at the very top, complete with any query string (critical rules 2 and 4 apply exactly as for a normal deploy).
+2. **How to claim** — both `claimCommand` and `claimUrl`.
+3. **The actual `expiresAt` value**, plus a clear statement that the project is removed if not claimed. If `expiresAt` is absent from the output, say the deadline is unknown and advise claiming promptly — never invent a duration.
+
+Example shape:
+
+> 🌐 **Live URL**: `<url>`
+>
+> ---
+>
+> ⏳ **Claim before `<expiresAt>`** — otherwise this project is removed.
+>
+> - Claim via CLI: `<claimCommand>`
+> - Claim in browser: `<claimUrl>`
+
+### Claiming a project
+
+Requires login. Run from the directory containing `.edgeone/anonymous.json` and the token is picked up automatically:
+
+```bash
+edgeone makers claim --json
+# or pass the token explicitly:
+edgeone makers claim --sid <anonymousToken> --json
+```
+
+⛔ The parameter is `--sid` (see critical rule 9). `-t` on `claim` is the account API token, not the anonymous token.
+
+Claim only after the deploy has finished — the backend only migrates deployments in `Success` state. On success the local state file is deleted and the project becomes a normal one, managed with `edgeone makers deploy`.
+
+For the full JSON schema, rate limits, error codes, state-file fields, and site-resolution rules, see [references/anonymous-deploy.md](references/anonymous-deploy.md).
+
+---
+
 ## ⚠️ Parse Deploy Output (Critical)
 
 ### Preferred: `--json`
