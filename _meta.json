@@ -2,7 +2,7 @@
   "ownerId": "442102",
   "publishedAt": 1781766512723,
   "slug": "edgeone-makers-tools",
-  "version": "1.0.4",
+  "version": "1.1.0",
   "files": [
     "SKILL.md",
     "CLAUDE.md",
@@ -34,6 +34,7 @@
     "skills/makers-cloud-functions/references/python-functions.md",
     "skills/makers-cloud-functions/references/troubleshooting.md",
     "skills/makers-deploy/SKILL.md",
+    "skills/makers-deploy/references/anonymous-deploy.md",
     "skills/makers-deploy/references/command-reference.md",
     "skills/makers-edge-functions/SKILL.md",
     "skills/makers-env-adaption/SKILL.md",
