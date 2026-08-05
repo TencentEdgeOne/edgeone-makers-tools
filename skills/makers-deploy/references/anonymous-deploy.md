@@ -70,13 +70,13 @@ Do not pass these — they have no effect and will mislead the user:
 
 | Field | Meaning |
 |-------|---------|
-| `url` | Live access URL. Present it in full, including any query string. |
+| `url` | Live access URL. Present it exactly as returned, never truncated — if it carries a query string, keep the whole thing. |
 | `projectId` | Anonymous project ID. |
 | `deploymentId` | Deployment ID. |
 | `anonymousToken` | Anonymous identity token (the Sid). Needed to claim. |
 | `claimUrl` | Web claim URL, on the console domain matching `site`. |
 | `claimCommand` | Ready-to-run CLI claim command. |
-| `expiresAt` | **Actual** claim deadline, ISO 8601. Always show this value; never substitute a hardcoded duration. |
+| `expiresAt` | **Actual** claim deadline, ISO 8601. Always show this value; never substitute a hardcoded duration. Omitted when the backend returns no usable expiry timestamp — in that case say the deadline is unknown and advise claiming promptly, and still never invent a duration. |
 | `site` | `china` or `global` — the API site this project lives on. |
 
 ### Failure
@@ -125,7 +125,7 @@ Lifecycle:
 - **Kept on failure**, so a retry or a later claim can still find the token.
 - When present, `claim` needs no `--sid`.
 
-Treat it as a secret: it contains a single-use credential. It lives under `.edgeone/`, which projects normally already ignore in git — confirm that before committing.
+Treat it as a secret: it holds an ephemeral credential, valid until claimed or expired. It lives under `.edgeone/`, which projects normally already ignore in git — confirm that before committing.
 
 ---
 
