@@ -14,6 +14,8 @@ metadata:
 
 > ⚠️ **`.env.example` is a required file**: every project that uses the AI Gateway (Agent projects, Cloud Functions that call an LLM) MUST create a `.env.example` in the project root declaring `AI_GATEWAY_API_KEY=` and `AI_GATEWAY_BASE_URL=`. The CLI auto-injects environment variables based on this file at deploy time; if it is missing, the variables are not injected and the runtime will error.
 
+> 📝 **Write HTML last**: writing an `index.html` instantly triggers the IDE live preview. If its `style.css` / `script.js` don't exist yet, the user sees an unstyled, broken skeleton. So write CSS and JS **first**, then write `index.html` **last** — that way the very first preview is the finished page. Also write each `index.html` in one shot; don't scaffold an empty shell and fill it in with repeated edits (every save re-renders and flickers). For a tiny single-page tool, just inline the CSS and JS into one `index.html` — one file, no intermediate state.
+
 Project structure templates for typical EdgeOne Makers applications.
 
 ## Full-stack app — Node.js (static + API)
@@ -35,6 +37,55 @@ Frontend calls API:
 const res = await fetch('/api/users');
 const users = await res.json();
 ```
+
+> 💾 **Where does the data live?** This platform has **no database**. The API skeletons above return empty data — to actually persist records, uploads, votes, or per-user state, back them with **Blob**. See the recipe below and [makers-storage → Blob as your backend](../makers-storage/references/blob.md).
+
+## Dynamic site with Blob persistence (guestbook / gallery / voting / save-state)
+
+The default shape for any generated site that needs a real backend but no relational data. Frontend → Cloud Function → Blob. No DB, no console setup.
+
+```
+my-app/
+├── index.html              # Frontend (form + list)
+├── script.js
+├── cloud-functions/
+│   └── api/
+│       └── messages.js     # GET lists entries, POST appends one
+├── package.json            # depends on @edgeone/pages-blob
+```
+
+**cloud-functions/api/messages.js** — one file per record (Pattern 1):
+```javascript
+import { getStore } from "@edgeone/pages-blob";
+
+export async function onRequest({ request }) {
+  const store = getStore("guestbook");
+
+  if (request.method === "POST") {
+    const { name, text } = await request.json();
+    const id = `${Date.now()}-${Math.round(Math.random() * 1e6)}`;
+    await store.setJSON(`entries/${id}.json`, { id, name, text, ts: Date.now() });
+    return Response.json({ ok: true, id });
+  }
+
+  const { blobs } = await store.list({ prefix: "entries/" });
+  const items = await Promise.all(blobs.map((b) => store.get(b.key, { type: "json" })));
+  items.sort((a, b) => b.ts - a.ts);
+  return Response.json({ items });
+}
+```
+
+**index.html** frontend calls it like any API:
+```javascript
+await fetch('/api/messages', {                     // post
+  method: 'POST',
+  headers: { 'Content-Type': 'application/json' },
+  body: JSON.stringify({ name, text }),
+});
+const { items } = await fetch('/api/messages').then((r) => r.json());  // list
+```
+
+Swap the key scheme for other shapes: `users/<uid>.json` for save-state, `counts/<option>.json` (strong consistency) for votes, `uploads/<id>.jpg` + `items/<id>.json` for file uploads. Full patterns: [makers-storage → Blob as your backend](../makers-storage/references/blob.md).
 
 ## Full-stack app — Go (Gin framework)
 

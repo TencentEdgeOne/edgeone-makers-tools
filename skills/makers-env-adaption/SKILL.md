@@ -10,7 +10,7 @@ description: >-
   NEVER python -m http.server / npx serve), dev server requirements.
 metadata:
   author: edgeone
-  version: "1.1.0"
+  version: "1.1.1"
 ---
 
 # Runtime Environment Adaptation Guide
@@ -38,7 +38,8 @@ preview     │                      ┌─ dev server running? ─ Yes ──�
 | Preview local dev server | `present_files("http://127.0.0.1:8088/")` | ❌ Passing `/path/to/index.html` (IDE opens it via file://) |
 | Preview a deployed project | `present_files(deploy_url)` with `?eo_token=...` | ❌ Passing a local `dist/index.html` path |
 | Start dev server | `edgeone makers dev --name <p> --skip-env-sync` | ❌ `python -m http.server` / `npx serve` |
-| Verify dev server is up | `present_files(http://...)` or the user's system terminal | ❌ Bash `curl localhost` (sandbox network isolation) |
+| Verify dev server is up (agent-side API check) | `curl --noproxy '*' http://127.0.0.1:8088/api/...` ✅ works (same sandbox) | ❌ `curl localhost:8088` / plain `curl` (proxy + IPv6 → 404/000) |
+| Verify dev server is up (user-facing) | `present_files(http://127.0.0.1:8088/)` (platform tunnel) | ❌ Telling user to open `127.0.0.1:8088` — their browser can't reach the sandbox |
 
 **Core iron rule**: inside a Makers project, **any HTML / URL preview MUST go through the HTTP protocol**. `file://` looks convenient, but fetch / SSE / Blob / KV all break under it.
 
@@ -104,17 +105,19 @@ edgeone whoami  # exit 0 = logged in, exit 1 = not logged in (does not hang)
 
 ---
 
-### 3. Network isolation
+### 3. Network isolation (dev server reachability from Bash)
 
-**The Bash tool's network is isolated from the host** — inside WorkBuddy's Bash, `curl localhost:<port>` cannot reach the host's dev server.
+The Bash tool and `edgeone makers dev` run **in the same sandbox (same machine)**, so the loopback dev server IS reachable from Bash. The earlier claim that "Bash curl is isolated and returns 404" is wrong — the failures are caused by the **proxy** (§5) and the **IPv6 localhost** (§4), not by network isolation.
 
 | Verification method | Availability | Notes |
 |---------|--------|------|
-| Built-in browser preview (`present_files`) | ✅ Available | Uses the host network, reliable |
+| Built-in browser preview (`present_files`) | ✅ Available | Uses the platform tunnel; the ONLY way the **user's** browser can see the sandbox dev server |
 | User's system terminal | ✅ Available | `curl http://127.0.0.1:8088/` |
-| Bash tool curl | ❌ Unavailable | Routed inside the sandbox, returns 404 |
+| Bash tool curl (agent-side API checks) | ✅ Available **only with `--noproxy '*'` + `127.0.0.1`** | Plain `curl localhost:8088` fails: (a) `localhost`→`::1` (§4), (b) proxy hijacks the request (§5) |
 
-**Do NOT** use Bash curl to judge whether the dev server started successfully. Use `present_files` or verify by deploying.
+**Practical rule**:
+- Use `curl --noproxy '*' http://127.0.0.1:8088/...` from Bash to **agent-side verify** API endpoints during testing — this works (it was used to validate a full create→upload→like flow).
+- Do NOT rely on Bash curl to show the page to the user. The user's browser cannot reach `127.0.0.1:8088` inside the sandbox; for a user-facing preview, pass the dev URL to `present_files` (platform tunnel) or deploy and share the live URL.
 
 ---
 
@@ -172,7 +175,15 @@ A `setLocalData EPERM` does not affect the running service; it only affects the 
 |------|---------|------|
 | `npm install` | **Foreground sync** | Usually 10-30s; running it in the background would leave later commands missing dependencies |
 | `edgeone makers dev` | **Background async** (`run_in_background`) | Long-running process, must not block the conversation |
-| `edgeone makers deploy` | **Foreground sync** | 1-3 minutes; the result is the core deliverable and must be shown immediately |
+| `edgeone makers deploy` | **Background async** (`run_in_background`) | Cold deploys (build → upload → Process → live) routinely take **2–10+ minutes**. The foreground wall-clock budget (~100s) SIGKILLs the CLI mid-deploy (exit 137) even while it keeps printing progress — you lose the final URL line. Run it in the background and wait for the completion notification. |
+
+#### 7.2 Deploy in background — why, and what the kill really means
+
+- **Foreground kill = wall-clock budget, not a hang.** A foreground Bash command in this sandbox has a fixed ~100s wall-clock budget; at the limit the whole process tree gets SIGKILL (`exit 137 = 128 + 9`), regardless of whether it keeps printing. During a deploy the CLI prints `Deployment in progress... elapsed: ~XXs` every ~10s — those heartbeat lines do NOT reset or extend the budget. So "still printing → killed at ~100s" is expected, not a stall.
+- **Killing the CLI does NOT usually fail the deploy.** The deployment itself runs server-side. A foreground CLI killed at `Created deployment` / `Process` has very likely continued on the server and gone live (confirmed in practice: a deploy killed at ~100s was later verified live, took ~674s end-to-end). Re-running `deploy` (same `-n <project>`) reuses the project and returns the URL.
+- **Always use `run_in_background: true` for deploy** so the CLI survives past the foreground budget and emits the final `--json` line with the live URL. Do not poll the task across turns — rely on the `<task-notification>` completion event. (Cross-turn `TaskOutput` may report the handle as "not found"; the process still finished.)
+- **`--json` still prints progress heartbeats** to stdout/stderr, not a single clean JSON line. Parse the **last** line for the result object; treat the progress lines as noise. (This is a CLI cleanliness issue, unrelated to the kill behavior — do not assume "no output = process ended"; the sandbox judges liveness by OS process state, not by stdout bytes.)
+- **Clean up background processes** after use: a `edgeone makers dev` left running keeps holding port 8088 and may collide with the next dev/deploy. Stop it with `TaskStop` or kill it when the session moves on.
 
 ### 7.1 Preview & Dev Server full flow (MUST use HTTP, file:// forbidden)
 
@@ -185,7 +196,7 @@ After finishing development, **start the dev server and preview directly** — d
 3. **Pass `http://127.0.0.1:8088/` to `present_files`** (note it is `127.0.0.1`, **not** `localhost` — see §4)
 4. Tell the user: "The project's local preview is running, please check it out. If everything looks good, I can deploy it live for you directly."
 
-Only after the user confirms, run `edgeone makers deploy -n <project> --json` (**foreground sync**, see §7).
+Only after the user confirms, run `edgeone makers deploy -n <project> --json` (**background async**, see §7 and §7.2 — it exceeds the foreground wall-clock budget).
 
 #### ⛔ file:// preview is strictly forbidden
 
