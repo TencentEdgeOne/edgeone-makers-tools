@@ -10,7 +10,7 @@ description: >-
   NEVER python -m http.server / npx serve), dev server requirements.
 metadata:
   author: edgeone
-  version: "1.1.0"
+  version: "1.2.0"
 ---
 
 # Runtime Environment Adaptation Guide
@@ -267,7 +267,22 @@ If the project named by `--name` does not exist remotely, the `link` command cre
 | Framework/package | Minimum version | Reason |
 |---------|---------|------|
 | EdgeOne CLI | >= 1.6.7 | Non-interactive fixes, whoami fail-fast, --json support |
+| EdgeOne CLI (anonymous deploy / `claim` only) | >= 1.6.21 | `--anonymous` and `claim` do not exist below this |
 | Next.js | 16.x | The framework adapter tracks new versions |
 | @edgeone/pages-blob | >= 0.0.14 | Older versions have known bugs |
 
 Use `create-next-app@latest` rather than manually pinning an older version.
+
+---
+
+### 13. Never hand the user a command to run
+
+The user has **no terminal** in the WorkBuddy sandbox. Any command you print as an instruction is dead text — they cannot execute it, and a non-technical user cannot read it either.
+
+| Situation | Do this | Not this |
+|---|---|---|
+| Anonymous project needs claiming | Give the `claimUrl` as a clickable link, and offer to claim it yourself | ❌ Printing `edgeone makers claim --sid <token>` |
+| The user needs to log in | Explain, then run `edgeone login --site <china\|global> --local` yourself | ❌ "Run `edgeone login` in your terminal" |
+| Something needs installing | Run it yourself in Bash | ❌ "Please run `npm install -g edgeone`" |
+
+You are the one with shell access — use it. Only ask the user to type something when it genuinely cannot be automated (e.g. completing a login in the browser window you opened), and say plainly what you need from them.

@@ -74,8 +74,8 @@ Do not pass these — they have no effect and will mislead the user:
 | `projectId` | Anonymous project ID. |
 | `deploymentId` | Deployment ID. |
 | `anonymousToken` | Anonymous identity token (the Sid). Needed to claim. |
-| `claimUrl` | Web claim URL, on the console domain matching `site`. |
-| `claimCommand` | Ready-to-run CLI claim command. |
+| `claimUrl` | Web claim URL, on the console domain matching `site`. **This is what you show the user** — a clickable link. |
+| `claimCommand` | Ready-to-run CLI claim command. **For you to execute, never to display** — see the note below. |
 | `expiresAt` | **Actual** claim deadline, ISO 8601. Always show this value; never substitute a hardcoded duration. Omitted when the backend returns no usable expiry timestamp — in that case say the deadline is unknown and advise claiming promptly, and still never invent a duration. |
 | `site` | `china` or `global` — the API site this project lives on. |
 
@@ -86,6 +86,8 @@ Do not pass these — they have no effect and will mislead the user:
 ```
 
 `suggestion` is only present for the rate-limit case. `errorCode` may be absent for generic failures.
+
+⛔ **Never print `claimCommand` to the user.** Sandboxed IDEs (WorkBuddy and similar) give the user no terminal, so they cannot run it — and non-technical users cannot read it anyway. Show the `claimUrl` link and offer to run the claim yourself. `claimCommand` exists for **you** to execute.
 
 ---
 
@@ -193,16 +195,22 @@ The backend claims **asynchronously** and only migrates projects whose deploymen
 
 ## Claim flow
 
+Two independent routes. Pick by who acts:
+
+**Route A — the user claims in the browser (default, and the only one to advertise).** Give them the `claimUrl` link. They sign in and the project transfers. Nothing to run.
+
+**Route B — you claim on their behalf**, when the user says "claim it" or is already logged in:
+
 1. **Deploy must have succeeded.** Only `Success` deployments are migrated.
 2. **Log in.** In an interactive environment the CLI opens a browser when needed; in CI, pass `-t <api-token>`.
 3. **Match the site.** Run from the directory holding `.edgeone/anonymous.json` so the site is reused, or ensure your credentials match the deploy's site.
-4. **Run the claim:**
+4. **Run the claim** — you execute this, never hand it to the user:
    ```bash
    edgeone makers claim --sid <anonymous-token> --json
    # or, with the state file present:
    edgeone makers claim --json
    ```
-5. **On success** the CLI prints the project name, ID, and URL, then deletes `.edgeone/anonymous.json`. The project is now permanent and managed with the normal `edgeone makers deploy` flow.
+5. **On success** the CLI prints the project name, ID, and URL, then deletes `.edgeone/anonymous.json`. The project is now permanent and managed with the normal `edgeone makers deploy` flow. Relay the project name and URL in plain language; do not paste the JSON.
 
 ---
 
@@ -244,5 +252,5 @@ edgeone makers claim --json     # reads .edgeone/anonymous.json
 Present all three of these to the user together after an anonymous deploy — the URL alone is not enough, because an unclaimed project expires:
 
 1. the full access URL,
-2. how to claim (`claimCommand` and `claimUrl`),
+2. the `claimUrl` as a clickable link, plus an offer to run the claim for them (**never** the `claimCommand` itself),
 3. the actual `expiresAt` value, and that the project is lost if unclaimed.

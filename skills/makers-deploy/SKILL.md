@@ -18,7 +18,7 @@ description: >-
   use edgeone-makers-dev for troubleshooting).
 metadata:
   author: edgeone
-  version: "2.3.0"
+  version: "2.4.0"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -53,10 +53,11 @@ Deploy any project to **EdgeOne Makers**.
 7. **After token login, ask if the user wants to save the token locally** for future use.
 8. **Before triggering any browser popup (login / registration), explain the reason and the benefits to the user first** — never silently launch a browser window.
 
-**Rules 9-10 apply to the anonymous deploy / claim flow only:**
+**Rules 9-11 apply to the anonymous deploy / claim flow only:**
 
 9. **The claim command's parameter is `--sid`, NOT `--token`** — `edgeone makers claim --sid <anonymous-token>`. The `-t` / `--token` flag on `claim` is the **account API token**, an entirely different credential. Passing the anonymous token to `-t` fails. Product documentation showing `claim --token <anonymous-token>` is wrong; trust this rule.
 10. **Never state a fixed expiry for anonymous deployments** — do not say "60 minutes" or any other duration. Read the actual `expiresAt` value from the deploy output and show that; if the field is absent, say the deadline is unknown and advise claiming promptly. Measured token lifetimes do not match the documented 60 minutes, so a hardcoded number misinforms the user.
+11. **Never show the user a CLI claim command** — do not print `claimCommand`, `edgeone makers claim --sid ...`, or any other command as the user's way to claim. In sandboxed IDEs like WorkBuddy the user has no terminal and literally cannot run it, and non-technical users cannot read it. Give them the **`claimUrl` link** to click, and offer to run the claim yourself. `claimCommand` is for **you** to execute, not to display.
 
 ---
 
@@ -362,7 +363,7 @@ Parse the **last line** of stdout as JSON (human-readable output precedes it). F
 Your reply must contain all three of the following. The URL alone is not enough — an unclaimed project disappears.
 
 1. **The full access URL**, at the very top, complete with any query string (critical rules 2 and 4 apply exactly as for a normal deploy).
-2. **How to claim** — both `claimCommand` and `claimUrl`.
+2. **The claim link** — `claimUrl`, as a clickable link. ⛔ **Do NOT show `claimCommand` or any `edgeone makers claim ...` command to the user.** See critical rule 11.
 3. **The actual `expiresAt` value**, plus a clear statement that the project is removed if not claimed. If `expiresAt` is absent from the output, say the deadline is unknown and advise claiming promptly — never invent a duration.
 
 Example shape:
@@ -373,10 +374,13 @@ Example shape:
 >
 > ⏳ **Claim before `<expiresAt>`** — otherwise this project is removed.
 >
-> - Claim via CLI: `<claimCommand>`
-> - Claim in browser: `<claimUrl>`
+> 👉 [Claim this project](<claimUrl>) — sign in and it's permanently yours.
+>
+> Or just tell me "claim it" and I'll do it for you.
 
 ### Claiming a project
+
+**You run this command — never print it for the user.** When the user asks to claim (or clicks through and asks for help), execute it yourself.
 
 Requires login. Run from the directory containing `.edgeone/anonymous.json` and the token is picked up automatically:
 
@@ -389,6 +393,8 @@ edgeone makers claim --sid <anonymousToken> --json
 ⛔ The parameter is `--sid` (see critical rule 9). `-t` on `claim` is the account API token, not the anonymous token.
 
 Claim only after the deploy has finished — the backend only migrates deployments in `Success` state. On success the local state file is deleted and the project becomes a normal one, managed with `edgeone makers deploy`.
+
+Report the outcome in plain language — the project name and its live URL — not the raw JSON.
 
 For the full JSON schema, rate limits, error codes, state-file fields, and site-resolution rules, see [references/anonymous-deploy.md](references/anonymous-deploy.md).
 
