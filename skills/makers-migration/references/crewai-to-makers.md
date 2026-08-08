@@ -117,7 +117,7 @@ crewai>=1.14.5
 openai>=1.50.0
 ```
 
-> For tool streaming, subscribe to `crewai_event_bus` `LLMStreamChunkEvent` → `ai_response` and `TaskCompletedEvent` → `tool_result` (see [makers-agents python-frameworks/crewai.md](../../makers-agents/references/python-frameworks/crewai.md) §6). For platform tools use `ctx.tools.to_crewai_tools(BaseTool)`.
+> For tool streaming, subscribe to `crewai_event_bus` `LLMStreamChunkEvent` → `ai_response` and `TaskCompletedEvent` → `tool_result` (see the CrewAI row of [Framework reference index](../SKILL.md#framework-reference-index), §6). For platform tools use `ctx.tools.to_crewai_tools(BaseTool)`.
 
 ---
 

@@ -136,7 +136,7 @@ Same `createDeepAgent({ model, systemPrompt, tools, maxTurns })` API. On Makers:
 - Stream via `ctx.utils.stream_sse(gen())`
 - `buildCommand: ""`, `outputDirectory: ""`
 
-See [makers-agents python-frameworks/deepagents.md](../../makers-agents/references/python-frameworks/deepagents.md).
+See the DeepAgents row of [Framework reference index](../SKILL.md#framework-reference-index).
 
 ---
 

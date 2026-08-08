@@ -147,7 +147,7 @@ export async function onRequest(context: any) {
 2. **Writable config/temp dirs** — the SDK subprocess needs writable `~/.claude` and temp; set `CLAUDE_CONFIG_DIR='/tmp/claude-agent-sdk'` and `CLAUDE_CODE_TMPDIR='/tmp'` in `options.env`.
 3. **No `process.env`** — agent endpoints disable `process.env`; always use `context.env`.
 4. **Tools** — `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` returns `{ name, tools, allowedTools }`; pass the created server as `edgeone` and set `allowedTools`.
-5. **Sandbox** — if you use `context.sandbox`, its `/tmp` is per-request and easily lost; keep a process-level file cache and re-upload every request. See [makers-agents capabilities/sandbox.md](../../makers-agents/references/capabilities/sandbox.md).
+5. **Sandbox** — if you use `context.sandbox`, its `/tmp` is per-request and easily lost; keep a process-level file cache and re-upload every request. See the platform capabilities line of [Framework reference index](../SKILL.md#framework-reference-index).
 
 ---
 
@@ -163,7 +163,7 @@ Native `claude_agent_sdk` (Python) uses `query()` / `ClaudeAgentOptions`. On Mak
 - Stream via `ctx.utils.stream_sse(gen())`
 - `buildCommand: ""`, `outputDirectory: ""`
 
-See [makers-agents python-frameworks/claude-sdk.md](../../makers-agents/references/python-frameworks/claude-sdk.md).
+See the Claude Agent SDK row of [Framework reference index](../SKILL.md#framework-reference-index).
 
 ---
 

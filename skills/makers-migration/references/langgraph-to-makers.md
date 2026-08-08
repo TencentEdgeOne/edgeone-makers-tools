@@ -162,7 +162,7 @@ Native LangGraph-Python uses the same `StateGraph`/`MemorySaver`/`tool` API. On 
 - Stream via `ctx.utils.stream_sse(gen())`
 - `buildCommand: ""`, `outputDirectory: ""` in `edgeone.json`
 
-See [makers-agents python-frameworks/langgraph.md](../../makers-agents/references/python-frameworks/langgraph.md).
+See the LangGraph row of [Framework reference index](../SKILL.md#framework-reference-index).
 
 ---
 
