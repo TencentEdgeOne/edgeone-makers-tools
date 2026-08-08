@@ -5,9 +5,17 @@ on:
     branches: [main]
     paths:
       - 'skills/**'
+      - 'scripts/**'
+      - 'hooks/**'
+      - '_meta.json'
+      - 'package.json'
   pull_request:
     paths:
       - 'skills/**'
+      - 'scripts/**'
+      - 'hooks/**'
+      - '_meta.json'
+      - 'package.json'
 
 jobs:
   build:
@@ -21,6 +29,9 @@ jobs:
 
       - name: Run tests
         run: npm test
+
+      - name: Run doctor
+        run: npm run doctor
 
       - name: Build multi-platform output
         run: node scripts/build.mjs

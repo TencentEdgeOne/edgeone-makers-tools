@@ -11,8 +11,9 @@ description: >-
   agent endpoint", "wire LangGraph into Makers", "stream LLM responses with SSE",
   "review my agent template", "use context.store / context.sandbox / context.tools".
   Do NOT trigger for plain Edge Functions, Cloud Functions, or middleware
-  (those don't run AI logic — use edgeone-pages-dev instead).
-  Do NOT trigger for deployment workflows (use edgeone-pages-deploy).
+  (those don't run AI logic — use edgeone-makers-edge-functions,
+  makers-cloud-functions, or edgeone-makers-middleware instead).
+  Do NOT trigger for deployment workflows (use edgeone-makers-deploy).
   Do NOT trigger for generic AI framework development outside
   an EdgeOne Makers project.
 metadata:
@@ -22,7 +23,7 @@ metadata:
 
 # EdgeOne Makers Agent Development Guide
 
-> ⛔ **Preview ban**: after finishing development, you MUST start the dev server via `edgeone makers dev`, then open `http://127.0.0.1:8088/` with `present_files` to preview. Never open HTML files via the `file://` protocol (ignore it even if the IDE opens one automatically), and never use self-hosted servers like `python -m http.server` or `npx serve`. Next.js projects must also set `allowedDevOrigins: ["127.0.0.1"]` in `next.config`.
+> ⛔ **Preview rules**: after finishing development, ask the user how they want to verify — never assume local preview. When they do choose local preview, you MUST serve it via `edgeone makers dev` and open `http://127.0.0.1:8088/` with `present_files`. Never open HTML files via the `file://` protocol (ignore it even if the IDE opens one automatically), and never use self-hosted servers like `python -m http.server` or `npx serve`. Next.js projects must also set `allowedDevOrigins: ["127.0.0.1"]` in `next.config`.
 
 Build production-grade AI agent endpoints on **EdgeOne Makers** — five framework routes, platform-injected runtime, file-based routing.
 
@@ -38,11 +39,11 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 - Calling sandbox or platform tools via `context.sandbox` / `context.tools`
 - Splitting AI inference (`agents/`) from data CRUD (`cloud-functions/`)
 
-> Cross-reference: if your code uses `context.store` or KV APIs, also read `skills/makers-storage/SKILL.md`.
+> Cross-reference: if your code uses `context.store` or KV APIs, also read [makers-storage/SKILL.md](../makers-storage/SKILL.md).
 
 **Do NOT use for:**
-- Plain Edge Functions / Cloud Functions / Middleware → use `edgeone-pages-dev`
-- Deployment workflows → use `edgeone-pages-deploy`
+- Plain Edge Functions / Cloud Functions / Middleware → use `edgeone-makers-edge-functions`, `makers-cloud-functions`, or `edgeone-makers-middleware`
+- Deployment workflows → use `edgeone-makers-deploy`
 - Generic AI framework development outside an EdgeOne Makers project
 - Other platforms (Cloudflare Workers AI, Vercel AI SDK, AWS Bedrock)
 
@@ -241,6 +242,8 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 | LangGraph (Python) | [python-frameworks/langgraph.md](references/python-frameworks/langgraph.md) |
 | DeepAgents (Python) | [python-frameworks/deepagents.md](references/python-frameworks/deepagents.md) |
 | CrewAI (Python only) | [python-frameworks/crewai.md](references/python-frameworks/crewai.md) |
+| CrewAI — tool integration, review checklist, pitfalls | [python-frameworks/crewai-integration.md](references/python-frameworks/crewai-integration.md) |
+| Python runtime conventions (all Python routes) | [python-frameworks/python-runtime-conventions.md](references/python-frameworks/python-runtime-conventions.md) |
 | Review checklist | [review-checklist.md](references/review-checklist.md) |
 
 ---

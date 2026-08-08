@@ -25,12 +25,14 @@ metadata:
 When you reach the "display / preview" step, **read this first before deciding how to call `present_files`**:
 
 ```
-            ┌─ Delivering finished work? ── Yes ──→ present_files(deployed EdgeOne URL) ✅
-            │
-Enter       ┤
-preview     │                      ┌─ dev server running? ─ Yes ──→ present_files(http://127.0.0.1:8088/) ✅
-            └─ Still iterating? ───┤
-                                    └─ No ──→ start edgeone makers dev → present_files(...)
+Dev done ──→ ASK the user how to verify (never assume)
+              │
+              ├─ "deploy directly" ──→ deploy → present_files(deployed EdgeOne URL) ✅
+              │
+              ├─ "local preview" ────────────┐
+              └─ "preview then deploy" ──────┤
+                                             ├─ dev server running? ─ Yes ──→ present_files(http://127.0.0.1:8088/) ✅
+                                             └─ No ──→ start edgeone makers dev → present_files(...)
 ```
 
 | What you want to do | Correct approach | Wrong approach (breaks) |
@@ -176,7 +178,7 @@ A `setLocalData EPERM` does not affect the running service; it only affects the 
 
 ### 7.1 Preview & Dev Server full flow (MUST use HTTP, file:// forbidden)
 
-After finishing development, **start the dev server and preview directly** — do not ask "do you want to preview?". Full flow:
+After finishing development, **ask the user how they want to verify** — do not assume local preview. Offer three options: local preview / deploy directly / preview then deploy. Once the user picks local preview, follow this flow:
 
 > ⚠️ **WorkBuddy default behavior**: when you create an HTML file the platform may auto-open a preview via file:// — **ignore it**, that is not a valid preview. You must wait until `edgeone makers dev` is up, then re-open via the HTTP URL to override it.
 
@@ -224,7 +226,7 @@ present_files("https://my-app-w9t0lxe8.edgeone.cool")                         # 
 
 ---
 
-### 10. Next.js HMR cross-origin configuration
+### 8. Next.js HMR cross-origin configuration
 
 The Next.js 15+ dev server trusts only `localhost` by default. Accessing it via `127.0.0.1` in the sandbox is treated as cross-origin, so the HMR WebSocket is blocked and the page becomes unresponsive.
 
@@ -237,7 +239,7 @@ Note: the value is a **bare host**, without an `http://` prefix and without a po
 
 ---
 
-### 11. Project linking (required for Blob/KV)
+### 9. Project linking (required for Blob/KV)
 
 Projects that use Blob Storage or KV must ensure the project is linked (a `.edgeone/project.json` exists) before starting dev. When not linked, Blob/KV calls report `Missing: deployCredential`.
 
@@ -262,7 +264,7 @@ If the project named by `--name` does not exist remotely, the `link` command cre
 
 ---
 
-### 12. Framework version requirements
+### 10. Framework version requirements
 
 | Framework/package | Minimum version | Reason |
 |---------|---------|------|
