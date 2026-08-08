@@ -200,3 +200,87 @@ test('plugin-skill-injection-optimization.SIGNAL_LOGGING.3 logs validate matches
     await rm(tmp, { recursive: true, force: true });
   }
 });
+
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.7 aggregates matches from every skill whose pathPatterns match', () => {
+  const rules = [
+    {
+      skill: 'skill-alpha',
+      pathPatterns: ['functions/**'],
+      validate: [{ pattern: 'process\\.env', message: 'Alpha says use context.env.' }],
+    },
+    {
+      skill: 'skill-beta',
+      pathPatterns: ['functions/**'],
+      validate: [{ pattern: 'process\\.env', message: 'Beta says the same thing differently.' }],
+    },
+  ];
+
+  const output = buildValidateWriteOutput(
+    {
+      tool_name: 'Write',
+      tool_input: { file_path: 'functions/index.ts', content: 'process.env.KEY' },
+    },
+    { rules },
+  );
+
+  assert.deepEqual(output, {
+    hookSpecificOutput: {
+      hookEventName: 'PreToolUse',
+      additionalContext:
+        'Validation reminder:\n- Alpha says use context.env.\n- Beta says the same thing differently.',
+    },
+  });
+});
+
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.7 deduplicates an identical message from two skills', () => {
+  const rules = [
+    {
+      skill: 'skill-alpha',
+      pathPatterns: ['functions/**'],
+      validate: [{ pattern: 'process\\.env', message: 'Use context.env.' }],
+    },
+    {
+      skill: 'skill-beta',
+      pathPatterns: ['functions/**'],
+      validate: [{ pattern: 'process\\.env', message: 'Use context.env.' }],
+    },
+  ];
+
+  const output = buildValidateWriteOutput(
+    {
+      tool_name: 'Write',
+      tool_input: { file_path: 'functions/index.ts', content: 'process.env.KEY' },
+    },
+    { rules },
+  );
+
+  assert.equal(
+    output.hookSpecificOutput.additionalContext,
+    'Validation reminder:\n- Use context.env.',
+  );
+});
+
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.7 ignores a skill whose pathPatterns do not match', () => {
+  const rules = [
+    {
+      skill: 'skill-alpha',
+      pathPatterns: ['edge-functions/**'],
+      validate: [{ pattern: 'process\\.env', message: 'Alpha.' }],
+    },
+    {
+      skill: 'skill-beta',
+      pathPatterns: ['agents/**'],
+      validate: [{ pattern: 'process\\.env', message: 'Beta.' }],
+    },
+  ];
+
+  const output = buildValidateWriteOutput(
+    {
+      tool_name: 'Write',
+      tool_input: { file_path: 'agents/chat/index.ts', content: 'process.env.KEY' },
+    },
+    { rules },
+  );
+
+  assert.equal(output.hookSpecificOutput.additionalContext, 'Validation reminder:\n- Beta.');
+});

@@ -145,21 +145,33 @@ function getToolWriteContent(payload) {
   return '';
 }
 
-function findSkillForPath(filePath, rules) {
-  if (!filePath) return null;
-  for (const rule of rules) {
-    if (rule.pathPatterns.some((pattern) => globToRegExp(pattern).test(filePath))) return rule;
-  }
-  return null;
+/**
+ * 返回所有 pathPatterns 命中该路径的规则。
+ *
+ * 不能只取第一条：规则按 skills/ 的字母序加载，而 `agents/**` 与
+ * `cloud-functions/**` 这类前缀天然会重叠。只取首条等于让「哪条铁律生效」
+ * 由目录名的字母序偶然决定，多个 skill 共管同一路径时会静默丢提醒。
+ */
+function findSkillsForPath(filePath, rules) {
+  if (!filePath) return [];
+  return rules.filter((rule) =>
+    rule.pathPatterns.some((pattern) => globToRegExp(pattern).test(filePath)),
+  );
 }
 
-function selectValidationMatches(content, rule) {
+/**
+ * 收集全部命中的校验项，message 去重并保留首次出现顺序。
+ * 每项带上来源 skill，供 signal log 归因。
+ */
+function selectValidationMatches(content, matchedRules) {
   const seen = new Set();
   const matches = [];
-  for (const item of rule.validate) {
-    if (new RegExp(item.pattern).test(content) && !seen.has(item.message)) {
+  for (const rule of matchedRules) {
+    for (const item of rule.validate) {
+      if (!new RegExp(item.pattern).test(content)) continue;
+      if (seen.has(item.message)) continue;
       seen.add(item.message);
-      matches.push(item);
+      matches.push({ ...item, skill: rule.skill });
     }
   }
   return matches;
@@ -174,13 +186,13 @@ export function buildValidateWriteOutput(payload, options = {}) {
   const content = getToolWriteContent(payload);
   if (!content) return null;
 
-  const rule = findSkillForPath(
+  const matchedRules = findSkillsForPath(
     getToolPath(getToolInput(payload)),
     options.rules || loadSkillValidateRules(),
   );
-  if (!rule) return null;
+  if (matchedRules.length === 0) return null;
 
-  const matches = selectValidationMatches(content, rule);
+  const matches = selectValidationMatches(content, matchedRules);
   if (matches.length === 0) return null;
 
   if (shouldWriteSignalLog(options)) {
@@ -189,7 +201,7 @@ export function buildValidateWriteOutput(payload, options = {}) {
         {
           hook: 'PreToolUse',
           trigger: 'validate',
-          matchedSkill: rule.skill,
+          matchedSkill: match.skill,
           reason: match.message,
           toolName: getToolName(payload),
         },
