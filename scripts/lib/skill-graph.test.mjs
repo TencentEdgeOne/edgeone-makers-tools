@@ -373,3 +373,130 @@ test('skill-graph.checkFileManifest ignores manifest entries outside skills/', a
     await rm(root, { recursive: true, force: true });
   }
 });
+
+/** 造一个正文足够长(必然超过目录阈值)的 reference,可选地在开头插几行。 */
+function longReference(head = '') {
+  const body = Array.from({ length: 120 }, (_, i) => `line ${i}`).join('\n');
+  return `# Long\n\n${head}${body}\n`;
+}
+
+test('skill-graph.findMissingTocs accepts an ordered-list table of contents', async () => {
+  // `1.` 这一支单独钉住:去掉 ANCHOR_LIST_ITEM 里的 \d+\. 分支后本用例才会红。
+  const root = await makeSkills({
+    'makers-a/references/long.md': longReference('1. [One](#one)\n2. [Two](#two)\n\n'),
+  });
+  try {
+    assert.deepEqual(findMissingTocs(root), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findMissingTocs accepts a star-bulleted table of contents', async () => {
+  // `*` 这一支单独钉住:去掉 [-*] 里的 * 后本用例才会红。
+  const root = await makeSkills({
+    'makers-a/references/long.md': longReference('* [One](#one)\n* [Two](#two)\n\n'),
+  });
+  try {
+    assert.deepEqual(findMissingTocs(root), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findMissingTocs still flags a long file whose prose merely links an anchor', async () => {
+  // 最危险的方向:漏报意味着 Task 15 永远不会给它补目录。
+  // 正文里的行内锚点链接不是目录——它不在行首,ANCHOR_LIST_ITEM 的 ^ 与列表符号要求就为这个。
+  const root = await makeSkills({
+    'makers-a/references/long.md': longReference('See [below](#tail) for details.\n\n'),
+  });
+  try {
+    assert.deepEqual(
+      findMissingTocs(root).map((x) => x.file),
+      ['makers-a/references/long.md'],
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findMissingTocs still flags a long file whose only list link is not an anchor', async () => {
+  // 列表项里放的是普通文件链接而非 #锚点,不算目录:钉住 ANCHOR_LIST_ITEM 结尾的 \(# 要求。
+  const root = await makeSkills({
+    'makers-a/references/long.md': longReference('- [One](one.md)\n- [Two](two.md)\n\n'),
+    'makers-a/references/one.md': '# One\n',
+    'makers-a/references/two.md': '# Two\n',
+  });
+  try {
+    assert.deepEqual(
+      findMissingTocs(root).map((x) => x.file),
+      ['makers-a/references/long.md'],
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findMissingTocs still flags a long file whose mid-line dash precedes an anchor link', async () => {
+  // 钉住 ANCHOR_LIST_ITEM 的 ^:没有 ^ 时,这行里的「 - [Two](#two)」会被当成行首列表项,
+  // 于是一段普通散文被误认成目录(漏报),Task 15 就永远不会给它补目录。
+  const root = await makeSkills({
+    'makers-a/references/long.md': longReference('Compare A - [Two](#two) is inline prose.\n\n'),
+  });
+  try {
+    assert.deepEqual(
+      findMissingTocs(root).map((x) => x.file),
+      ['makers-a/references/long.md'],
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findMissingTocs treats 100 lines as short and 101 as long', async () => {
+  // 钉住 <= TOC_LINE_THRESHOLD 这道边界(而非 < )。
+  // 行数是 split 段数:99 个 \n + 结尾换行 = 100 段。
+  const root = await makeSkills({
+    'makers-a/references/at-100.md': `${Array.from({ length: 99 }, (_, i) => `a ${i}`).join('\n')}\n`,
+    'makers-b/references/at-101.md': `${Array.from({ length: 100 }, (_, i) => `b ${i}`).join('\n')}\n`,
+  });
+  try {
+    assert.deepEqual(findMissingTocs(root), [
+      { file: 'makers-b/references/at-101.md', lines: 101 },
+    ]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findOversizedFiles treats 500 lines as fine and 501 as oversized', async () => {
+  // 钉住 > MAX_FILE_LINES 这道边界(而非 >= )。
+  const root = await makeSkills({
+    'makers-a/references/at-500.md': `${Array.from({ length: 499 }, (_, i) => `a ${i}`).join('\n')}\n`,
+    'makers-b/references/at-501.md': `${Array.from({ length: 500 }, (_, i) => `b ${i}`).join('\n')}\n`,
+  });
+  try {
+    assert.deepEqual(findOversizedFiles(root), [
+      { file: 'makers-b/references/at-501.md', lines: 501, cap: 500 },
+    ]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findMissingTocs only exempts a real SKILL.md, not a lookalike filename', async () => {
+  // endsWith('SKILL.md') 会把 MY-SKILL.md 一起豁免,而 Task 15 拿这个检测当验收门,
+  // 于是这种文件永远补不上目录也没人报。
+  const root = await makeSkills({
+    'makers-a/references/MY-SKILL.md': longReference(),
+    'makers-a/SKILL.md': `---\nname: a\n---\n\n${longReference()}`,
+  });
+  try {
+    assert.deepEqual(
+      findMissingTocs(root).map((x) => x.file),
+      ['makers-a/references/MY-SKILL.md'],
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});

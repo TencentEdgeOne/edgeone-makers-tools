@@ -74,8 +74,13 @@ export function forEachMarkdownLine(root, visit) {
 /**
  * 读单个 markdown 全文，读不到返回 null。
  *
- * 本模块唯一一处“带守卫的读”：existsSync + isFile 挡掉不存在与 EISDIR
- * （SKILL.md 是个目录就会踩到），try/catch 挡掉 EACCES 这类权限错。
+ * 本模块唯一一处“带守卫的读”，isFile() 这道守卫挡掉三类东西：
+ *   - 不存在的路径
+ *   - 目录（SKILL.md 是个目录时裸读会抛 EISDIR）
+ *   - 管道/设备等非普通文件——树里放一个命名 FIFO 叫 *.md，裸读会**永久阻塞**
+ *     （实测 5s 未返回，只能 SIGKILL）。CI 里挂死比抛栈更难查，所以先 stat 再读。
+ * try/catch 另外挡掉 EACCES 这类权限错。
+ *
  * 调用方把 null 当成“跳过这个文件”而不是抛——doctor 调 collect() 时没有
  * try/catch，一个权限异常的文件不该把整份六项报告换成裸栈。
  *
@@ -95,8 +100,9 @@ function readMarkdownText(root, file) {
 /**
  * 读单个 markdown 并按行切好，读不到返回 null。
  *
- * 需要整份行数组的检测（数行数、看开头 N 行）用这个；
- * 只关心逐行内容的检测继续用 forEachMarkdownLine。
+ * 拆成两个函数纯粹是为了各取所需：listDeclaredSkillNames 要整段 text 跑正则，
+ * 两个新检测要行数组（数行数、看开头 N 行）。包一层不花钱，也免得前者
+ * 多做一次无意义的 split。只关心逐行内容的检测继续用 forEachMarkdownLine。
  */
 function readMarkdownLines(root, file) {
   const text = readMarkdownText(root, file);
@@ -234,11 +240,15 @@ const ANCHOR_LIST_ITEM = /^\s*(?:[-*]|\d+\.)\s*\[[^\]]+\]\(#/;
  * 依据：Claude 可能只 head -100 部分读取，没有目录就拿不到全貌。
  *
  * SKILL.md 不在此列：它是入口，模型总是整份读，且有 frontmatter 而非目录。
+ * 用 `=== 'SKILL.md' || endsWith('/SKILL.md')` 而不是 endsWith('SKILL.md')：
+ * 后者会把 references/MY-SKILL.md 这种也一并豁免，从此永远拿不到目录且无人报错。
+ *
+ * lines 的计法见 findOversizedFiles 的说明（是 split 段数，非 wc -l）。
  */
 export function findMissingTocs(root) {
   const missing = [];
   for (const file of listMarkdownFiles(root)) {
-    if (file.endsWith('SKILL.md')) continue;
+    if (file === 'SKILL.md' || file.endsWith('/SKILL.md')) continue;
     const lines = readMarkdownLines(root, file);
     if (lines === null) continue;
     if (lines.length <= TOC_LINE_THRESHOLD) continue;
@@ -248,7 +258,14 @@ export function findMissingTocs(root) {
   return missing;
 }
 
-/** 超过 500 行的 md 文件（SKILL.md 与 reference 同一上限）。 */
+/**
+ * 超过 500 行的 md 文件（SKILL.md 与 reference 同一上限）。
+ *
+ * 注意 lines 是 split(/\r?\n/) 的**段数**，不是 wc -l：以换行结尾的文件
+ * 末尾会多出一个空串，所以 lines === wc -l + 1
+ * （crewai.md：wc -l 601，这里报 602）。于是对这类文件实际卡的是 499 行正文。
+ * 不改：602 这个基线已被 Task 3/11/16 三处断言，动它会连带失配。
+ */
 export function findOversizedFiles(root) {
   const over = [];
   for (const file of listMarkdownFiles(root)) {
