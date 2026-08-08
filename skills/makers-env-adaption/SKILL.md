@@ -226,7 +226,7 @@ present_files("https://my-app-w9t0lxe8.edgeone.cool")                         # 
 
 ---
 
-### 10. Next.js HMR cross-origin configuration
+### 8. Next.js HMR cross-origin configuration
 
 The Next.js 15+ dev server trusts only `localhost` by default. Accessing it via `127.0.0.1` in the sandbox is treated as cross-origin, so the HMR WebSocket is blocked and the page becomes unresponsive.
 
@@ -239,7 +239,7 @@ Note: the value is a **bare host**, without an `http://` prefix and without a po
 
 ---
 
-### 11. Project linking (required for Blob/KV)
+### 9. Project linking (required for Blob/KV)
 
 Projects that use Blob Storage or KV must ensure the project is linked (a `.edgeone/project.json` exists) before starting dev. When not linked, Blob/KV calls report `Missing: deployCredential`.
 
@@ -264,7 +264,7 @@ If the project named by `--name` does not exist remotely, the `link` command cre
 
 ---
 
-### 12. Framework version requirements
+### 10. Framework version requirements
 
 | Framework/package | Minimum version | Reason |
 |---------|---------|------|
