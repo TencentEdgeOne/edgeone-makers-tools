@@ -260,3 +260,21 @@ export function findOversizedFiles(root) {
   }
   return over;
 }
+
+/**
+ * _meta.json 的 files 数组 ↔ skills/ 下真实 md 文件。
+ * missing = 磁盘有但没声明（不会发布到 SkillHub）
+ * extra   = 声明了但磁盘没有（发布时会缺文件）
+ * 只比较 skills/ 前缀项，根级 SKILL.md / CLAUDE.md 不在管辖范围。
+ *
+ * files 由调用方传入而不是在这里读 _meta.json：本模块的契约是
+ * “给一个 root，返回纯数据”，不认识仓库根在哪。读文件是 doctor 那层的事。
+ */
+export function checkFileManifest(root, files) {
+  const disk = new Set(listMarkdownFiles(root).map((file) => `skills/${file}`));
+  const declared = new Set((files || []).filter((file) => String(file).startsWith('skills/')));
+  return {
+    missing: [...disk].filter((file) => !declared.has(file)).sort(),
+    extra: [...declared].filter((file) => !disk.has(file)).sort(),
+  };
+}

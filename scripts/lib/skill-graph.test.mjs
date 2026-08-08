@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import test from 'node:test';
 
 import {
+  checkFileManifest,
   findBrokenLinks,
   findDanglingSkillNames,
   findDeepReferenceLinks,
@@ -330,6 +331,45 @@ test('skill-graph.findMissingTocs and findOversizedFiles survive an unreadable f
   } finally {
     // 先恢复权限,否则 rm 清不掉这棵树。
     await chmod(locked, 0o644);
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.checkFileManifest reports files on disk but absent from the manifest', async () => {
+  const root = await makeSkills({
+    'makers-a/SKILL.md': '---\nname: a\n---\n',
+    'makers-a/references/x.md': '# X\n',
+  });
+  try {
+    assert.deepEqual(checkFileManifest(root, ['skills/makers-a/SKILL.md']), {
+      missing: ['skills/makers-a/references/x.md'],
+      extra: [],
+    });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.checkFileManifest reports manifest entries with no file on disk', async () => {
+  const root = await makeSkills({ 'makers-a/SKILL.md': '---\nname: a\n---\n' });
+  try {
+    assert.deepEqual(
+      checkFileManifest(root, ['skills/makers-a/SKILL.md', 'skills/makers-ghost/SKILL.md']),
+      { missing: [], extra: ['skills/makers-ghost/SKILL.md'] },
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.checkFileManifest ignores manifest entries outside skills/', async () => {
+  const root = await makeSkills({ 'makers-a/SKILL.md': '---\nname: a\n---\n' });
+  try {
+    assert.deepEqual(
+      checkFileManifest(root, ['SKILL.md', 'CLAUDE.md', 'skills/makers-a/SKILL.md']),
+      { missing: [], extra: [] },
+    );
+  } finally {
     await rm(root, { recursive: true, force: true });
   }
 });
