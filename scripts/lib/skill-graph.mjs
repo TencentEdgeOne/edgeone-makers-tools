@@ -3,6 +3,9 @@ import { dirname, join, relative, resolve } from 'node:path';
 
 const MD_LINK = /\[[^\]]*\]\(([^)\s]+)\)/g;
 
+/** 统一的换行切分，兼容 CRLF；无 g 标志，可安全共享。 */
+const LINE_BREAK = /\r?\n/;
+
 /**
  * 非本地链接：任意 URL scheme（http:/https:/mailto:/tel:/data: ……）与纯锚点。
  * 用通用 scheme 匹配而不是逐个枚举，免得以后漏掉一种就误报。
@@ -63,9 +66,41 @@ export function forEachMarkdownLine(root, visit) {
       unreadable.push({ file, error: error instanceof Error ? error.message : String(error) });
       continue;
     }
-    text.split(/\r?\n/).forEach((line, index) => visit(file, line, index + 1));
+    text.split(LINE_BREAK).forEach((line, index) => visit(file, line, index + 1));
   }
   return unreadable;
+}
+
+/**
+ * 读单个 markdown 全文，读不到返回 null。
+ *
+ * 本模块唯一一处“带守卫的读”：existsSync + isFile 挡掉不存在与 EISDIR
+ * （SKILL.md 是个目录就会踩到），try/catch 挡掉 EACCES 这类权限错。
+ * 调用方把 null 当成“跳过这个文件”而不是抛——doctor 调 collect() 时没有
+ * try/catch，一个权限异常的文件不该把整份六项报告换成裸栈。
+ *
+ * forEachMarkdownLine 故意不走这里：它要把错误信息本身交给 findBrokenLinks
+ * 记成 unreadable 条目，而这里的契约是静默跳过，两种契约不该合并。
+ */
+function readMarkdownText(root, file) {
+  const full = join(root, file);
+  if (!existsSync(full) || !statSync(full).isFile()) return null;
+  try {
+    return readFileSync(full, 'utf8');
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * 读单个 markdown 并按行切好，读不到返回 null。
+ *
+ * 需要整份行数组的检测（数行数、看开头 N 行）用这个；
+ * 只关心逐行内容的检测继续用 forEachMarkdownLine。
+ */
+function readMarkdownLines(root, file) {
+  const text = readMarkdownText(root, file);
+  return text === null ? null : text.split(LINE_BREAK);
 }
 
 /**
@@ -137,14 +172,8 @@ const NON_SKILL_SLUGS = new Set(['edgeone-makers-tools']);
 export function listDeclaredSkillNames(root) {
   const names = new Set();
   for (const dir of listSkillDirs(root)) {
-    const skillPath = join(root, dir, 'SKILL.md');
-    if (!existsSync(skillPath) || !statSync(skillPath).isFile()) continue;
-    let text;
-    try {
-      text = readFileSync(skillPath, 'utf8');
-    } catch {
-      continue;
-    }
+    const text = readMarkdownText(root, join(dir, 'SKILL.md'));
+    if (text === null) continue;
     const match = /^name:\s*(.+)$/m.exec(text);
     if (match) names.add(match[1].trim().replace(/^["']|["']$/g, ''));
   }
@@ -193,4 +222,41 @@ export function findDeepReferenceLinks(root) {
     }
   });
   return deep;
+}
+
+export const TOC_LINE_THRESHOLD = 100;
+export const MAX_FILE_LINES = 500;
+const TOC_SCAN_LINES = 25;
+const ANCHOR_LIST_ITEM = /^\s*(?:[-*]|\d+\.)\s*\[[^\]]+\]\(#/;
+
+/**
+ * 超 100 行、且开头 25 行内没有锚点目录的 reference。
+ * 依据：Claude 可能只 head -100 部分读取，没有目录就拿不到全貌。
+ *
+ * SKILL.md 不在此列：它是入口，模型总是整份读，且有 frontmatter 而非目录。
+ */
+export function findMissingTocs(root) {
+  const missing = [];
+  for (const file of listMarkdownFiles(root)) {
+    if (file.endsWith('SKILL.md')) continue;
+    const lines = readMarkdownLines(root, file);
+    if (lines === null) continue;
+    if (lines.length <= TOC_LINE_THRESHOLD) continue;
+    if (lines.slice(0, TOC_SCAN_LINES).some((line) => ANCHOR_LIST_ITEM.test(line))) continue;
+    missing.push({ file, lines: lines.length });
+  }
+  return missing;
+}
+
+/** 超过 500 行的 md 文件（SKILL.md 与 reference 同一上限）。 */
+export function findOversizedFiles(root) {
+  const over = [];
+  for (const file of listMarkdownFiles(root)) {
+    const lines = readMarkdownLines(root, file);
+    if (lines === null) continue;
+    if (lines.length > MAX_FILE_LINES) {
+      over.push({ file, lines: lines.length, cap: MAX_FILE_LINES });
+    }
+  }
+  return over;
 }

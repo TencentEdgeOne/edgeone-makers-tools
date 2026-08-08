@@ -8,6 +8,8 @@ import {
   findBrokenLinks,
   findDanglingSkillNames,
   findDeepReferenceLinks,
+  findMissingTocs,
+  findOversizedFiles,
   listMarkdownFiles,
 } from './skill-graph.mjs';
 
@@ -237,6 +239,94 @@ test('skill-graph.findDanglingSkillNames survives an unreadable or non-file SKIL
     assert.deepEqual(dangling, [
       { file: 'makers-b/SKILL.md', line: 5, name: 'edgeone-pages-dev' },
     ]);
+  } finally {
+    // 先恢复权限,否则 rm 清不掉这棵树。
+    await chmod(locked, 0o644);
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findMissingTocs flags a long reference without a table of contents', async () => {
+  const body = Array.from({ length: 120 }, (_, i) => `line ${i}`).join('\n');
+  const root = await makeSkills({ 'makers-a/references/long.md': `# Long\n\n${body}\n` });
+  try {
+    assert.deepEqual(findMissingTocs(root), [
+      { file: 'makers-a/references/long.md', lines: 123 },
+    ]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findMissingTocs accepts a long reference that opens with anchor links', async () => {
+  const body = Array.from({ length: 120 }, (_, i) => `line ${i}`).join('\n');
+  const root = await makeSkills({
+    'makers-a/references/long.md': `# Long\n\n- [One](#one)\n- [Two](#two)\n\n${body}\n`,
+  });
+  try {
+    assert.deepEqual(findMissingTocs(root), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findMissingTocs ignores short references and SKILL.md', async () => {
+  const body = Array.from({ length: 120 }, (_, i) => `line ${i}`).join('\n');
+  const root = await makeSkills({
+    'makers-a/references/short.md': '# Short\n\nonly a few lines\n',
+    'makers-a/SKILL.md': `---\nname: a\n---\n\n${body}\n`,
+  });
+  try {
+    assert.deepEqual(findMissingTocs(root), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findOversizedFiles flags files above the 500-line cap', async () => {
+  const skillBody = Array.from({ length: 520 }, (_, i) => `s ${i}`).join('\n');
+  const refBody = Array.from({ length: 520 }, (_, i) => `r ${i}`).join('\n');
+  const root = await makeSkills({
+    'makers-a/SKILL.md': `---\nname: a\n---\n${skillBody}\n`,
+    'makers-a/references/big.md': `# Big\n${refBody}\n`,
+  });
+  try {
+    const over = findOversizedFiles(root);
+    assert.deepEqual(over.map((x) => x.file).sort(), [
+      'makers-a/SKILL.md',
+      'makers-a/references/big.md',
+    ]);
+    assert.ok(over.every((x) => x.lines > 500 && x.cap === 500));
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findMissingTocs and findOversizedFiles survive an unreadable file', async () => {
+  const body = Array.from({ length: 600 }, (_, i) => `line ${i}`).join('\n');
+  const root = await makeSkills({
+    // 这个读不到:既够长会被目录检测盯上,也超 500 行会被行数检测盯上。
+    'makers-a/references/locked.md': `# Locked\n\n${body}\n`,
+    'makers-b/references/plain.md': `# Plain\n\n${body}\n`,
+  });
+  const locked = join(root, 'makers-a/references/locked.md');
+  try {
+    await chmod(locked, 0o000);
+
+    // 不抛——doctor 调 collect() 没有 try/catch,一个权限异常的文件
+    // 不该把整份六项报告换成裸栈。
+    const missing = findMissingTocs(root);
+    const over = findOversizedFiles(root);
+
+    // 读不到的文件被跳过,不凭空报一条。
+    assert.deepEqual(
+      missing.map((x) => x.file),
+      ['makers-b/references/plain.md'],
+    );
+    assert.deepEqual(
+      over.map((x) => x.file),
+      ['makers-b/references/plain.md'],
+    );
   } finally {
     // 先恢复权限,否则 rm 清不掉这棵树。
     await chmod(locked, 0o644);
