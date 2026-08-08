@@ -1,10 +1,10 @@
 import assert from 'node:assert/strict';
-import { mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
+import { chmod, mkdtemp, mkdir, writeFile, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import test from 'node:test';
 
-import { findBrokenLinks } from './skill-graph.mjs';
+import { findBrokenLinks, listMarkdownFiles } from './skill-graph.mjs';
 
 /** 在临时目录里造一棵假的 skills 树，键是相对路径。 */
 async function makeSkills(tree) {
@@ -76,6 +76,60 @@ test('skill-graph.findBrokenLinks ignores http links and strips anchors', async 
   });
   try {
     assert.deepEqual(findBrokenLinks(root), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findBrokenLinks fails with a readable message on a bad root', async () => {
+  const root = await makeSkills({ 'makers-a/SKILL.md': '---\nname: a\n---\n' });
+  try {
+    assert.throws(() => findBrokenLinks(join(root, 'no-such-dir')), {
+      message: /root directory not found/,
+    });
+    // 传文件而不是目录:原来会抛 ENOTDIR 裸栈。
+    assert.throws(() => findBrokenLinks(join(root, 'makers-a/SKILL.md')), {
+      message: /not a directory/,
+    });
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findBrokenLinks keeps scanning when one file is unreadable', async () => {
+  const root = await makeSkills({
+    'makers-a/locked.md': '# locked\n',
+    'makers-b/SKILL.md': '---\nname: b\n---\n\n[gone](missing.md)\n',
+  });
+  const locked = join(root, 'makers-a/locked.md');
+  try {
+    await chmod(locked, 0o000);
+    const broken = findBrokenLinks(root);
+
+    // 后面那个文件的断链仍被发现,没有被前面的权限错误带走整轮扫描。
+    assert.ok(
+      broken.some((item) => item.file === 'makers-b/SKILL.md' && item.target === 'missing.md'),
+    );
+    // 读不到的文件被单独记录,而不是静默当成“没有断链”。
+    const unreadable = broken.find((item) => item.file === 'makers-a/locked.md');
+    assert.equal(unreadable.line, 0);
+    assert.equal(unreadable.target, null);
+    assert.match(unreadable.error, /EACCES/);
+  } finally {
+    // 先恢复权限,否则 rm 清不掉这棵树。
+    await chmod(locked, 0o644);
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.listMarkdownFiles returns globally sorted paths', async () => {
+  const root = await makeSkills({
+    'a/z.md': '# z\n',
+    'a-b.md': '# a-b\n',
+    'b/c.md': '# c\n',
+  });
+  try {
+    assert.deepEqual(listMarkdownFiles(root), ['a-b.md', 'a/z.md', 'b/c.md']);
   } finally {
     await rm(root, { recursive: true, force: true });
   }
