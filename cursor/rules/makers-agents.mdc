@@ -16,6 +16,15 @@ description: >-
   Do NOT trigger for deployment workflows (use edgeone-makers-deploy).
   Do NOT trigger for generic AI framework development outside
   an EdgeOne Makers project.
+pathPatterns:
+  - agents/**
+validate:
+  - pattern: "process\\.env|os\\.environ"
+    message: "Read env via context.env inside agents/ and cloud-functions/, never process.env or os.environ (Critical Rule 3)."
+  - pattern: "headers\\s*\\.\\s*get\\s*\\("
+    message: "Headers are plain objects here: context.request.headers['x-name'], not .get('x-name') (Critical Rule 4)."
+  - pattern: "langgraphStore\\s*\\?\\?\\s*store"
+    message: "Never write `store?.langgraphStore ?? store` — in cloud-function context it falls back to a store with no .get and crashes (Critical Rule 12)."
 metadata:
   author: edgeone
   version: "1.0.0"

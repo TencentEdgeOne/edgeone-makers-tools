@@ -8,6 +8,14 @@ description: >-
   Covers: non-interactive CLI flags, network isolation workarounds, login in sandbox,
   proxy bypass, file preview constraints (MUST use http:// via dev server, NEVER file://,
   NEVER python -m http.server / npx serve), dev server requirements.
+pathPatterns:
+  - "*.sh"
+  - package.json
+validate:
+  - pattern: "python\\s+-m\\s+http\\.server|npx\\s+(serve|http-server)"
+    message: "Use `edgeone makers dev` — self-hosted static servers skip Blob credentials, Cloud Functions routing, Edge Functions and middleware."
+  - pattern: "localhost:80(88|89)"
+    message: "Use 127.0.0.1, not localhost — in the sandbox localhost resolves to ::1 and yields false 404s."
 metadata:
   author: edgeone
   version: "1.1.0"

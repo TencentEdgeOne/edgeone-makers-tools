@@ -13,6 +13,12 @@ description: >-
   Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy) —
   route those to the skill owning the runtime: edgeone-makers-edge-functions,
   makers-cloud-functions, edgeone-makers-middleware, or edgeone-makers-agents.
+pathPatterns:
+  - "*.sh"
+  - .github/workflows/**
+validate:
+  - pattern: "whoami[^\\n]*\\s-t\\s"
+    message: "edgeone whoami does not accept -t. Check the exit code instead: 0 = logged in, 1 = not."
 metadata:
   author: edgeone
   version: "2.2.0"

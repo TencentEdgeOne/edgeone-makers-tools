@@ -3,6 +3,11 @@ name: edgeone-makers-storage
 description: >-
   KV and Blob storage services on EdgeOne Makers. KV for edge key-value pairs,
   Blob for file/object storage in Cloud Functions. Covers SDK usage, setup, and troubleshooting.
+pathPatterns:
+  - edge-functions/**
+validate:
+  - pattern: "context\\.env\\.[A-Za-z_]*[Kk][Vv]"
+    message: "KV is a console-bound global variable, not on context.env — call my_kv.get(...) directly. See makers-storage/references/kv.md."
 metadata:
   author: edgeone
   version: "1.0.0"
