@@ -242,6 +242,8 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 | LangGraph (Python) | [python-frameworks/langgraph.md](references/python-frameworks/langgraph.md) |
 | DeepAgents (Python) | [python-frameworks/deepagents.md](references/python-frameworks/deepagents.md) |
 | CrewAI (Python only) | [python-frameworks/crewai.md](references/python-frameworks/crewai.md) |
+| CrewAI — tool integration, review checklist, pitfalls | [python-frameworks/crewai-integration.md](references/python-frameworks/crewai-integration.md) |
+| Python runtime conventions (all Python routes) | [python-frameworks/python-runtime-conventions.md](references/python-frameworks/python-runtime-conventions.md) |
 | Review checklist | [review-checklist.md](references/review-checklist.md) |
 
 ---
