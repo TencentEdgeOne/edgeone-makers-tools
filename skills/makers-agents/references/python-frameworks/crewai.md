@@ -1,5 +1,13 @@
 # Route E: CrewAI (Python-only)
 
+## Contents
+
+- [When to use Route E](#when-to-use-route-e)
+- [⚠️ Key differences between Python and TS routes (in one shot)](#key-differences-between-python-and-ts-routes-in-one-shot)
+- [Python Runtime Conventions](#python-runtime-conventions)
+- [Core pattern breakdown](#core-pattern-breakdown)
+- [Next: integration & review](#next-integration-review)
+
 > Use when: multi-agent collaboration (role split + Sequential/Hierarchical Process), YAML-configured Agent/Task is desired, or you want to leverage CrewAI's built-in skills / event_bus capabilities.
 > Core pattern: `Crew(agents, tasks, process)` + `crew.kickoff()` + bridging events to SSE.
 > ⚠️ **CrewAI has no official JS SDK** — this is the **only route among the five that requires the Python runtime**.

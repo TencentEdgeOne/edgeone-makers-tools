@@ -1,5 +1,11 @@
 # Migration: CrewAI (Python-only) → EdgeOne Makers
 
+## Contents
+
+- [❌ Before — native CrewAI (Flask + direct OpenAI + LiteLLM)](#before-native-crewai-flask-direct-openai-litellm)
+- [✅ After — Makers agent handler](#after-makers-agent-handler)
+- [Conversion Checklist](#conversion-checklist)
+
 CrewAI has no JS SDK, so this route is Python-only. The migration is about: routing the LLM through AI Gateway (`provider="openai"` to bypass LiteLLM), dropping `memory=True`/`verbose=True` for platform conventions, wrapping `crew.kickoff()` in a thread, and bridging the event_bus to Makers SSE.
 
 ---

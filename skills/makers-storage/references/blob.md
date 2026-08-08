@@ -1,5 +1,15 @@
 # Blob Storage
 
+## Contents
+
+- [Quick Start](#quick-start)
+- [Consistency Model](#consistency-model)
+- [API Reference](#api-reference)
+- [Examples](#examples)
+- [Limits](#limits)
+- [Common Errors](#common-errors)
+- [Best Practices](#best-practices)
+
 EdgeOne Makers Blob is a distributed **object storage** service for Makers Functions. Suitable for storing images, documents, user uploads, AI-generated content, and structured data sets.
 
 > ⚠️ Blob is for **Makers Functions (Cloud Functions)** — uses the `@edgeone/pages-blob` npm SDK (NOT a global variable like KV).

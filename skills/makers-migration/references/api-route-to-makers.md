@@ -1,5 +1,11 @@
 # Migration: Generic API Route → EdgeOne Makers (no-framework path)
 
+## Contents
+
+- [Example 1: Next.js API Route (app router)](#example-1-nextjs-api-route-app-router)
+- [Example 2: Express Router](#example-2-express-router)
+- [Conversion Checklist](#conversion-checklist)
+
 > This is the **framework-less fallback**. Use it when your project does **not** use any of the five
 > agent frameworks (LangGraph, DeepAgents, OpenAI Agents SDK, Claude Agent SDK, CrewAI) — e.g. a custom
 > agent loop wrapped in Express, a Next.js API route, or a plain HTTP endpoint.

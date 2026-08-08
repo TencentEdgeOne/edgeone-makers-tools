@@ -1,5 +1,14 @@
 # Route B: Claude Agent SDK (`@anthropic-ai/claude-agent-sdk`)
 
+## Contents
+
+- [Dependencies](#dependencies)
+- [When to Use Route B](#when-to-use-route-b)
+- [Core Pattern Walkthrough](#core-pattern-walkthrough)
+- [Route B Review Checklist](#route-b-review-checklist)
+- [Frontend Call Example (chat + stop + file upload)](#frontend-call-example-chat-stop-file-upload)
+- [See Also](#see-also)
+
 > Use when: multi-step agentic flows, sandbox code execution, file processing, session memory.
 > Core pattern: `query()` + dual MCP servers (sandbox + custom tools) + session binding + SSE side channel.
 

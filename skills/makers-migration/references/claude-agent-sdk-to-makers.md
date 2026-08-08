@@ -1,5 +1,11 @@
 # Migration: Claude Agent SDK (`@anthropic-ai/claude-agent-sdk`) → EdgeOne Makers
 
+## Contents
+
+- [Node](#node)
+- [Python equivalent](#python-equivalent)
+- [Conversion Checklist](#conversion-checklist)
+
 Claude Agent SDK runs a Claude Code subprocess, so the biggest differences are: (1) route the model through AI Gateway by mapping `AI_GATEWAY_*` → `ANTHROPIC_*`, (2) provide a writable config/temp dir, (3) wire platform tools via `toClaudeMcpServer`, and (4) bind session memory through `claudeSessionStore`.
 
 ---

@@ -184,6 +184,32 @@ test('skill-graph.findDanglingSkillNames accepts declared names and the marketpl
   }
 });
 
+test('skill-graph.findDanglingSkillNames ignores a name that only appears inside an anchor slug', async () => {
+  const root = await makeSkills({
+    'makers-a/references/long.md':
+      '# Long\n\n- [Remediation: from Vercel style to EdgeOne Makers style](#remediation-from-vercel-style-to-edgeone-makers-style)\n\n## Remediation: from Vercel style to EdgeOne Makers style\n',
+  });
+  try {
+    assert.deepEqual(findDanglingSkillNames(root), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findDanglingSkillNames still flags a real name on a line that also has an anchor link', async () => {
+  const root = await makeSkills({
+    'makers-a/references/long.md':
+      '# Long\n\nUse edgeone-pages-dev, see [Setup](#setup-edgeone-makers-style).\n\n## Setup edgeone makers style\n',
+  });
+  try {
+    const dangling = findDanglingSkillNames(root);
+    assert.equal(dangling.length, 1);
+    assert.equal(dangling[0].name, 'edgeone-pages-dev');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('skill-graph.findDeepReferenceLinks flags links that climb two levels', async () => {
   const root = await makeSkills({
     'makers-a/references/x.md': 'See [y](../../makers-b/references/y.md).\n',

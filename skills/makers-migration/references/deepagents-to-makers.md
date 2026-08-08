@@ -1,5 +1,11 @@
 # Migration: DeepAgents (Node + Python) → EdgeOne Makers
 
+## Contents
+
+- [Node](#node)
+- [Python equivalent](#python-equivalent)
+- [Conversion Checklist](#conversion-checklist)
+
 DeepAgents is a thin layer over LangGraph, so the migration is almost identical to LangGraph: swap the model endpoint, drop custom tools for `context.tools`, and replace the HTTP server with an `onRequest` handler. Memory reuses the LangGraph adapters.
 
 ---

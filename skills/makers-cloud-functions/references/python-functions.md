@@ -1,5 +1,18 @@
 # Python Functions
 
+## Contents
+
+- [Development Modes](#development-modes)
+- [Handler Mode](#handler-mode)
+- [Flask Framework (WSGI)](#flask-framework-wsgi)
+- [FastAPI Framework (ASGI)](#fastapi-framework-asgi)
+- [File-system Routing](#file-system-routing)
+- [Dynamic Route Parameters](#dynamic-route-parameters)
+- [Dependency Management](#dependency-management)
+- [Local Development](#local-development)
+- [Limits](#limits)
+- [Template Projects](#template-projects)
+
 Python 3.10 runtime functions under `cloud-functions/`. Supports Handler class, WSGI (Flask/Django), and ASGI (FastAPI/Sanic) modes with automatic dependency detection.
 
 > **Runtime:** Python 3.10 — auto-detects framework, auto-installs dependencies, no manual configuration needed.

@@ -168,6 +168,9 @@ const SKILL_NAME_TOKEN = /\bedgeone-(?:makers|pages)-[a-z0-9-]+/g;
 /** marketplace / plugin 的产品 slug，不是 skill 名，不参与悬空判定。 */
 const NON_SKILL_SLUGS = new Set(['edgeone-makers-tools']);
 
+/** markdown 链接里的锚点目标 `](#…)`，扫描 skill 名前先剥掉。 */
+const ANCHOR_LINK_TARGET = /\]\(#[^)]*\)/g;
+
 /**
  * 各 SKILL.md frontmatter 声明的 name 集合。
  *
@@ -192,12 +195,17 @@ export function listDeclaredSkillNames(root) {
  *
  * 读不到的文件不在这里单独记账：findBrokenLinks 走的是同一批文件，
  * 已经会把它们报出来，doctor 那层不需要同一个问题听三遍。
+ *
+ * 锚点链接里的名字不算引用：`- [… EdgeOne Makers style](#…-edgeone-makers-style)`
+ * 这种目录条目，slug 会把散文标题压成看着像 skill 名的形状，但它指向的是
+ * 本文件的小节，不是要加载的 skill。剥掉 `](#…)` 再扫，避免误报。
  */
 export function findDanglingSkillNames(root) {
   const declared = listDeclaredSkillNames(root);
   const dangling = [];
   forEachMarkdownLine(root, (file, line, lineNumber) => {
-    for (const match of line.matchAll(SKILL_NAME_TOKEN)) {
+    const scannable = line.replace(ANCHOR_LINK_TARGET, '](#)');
+    for (const match of scannable.matchAll(SKILL_NAME_TOKEN)) {
       const name = match[0];
       if (declared.has(name) || NON_SKILL_SLUGS.has(name)) continue;
       dangling.push({ file, line: lineNumber, name });

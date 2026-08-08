@@ -1,5 +1,18 @@
 # Go Functions
 
+## Contents
+
+- [Development Modes](#development-modes)
+- [Handler Mode](#handler-mode)
+- [Framework Mode (Gin example)](#framework-mode-gin-example)
+- [Framework Mode — Echo example](#framework-mode-echo-example)
+- [File-system Routing (Handler mode)](#file-system-routing-handler-mode)
+- [Dynamic Routes](#dynamic-routes)
+- [Supported Frameworks](#supported-frameworks)
+- [Local Development](#local-development)
+- [Limits](#limits)
+- [Template Projects](#template-projects)
+
 Go runtime functions under `cloud-functions/`. High-performance compiled language with low memory footprint and fast cold start. Supports Handler mode (file-system routing) and Framework mode (Gin, Echo, Fiber, Chi).
 
 > **Runtime:** Go 1.26+ — cross-compiled automatically by the platform. No manual build configuration needed.

@@ -1,5 +1,13 @@
 # Route E: CrewAI — Integration & Review
 
+## Contents
+
+- [Tool integration (context.tools)](#tool-integration-contexttools)
+- [Route E review checklist](#route-e-review-checklist)
+- [Frontend call example (frontend is TS, identical to other routes)](#frontend-call-example-frontend-is-ts-identical-to-other-routes)
+- [Quick comparison vs. A/B/C/D](#quick-comparison-vs-abcd)
+- [Common pitfalls](#common-pitfalls)
+
 > Continues [crewai.md](crewai.md). Read that first for runtime conventions and the core pattern.
 
 ## Tool integration (context.tools)

@@ -1,5 +1,11 @@
 # File Routing + onRequest Entry Convention
 
+## Contents
+
+- [1. File Routing Convention](#1-file-routing-convention)
+- [2. `onRequest` Entry Convention](#2-onrequest-entry-convention)
+- [`externalNodeModules` (build config, usually not needed)](#externalnodemodules-build-config-usually-not-needed)
+
 > Covers: file-based routing rules, `onRequest` signature, context fields, environment variable iron rule.
 
 ---
