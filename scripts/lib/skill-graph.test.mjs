@@ -4,7 +4,12 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import test from 'node:test';
 
-import { findBrokenLinks, listMarkdownFiles } from './skill-graph.mjs';
+import {
+  findBrokenLinks,
+  findDanglingSkillNames,
+  findDeepReferenceLinks,
+  listMarkdownFiles,
+} from './skill-graph.mjs';
 
 /** 在临时目录里造一棵假的 skills 树，键是相对路径。 */
 async function makeSkills(tree) {
@@ -130,6 +135,73 @@ test('skill-graph.listMarkdownFiles returns globally sorted paths', async () => 
   });
   try {
     assert.deepEqual(listMarkdownFiles(root), ['a-b.md', 'a/z.md', 'b/c.md']);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findDanglingSkillNames flags a name no skill declares', async () => {
+  const root = await makeSkills({
+    'makers-a/SKILL.md': '---\nname: edgeone-makers-a\n---\n\nUse edgeone-pages-dev instead.\n',
+  });
+  try {
+    assert.deepEqual(findDanglingSkillNames(root), [
+      { file: 'makers-a/SKILL.md', line: 5, name: 'edgeone-pages-dev' },
+    ]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findDanglingSkillNames catches a dangling name inside description', async () => {
+  const root = await makeSkills({
+    'makers-a/SKILL.md':
+      '---\nname: edgeone-makers-a\ndescription: >-\n  Do NOT trigger for X (use edgeone-makers-dev instead).\n---\n\nBody.\n',
+  });
+  try {
+    const dangling = findDanglingSkillNames(root);
+    assert.equal(dangling.length, 1);
+    assert.equal(dangling[0].name, 'edgeone-makers-dev');
+    assert.equal(dangling[0].line, 4);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findDanglingSkillNames accepts declared names and the marketplace slug', async () => {
+  const root = await makeSkills({
+    'makers-a/SKILL.md':
+      '---\nname: edgeone-makers-a\n---\n\nSee edgeone-makers-b and edgeone-makers-tools.\n',
+    'makers-b/SKILL.md': '---\nname: edgeone-makers-b\n---\n\nHi.\n',
+  });
+  try {
+    assert.deepEqual(findDanglingSkillNames(root), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findDeepReferenceLinks flags links that climb two levels', async () => {
+  const root = await makeSkills({
+    'makers-a/references/x.md': 'See [y](../../makers-b/references/y.md).\n',
+    'makers-b/references/y.md': '# Y\n',
+  });
+  try {
+    assert.deepEqual(findDeepReferenceLinks(root), [
+      { file: 'makers-a/references/x.md', line: 1, target: '../../makers-b/references/y.md' },
+    ]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findDeepReferenceLinks allows single-level parent links', async () => {
+  const root = await makeSkills({
+    'makers-a/SKILL.md': '---\nname: a\n---\n\n[y](../makers-b/references/y.md)\n',
+    'makers-b/references/y.md': '# Y\n',
+  });
+  try {
+    assert.deepEqual(findDeepReferenceLinks(root), []);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

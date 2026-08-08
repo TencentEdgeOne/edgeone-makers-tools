@@ -110,3 +110,64 @@ export function findBrokenLinks(root) {
   }
   return broken;
 }
+
+const SKILL_NAME_TOKEN = /\bedgeone-(?:makers|pages)-[a-z0-9-]+/g;
+
+/** marketplace / plugin 的产品 slug，不是 skill 名，不参与悬空判定。 */
+const NON_SKILL_SLUGS = new Set(['edgeone-makers-tools']);
+
+/** 各 SKILL.md frontmatter 声明的 name 集合。 */
+export function listDeclaredSkillNames(root) {
+  const names = new Set();
+  for (const dir of listSkillDirs(root)) {
+    const skillPath = join(root, dir, 'SKILL.md');
+    if (!existsSync(skillPath)) continue;
+    const match = /^name:\s*(.+)$/m.exec(readFileSync(skillPath, 'utf8'));
+    if (match) names.add(match[1].trim().replace(/^["']|["']$/g, ''));
+  }
+  return names;
+}
+
+/**
+ * 找出正文/description 里出现、但没有任何 skill 声明的 skill 名。
+ * 模型会尝试加载这种名字，失败后重试成环。
+ *
+ * 读不到的文件不在这里单独记账：findBrokenLinks 走的是同一批文件，
+ * 已经会把它们报出来，doctor 那层不需要同一个问题听三遍。
+ */
+export function findDanglingSkillNames(root) {
+  const declared = listDeclaredSkillNames(root);
+  const dangling = [];
+  forEachMarkdownLine(root, (file, line, lineNumber) => {
+    for (const match of line.matchAll(SKILL_NAME_TOKEN)) {
+      const name = match[0];
+      if (declared.has(name) || NON_SKILL_SLUGS.has(name)) continue;
+      dangling.push({ file, line: lineNumber, name });
+    }
+  });
+  return dangling;
+}
+
+/**
+ * 爬升两级以上的相对路径。
+ * `(^|\/)` 这道前置守卫是为了别把 `..../../` 这类含 `....` 目录名的路径误判成两级爬升。
+ */
+const DEEP_PARENT_LINK = /(^|\/)\.\.\/\.\.\//;
+
+/**
+ * 找出爬升两级以上的相对链接。
+ * Anthropic 要求 reference 只下沉一层；`../../` 让模型在目录间反复横跳。
+ *
+ * 复用 localLinkTargets：它剥的是 #anchor / ?query，不动 `../` 前缀，
+ * 所以判定与上报的 target 都保留原样的爬升层数，且与 findBrokenLinks
+ * 的 target 归一化方式一致。
+ */
+export function findDeepReferenceLinks(root) {
+  const deep = [];
+  forEachMarkdownLine(root, (file, line, lineNumber) => {
+    for (const target of localLinkTargets(line)) {
+      if (DEEP_PARENT_LINK.test(target)) deep.push({ file, line: lineNumber, target });
+    }
+  });
+  return deep;
+}
