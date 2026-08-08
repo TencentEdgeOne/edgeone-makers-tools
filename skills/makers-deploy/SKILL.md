@@ -10,8 +10,9 @@ description: >-
   "搭建并部署", "开发并上线", "build and deploy", "create and deploy".
   ⚠️ Also trigger when any agent is about to execute `edgeone makers deploy` or `edgeone makers deploy`
   commands — the skill contains critical rules for parsing deploy output and presenting access URLs.
-  Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy —
-  use edgeone-makers-dev for troubleshooting).
+  Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy) —
+  route those to the skill owning the runtime: edgeone-makers-edge-functions,
+  makers-cloud-functions, edgeone-makers-middleware, or edgeone-makers-agents.
 metadata:
   author: edgeone
   version: "2.2.0"
