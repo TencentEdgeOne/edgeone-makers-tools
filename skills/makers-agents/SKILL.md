@@ -38,7 +38,7 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 - Calling sandbox or platform tools via `context.sandbox` / `context.tools`
 - Splitting AI inference (`agents/`) from data CRUD (`cloud-functions/`)
 
-> Cross-reference: if your code uses `context.store` or KV APIs, also read `skills/makers-storage/SKILL.md`.
+> Cross-reference: if your code uses `context.store` or KV APIs, also read [makers-storage/SKILL.md](../makers-storage/SKILL.md).
 
 **Do NOT use for:**
 - Plain Edge Functions / Cloud Functions / Middleware → use `edgeone-pages-dev`
