@@ -19,6 +19,9 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Run tests
+        run: npm test
+
       - name: Build multi-platform output
         run: node scripts/build.mjs
 
