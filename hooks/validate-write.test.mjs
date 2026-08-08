@@ -10,21 +10,23 @@ test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.1 loads validate ru
   const rules = await loadSkillValidateRules();
   const edgeFunctions = rules.find((rule) => rule.skill === 'edgeone-makers-edge-functions');
 
-  assert.ok(edgeFunctions);
-  assert.deepEqual(edgeFunctions.validate, [
-    {
-      pattern: 'process\\.env',
-      message: 'Use context.env in EdgeOne Makers runtime code.',
-    },
-    {
-      pattern: 'new\\s+Headers\\s*\\(',
-      message: 'Use plain object headers for this runtime surface.',
-    },
-    {
-      pattern: 'fs\\.writeFile',
-      message: 'Edge Functions do not support filesystem writes.',
-    },
-  ]);
+  assert.ok(edgeFunctions, 'edge-functions skill should declare validate rules');
+  assert.deepEqual(edgeFunctions.pathPatterns, ['edge-functions/**', 'functions/**']);
+
+  // 断言不变量而不是冻结的数组：每加一条规则都让测试失败，只会逼着人改断言。
+  assert.ok(edgeFunctions.validate.length >= 3);
+  for (const item of edgeFunctions.validate) {
+    assert.equal(typeof item.pattern, 'string');
+    assert.equal(typeof item.message, 'string');
+    assert.ok(item.message.length > 0);
+    assert.doesNotThrow(() => new RegExp(item.pattern));
+  }
+
+  // 三条原始红线必须始终在场，新增规则不得把它们挤掉。
+  const messages = edgeFunctions.validate.map((item) => item.message);
+  assert.ok(messages.includes('Use context.env in EdgeOne Makers runtime code.'));
+  assert.ok(messages.includes('Use plain object headers for this runtime surface.'));
+  assert.ok(messages.includes('Edge Functions do not support filesystem writes.'));
 });
 
 test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.2 warns on Edit content without blocking writes', () => {
@@ -283,4 +285,21 @@ test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.7 ignores a skill w
   );
 
   assert.equal(output.hookSpecificOutput.additionalContext, 'Validation reminder:\n- Beta.');
+});
+
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.8 every declared rule has usable patterns and paths', async () => {
+  const rules = await loadSkillValidateRules();
+  assert.ok(rules.length >= 8, `expected at least 8 skills with validate, got ${rules.length}`);
+
+  for (const rule of rules) {
+    assert.ok(rule.pathPatterns.length > 0, `${rule.skill} declares validate but no pathPatterns`);
+    assert.ok(rule.validate.length > 0, `${rule.skill} has an empty validate list`);
+    for (const item of rule.validate) {
+      assert.doesNotThrow(
+        () => new RegExp(item.pattern),
+        `${rule.skill}: invalid regex ${item.pattern}`,
+      );
+      assert.ok(item.message.length > 10, `${rule.skill}: message too short to be actionable`);
+    }
+  }
 });
