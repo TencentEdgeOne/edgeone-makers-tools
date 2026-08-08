@@ -206,3 +206,40 @@ test('skill-graph.findDeepReferenceLinks allows single-level parent links', asyn
     await rm(root, { recursive: true, force: true });
   }
 });
+
+test('skill-graph.findDeepReferenceLinks ignores a dotted dir name that only looks like two levels', async () => {
+  const root = await makeSkills({
+    // `..../` 是个普通目录名,不是爬升两级;DEEP_PARENT_LINK 的 (^|/) 守卫就为这个。
+    'makers-a/SKILL.md': '---\nname: a\n---\n\n[x](..../../a.md)\n',
+  });
+  try {
+    assert.deepEqual(findDeepReferenceLinks(root), []);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findDanglingSkillNames survives an unreadable or non-file SKILL.md', async () => {
+  const root = await makeSkills({
+    'makers-a/SKILL.md': '---\nname: edgeone-makers-a\n---\n',
+    'makers-b/SKILL.md': '---\nname: edgeone-makers-b\n---\n\nUse edgeone-pages-dev.\n',
+  });
+  const locked = join(root, 'makers-a/SKILL.md');
+  try {
+    await chmod(locked, 0o000);
+    // SKILL.md 是个目录:原来会抛 EISDIR。
+    await mkdir(join(root, 'makers-c/SKILL.md'), { recursive: true });
+
+    // 不抛——doctor 的六项检查不该被一个权限异常的文件换成裸栈。
+    const dangling = findDanglingSkillNames(root);
+
+    // 其余文件照常检查,没有被前面的权限错误带走整轮扫描。
+    assert.deepEqual(dangling, [
+      { file: 'makers-b/SKILL.md', line: 5, name: 'edgeone-pages-dev' },
+    ]);
+  } finally {
+    // 先恢复权限,否则 rm 清不掉这棵树。
+    await chmod(locked, 0o644);
+    await rm(root, { recursive: true, force: true });
+  }
+});

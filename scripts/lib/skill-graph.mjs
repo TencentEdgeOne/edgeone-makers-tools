@@ -111,18 +111,41 @@ export function findBrokenLinks(root) {
   return broken;
 }
 
+/**
+ * skill 名 token。
+ *
+ * 只认 `edgeone-` 前缀是刻意保守：仓库里裸的 `makers-*` 大量撞车
+ * （`makers-conversation-id` 是个 HTTP 头，还有 `makers-ai-voice-chat` 这类项目名），
+ * 放宽会把误报刷成噪音。
+ *
+ * 代价是有盲区：`makers-cli` / `makers-cloud-functions` / `makers-migration`
+ * 这三个 skill 的 frontmatter 声明的就是裸名，正文里引用它们时本函数看不见。
+ * 所以返回的条数是**下界**，别当成全覆盖。
+ */
 const SKILL_NAME_TOKEN = /\bedgeone-(?:makers|pages)-[a-z0-9-]+/g;
 
 /** marketplace / plugin 的产品 slug，不是 skill 名，不参与悬空判定。 */
 const NON_SKILL_SLUGS = new Set(['edgeone-makers-tools']);
 
-/** 各 SKILL.md frontmatter 声明的 name 集合。 */
+/**
+ * 各 SKILL.md frontmatter 声明的 name 集合。
+ *
+ * 读不到就跳过而不是抛：这函数是 doctor 六项检查之一的输入，
+ * 一个权限异常的文件不该把整份报告换成裸栈。漏读的文件由
+ * findBrokenLinks 那条 unreadable 记录负责报出来。
+ */
 export function listDeclaredSkillNames(root) {
   const names = new Set();
   for (const dir of listSkillDirs(root)) {
     const skillPath = join(root, dir, 'SKILL.md');
-    if (!existsSync(skillPath)) continue;
-    const match = /^name:\s*(.+)$/m.exec(readFileSync(skillPath, 'utf8'));
+    if (!existsSync(skillPath) || !statSync(skillPath).isFile()) continue;
+    let text;
+    try {
+      text = readFileSync(skillPath, 'utf8');
+    } catch {
+      continue;
+    }
+    const match = /^name:\s*(.+)$/m.exec(text);
     if (match) names.add(match[1].trim().replace(/^["']|["']$/g, ''));
   }
   return names;
