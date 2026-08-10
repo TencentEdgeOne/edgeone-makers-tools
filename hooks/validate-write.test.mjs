@@ -303,3 +303,25 @@ test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.8 every declared ru
     }
   }
 });
+
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.9 returns no rules when the skills directory is missing', () => {
+  // 部分安装 / CLAUDE_PLUGIN_ROOT 解析错位时，skills/ 可能不存在。
+  // 校验器失效应当是「不提醒」，不能变成每次写文件都抛 ENOENT。
+  assert.deepEqual(loadSkillValidateRules('/nonexistent-skills-dir-for-test'), []);
+});
+
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.9 returns no rules when the skills path is a file', () => {
+  assert.deepEqual(loadSkillValidateRules('hooks/validate-write.mjs'), []);
+});
+
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.9 yields no output instead of throwing when rules cannot be loaded', () => {
+  const output = buildValidateWriteOutput(
+    {
+      tool_name: 'Write',
+      tool_input: { file_path: 'agents/chat/index.ts', content: 'process.env.KEY' },
+    },
+    { rules: loadSkillValidateRules('/nonexistent-skills-dir-for-test') },
+  );
+
+  assert.equal(output, null);
+});

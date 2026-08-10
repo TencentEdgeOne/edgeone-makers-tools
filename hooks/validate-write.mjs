@@ -112,12 +112,32 @@ function parseSkillValidateRule(skillPath) {
   };
 }
 
+/**
+ * 读取各 skill 声明的 validate 规则。
+ *
+ * 读不到就返回空数组，绝不抛错：本函数跑在 PreToolUse 钩子里，
+ * 模型每写一个文件都会经过它。skills/ 不存在（部分安装、CLAUDE_PLUGIN_ROOT
+ * 解析错位）时若抛 ENOENT，用户每次写文件都会看到一次报错。
+ * 校验器失效的正确表现是「不提醒」，而不是「报错」。
+ */
 export function loadSkillValidateRules(skillsDir = DEFAULT_SKILLS_DIR) {
   if (skillsDir === DEFAULT_SKILLS_DIR && cachedRules) return cachedRules;
-  const rules = readdirSync(skillsDir, { withFileTypes: true })
+  let entries;
+  try {
+    entries = readdirSync(skillsDir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  const rules = entries
     .filter((entry) => entry.isDirectory())
     .map((entry) => join(skillsDir, entry.name, 'SKILL.md'))
-    .map((skillPath) => parseSkillValidateRule(skillPath))
+    .map((skillPath) => {
+      try {
+        return parseSkillValidateRule(skillPath);
+      } catch {
+        return null;
+      }
+    })
     .filter(Boolean);
   if (skillsDir === DEFAULT_SKILLS_DIR) cachedRules = rules;
   return rules;
@@ -226,17 +246,33 @@ async function readStdin() {
   return input;
 }
 
+/**
+ * 钩子入口。任何异常都吞掉并静默返回：
+ * 这段代码挡在模型每一次 Edit/Write 前面，宁可漏一次提醒，
+ * 也不能因为自身出错（stdin 不是合法 JSON、规则读不到等）
+ * 让用户每写一个文件都看到一次报错。
+ */
 export async function main() {
-  const rawInput = await readStdin();
-  const payload = rawInput.trim() ? JSON.parse(rawInput) : {};
-  const output = buildValidateWriteOutput(payload, { enableSignalLog: true });
+  let payload;
+  try {
+    const rawInput = await readStdin();
+    payload = rawInput.trim() ? JSON.parse(rawInput) : {};
+  } catch {
+    return;
+  }
+
+  let output;
+  try {
+    output = buildValidateWriteOutput(payload, { enableSignalLog: true });
+  } catch {
+    return;
+  }
+
   if (!output) return;
   process.stdout.write(`${JSON.stringify(output, null, 2)}\n`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch((error) => {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exit(1);
-  });
+  // main() 内部已兜住所有异常；这里再兜一层，保证退出码始终是 0。
+  main().catch(() => {});
 }
