@@ -85,6 +85,13 @@ edgeone whoami
 # If exit 0 → logged in, no -t needed
 # If exit 1 → not logged in, need token or browser login
 
+# NOTE: This auth gate is for `deploy` (account-bound upload to your EdgeOne
+# account). For `edgeone makers dev` (local preview), login is ONLY required
+# when the project uses Blob/credentialed backends — a pure-static dev needs
+# no login. When Blob IS used, the chain is: Blob → must be linked → linking
+# requires login, so login before linking/starting dev. See makers-storage /
+# makers-env-adaption for the dev auth rule and the link chain.
+
 # Check 3: Project already linked?
 cat edgeone.json 2>/dev/null
 ```
@@ -179,6 +186,8 @@ edgeone login --token <token>
 ```
 
 Auto-detects china/global from the token — no `--site` flag needed. Persists login state for subsequent commands.
+
+> 💡 **Reuse the token from a prior browser login — no console trip needed.** `edgeone login --site <x>` (browser) auto-generates an API Token and writes it to `~/.edgeone/<hash>` (JSON with `value.Token`). You can reuse that `Token` value directly as `EDGEONE_PAGES_API_TOKEN="<Token>"` or `-t <Token>` for `makers dev`/`deploy` in headless/agent contexts, instead of creating a new token in the console.
 
 **Method B: Pass `-t` directly in deploy (per-invocation)**
 
@@ -360,6 +369,9 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 | `edgeone whoami` shows an unexpected account | Browser session reuse. Click "Sign in with a different account" or log out from all consoles and re-login |
 | Project name conflict | Use a different name with `-n` |
 | Build failure | Check logs — usually missing deps or bad build script |
+| `whoami` says "not authenticated" but `edgeone login` just succeeded | Expected in agent/headless: `whoami` and `makers dev`/`deploy` read API-Token auth, not the browser session. Reuse the auto-generated token from `~/.edgeone/<hash>` (`value.Token`) as `EDGEONE_PAGES_API_TOKEN` / `-t`. See Token Login note above. |
+| `makers dev` hangs on an interactive "Link existing / Create and link" menu | The dev server needs project linking, which prompts interactively (blocks headless). Skip dev and go straight to `edgeone makers deploy -n <name> -t <token> --json`, which auto-creates + links non-interactively. |
+| `curl` to the deploy URL returns 302 → DingTalk SSO login | Preview gateway requires browser-based `eo_token` validation (JS), which `curl` can't do. Open the full `?eo_token=...&eo_time=...` URL in a real browser — it validates the token and bypasses SSO. Not a code bug. |
 
 ---
 
