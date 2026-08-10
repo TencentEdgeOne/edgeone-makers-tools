@@ -3,13 +3,6 @@ name: edgeone-makers-recipes
 description: >-
   Project structure templates and scaffolding recipes for typical EdgeOne Makers
   applications — full-stack apps, static sites, API services, and AI agent projects.
-pathPatterns:
-  - next.config.js
-  - next.config.mjs
-  - next.config.ts
-validate:
-  - pattern: "^(?![\\s\\S]*allowedDevOrigins)[\\s\\S]*$"
-    message: "Next.js dev server must set allowedDevOrigins: [\"127.0.0.1\"] — otherwise the HMR WebSocket is blocked in the sandbox and the page stops responding."
 metadata:
   author: edgeone
   version: "1.0.0"
