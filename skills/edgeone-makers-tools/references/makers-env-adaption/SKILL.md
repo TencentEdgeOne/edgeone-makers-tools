@@ -3,8 +3,7 @@ name: edgeone-makers-env-adaption
 description: >-
   Environment-specific adaptation rules for EdgeOne Makers Skills running in
   sandboxed or restricted AI coding environments (e.g. WorkBuddy).
-  Trigger when: the user is working in WorkBuddy, a sandboxed IDE, or any
-  non-interactive/CI environment where CLI commands may hang or network is isolated.
+  Trigger when: the user is working in WorkBuddy or a sandboxed IDE where CLI prompts hang and network is proxy-isolated (but browser login still works).
   Covers: non-interactive CLI flags, network isolation workarounds, login in sandbox,
   proxy bypass, file preview constraints (MUST use http:// via dev server, NEVER file://,
   NEVER python -m http.server / npx serve), dev server requirements.
@@ -55,6 +54,12 @@ preview     │                      ┌─ dev server running? ─ Yes ──�
 ## WorkBuddy Sandbox Environment
 
 WorkBuddy is a sandboxed remote IDE environment. When running AI coding tasks, it has the following constraints that differ from local development.
+
+> **⚠️ Common misread: WorkBuddy is a *desktop IDE sandbox*, NOT a headless environment.**
+> - CLI **interactive prompts** (site picker, confirmations) hang inside the sandbox → use the non-interactive flags in this section.
+> - **BUT browser login (`edgeone login --site <x>`) works fully** — WorkBuddy launches the host OS browser AND routes the OAuth callback back into the sandbox.
+>
+> Deploy/link login should default to browser login and only fall back to `-t <token>` after browser login is confirmed to fail. Do NOT jump to token login just because the caller is an "Agent".
 
 ---
 

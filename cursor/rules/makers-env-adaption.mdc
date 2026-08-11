@@ -3,8 +3,7 @@ name: edgeone-makers-env-adaption
 description: >-
   Environment-specific adaptation rules for EdgeOne Makers Skills running in
   sandboxed or restricted AI coding environments (e.g. WorkBuddy).
-  Trigger when: the user is working in WorkBuddy, a sandboxed IDE, or any
-  non-interactive/CI environment where CLI commands may hang or network is isolated.
+  Trigger when: the user is working in WorkBuddy or a sandboxed IDE where CLI prompts hang and network is proxy-isolated (but browser login still works).
   Covers: non-interactive CLI flags, network isolation workarounds, login in sandbox,
   proxy bypass, file preview constraints (MUST use http:// via dev server, NEVER file://,
   NEVER python -m http.server / npx serve), dev server requirements.
@@ -56,6 +55,12 @@ preview     │                      ┌─ dev server running? ─ Yes ──�
 
 WorkBuddy is a sandboxed remote IDE environment. When running AI coding tasks, it has the following constraints that differ from local development.
 
+> **⚠️ Common misread: WorkBuddy is a *desktop IDE sandbox*, NOT a headless environment.**
+> - CLI **interactive prompts** (site picker, confirmations) hang inside the sandbox → use the non-interactive flags in this section.
+> - **BUT browser login (`edgeone login --site <x>`) works fully** — WorkBuddy launches the host OS browser AND routes the OAuth callback back into the sandbox.
+>
+> Deploy/link login should default to browser login and only fall back to `-t <token>` after browser login is confirmed to fail. Do NOT jump to token login just because the caller is an "Agent".
+
 ---
 
 ### 1. Non-interactive mode (all CLI commands must avoid interactive prompts)
@@ -100,6 +105,8 @@ edgeone login --site china --local
 ```bash
 edgeone whoami  # exit 0 = logged in, exit 1 = not logged in (does not hang)
 ```
+
+**When is login actually required?** Login is only needed when the project uses **Blob** or other credentialed backends — and strictly because of the dependency chain: **Blob requires the project to be linked, and linking requires a logged-in account first.** So `edgeone makers dev` for a **pure-static** site runs fine without login — **do NOT force a login prompt for static-only previews**. Login (or `-t <token>`) becomes mandatory the moment dev/deploy must touch Blob storage. (The trigger condition and the link chain live in makers-storage.)
 
 **CLI version requirement**: >= 1.6.7 (older versions lack the non-interactive fixes; whoami will hang)
 
@@ -251,6 +258,8 @@ Note: the value is a **bare host**, without an `http://` prefix and without a po
 ### 11. Project linking (required for Blob/KV)
 
 Projects that use Blob Storage or KV must ensure the project is linked (a `.edgeone/project.json` exists) before starting dev. When not linked, Blob/KV calls report `Missing: deployCredential`.
+
+**Precondition — login first**: linking (and therefore Blob/KV) requires a logged-in account. The full chain is **Blob → must be linked → linking requires login**. If `edgeone whoami` returns exit 1, run `edgeone login` (browser) or use `edgeone makers link -t <token>` with a token **before** attempting to link. Do NOT try to link while unauthenticated.
 
 **Detect whether it is linked**:
 ```bash

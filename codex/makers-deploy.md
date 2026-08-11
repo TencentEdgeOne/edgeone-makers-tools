@@ -45,7 +45,7 @@ Deploy any project to **EdgeOne Makers**.
    ```
    Then append any other notes (console URL, caveats, etc.).
 5. **Ask the user to choose China or Global site** before browser login. Never assume. (Token login via `edgeone login --token` auto-detects site, no need to ask.)
-6. **Auto-detect the login method** — browser login in desktop environments, token login in headless/remote/CI environments. Follow the decision table below.
+6. **Prefer Browser Login; fall back to Token only after browser login is confirmed to fail** (see Login section for the ~60s fallback threshold and the Agent-in-IDE clarification — WorkBuddy is NOT headless). Token-first only when the user explicitly requests it.
 7. **After token login, ask if the user wants to save the token locally** for future use.
 8. **Before triggering any browser popup (login / registration), explain the reason and the benefits to the user first** — never silently launch a browser window.
 
@@ -85,6 +85,13 @@ edgeone whoami
 # If exit 0 → logged in, no -t needed
 # If exit 1 → not logged in, need token or browser login
 
+# NOTE: This auth gate is for `deploy` (account-bound upload to your EdgeOne
+# account). For `edgeone makers dev` (local preview), login is ONLY required
+# when the project uses Blob/credentialed backends — a pure-static dev needs
+# no login. When Blob IS used, the chain is: Blob → must be linked → linking
+# requires login, so login before linking/starting dev. See makers-storage /
+# makers-env-adaption for the dev auth rule and the link chain.
+
 # Check 3: Project already linked?
 cat edgeone.json 2>/dev/null
 ```
@@ -96,8 +103,8 @@ cat edgeone.json 2>/dev/null
 | Not installed or < 1.6.0 | — | → Go to **Install CLI** |
 | `≥ 1.6.0` ✓ | Logged in (or token present) | → Go to **Deploy** |
 | `≥ 1.6.0` ✓ | Not logged in, has saved token | → Go to **Deploy with Token** (use saved token) |
-| `≥ 1.6.0` ✓ | Not logged in, no saved token, **interactive desktop** | → Go to **Login** (browser) |
-| `≥ 1.6.0` ✓ | Not logged in, no saved token, **non-interactive (Agent/CI/headless)** | → Ask user for a **token**; browser login is unavailable and `deploy` will fail fast with a token hint |
+| `≥ 1.6.0` ✓ | Not logged in, no saved token | → **Try Browser Login first** (see Login section). If the browser doesn't open or nothing happens within ~60 seconds, **fall back to Token Login**. Do NOT preemptively skip browser login by guessing "this looks like an Agent/CI environment" — that guess is often wrong. In particular, **WorkBuddy is a desktop IDE sandbox and fully supports browser login** (host browser + OAuth callback are bridged into the sandbox). |
+| `≥ 1.6.0` ✓ | User explicitly provides a token or requests token login | → Go to **Deploy with Token** / **Token Login** |
 
 ---
 
@@ -125,7 +132,7 @@ Tell the user:
 > - **What happens next**: I'll run `edgeone login`, and your default browser will open the Tencent Cloud login page. Please complete the login/registration and authorize access, then come back here.
 > - **If you get stuck**: If the browser doesn't open, or the CLI keeps waiting after you've logged in, let me know — I'll switch to Token login instead.
 
-If the user does not respond for an extended period (e.g., more than 1–2 minutes), **proactively ask** about their status (whether the browser opened, any errors, or if they want to switch to Token login). Do not wait indefinitely.
+If the user does not respond within ~60 seconds (no browser popup or no progress reported), **proactively ask** about their status (whether the browser opened, any errors, or if they want to switch to Token login). Do not wait indefinitely.
 
 ### 1. Ask the user to choose a site, then ALWAYS pass `--site`
 
@@ -142,13 +149,14 @@ On CLI ≥ 1.6.0, a bare `login` in a non-interactive context fails fast asking 
 `--site` (it no longer pops an interactive site-picker that would hang). The site choice
 is meant to happen here in the conversation, not inside the CLI.
 
-### 2. Detect environment and choose login method
+### 2. Login methods reference
 
-| Condition | Method |
-|-----------|--------|
-| Local desktop IDE (VS Code, Cursor, WorkBuddy, etc.) | **Browser Login** |
-| Remote / SSH / container / CI / cloud IDE / headless | **Token Login** |
-| User explicitly requests token | **Token Login** |
+Two login methods are available. **Per Rule 6, always try Browser Login first**; the table below is a reference for when each method applies, not a decision procedure — do not use it to guess the environment.
+
+| Method | When it applies |
+|--------|-----------------|
+| **Browser Login** | Default. Works in all local desktop IDEs (VS Code, Cursor, WorkBuddy) — the IDE bridges the OS browser + OAuth callback into the sandbox. |
+| **Token Login** | Fallback after Browser Login is confirmed to fail (no browser popup / no progress within ~60s), OR when the user explicitly provides a token or requests token login. Also the only option in truly detached environments (SSH-only, CI runners, browserless containers). |
 
 #### Browser Login
 
@@ -179,6 +187,8 @@ edgeone login --token <token>
 ```
 
 Auto-detects china/global from the token — no `--site` flag needed. Persists login state for subsequent commands.
+
+> 💡 **Reuse the token from a prior browser login — no console trip needed.** `edgeone login --site <x>` (browser) auto-generates an API Token and writes it to `~/.edgeone/<hash>` (JSON with `value.Token`). You can reuse that `Token` value directly as `EDGEONE_PAGES_API_TOKEN="<Token>"` or `-t <Token>` for `makers dev`/`deploy` in headless/agent contexts, instead of creating a new token in the console.
 
 **Method B: Pass `-t` directly in deploy (per-invocation)**
 
@@ -360,6 +370,9 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 | `edgeone whoami` shows an unexpected account | Browser session reuse. Click "Sign in with a different account" or log out from all consoles and re-login |
 | Project name conflict | Use a different name with `-n` |
 | Build failure | Check logs — usually missing deps or bad build script |
+| `whoami` says "not authenticated" but `edgeone login` just succeeded | Expected in agent/headless: `whoami` and `makers dev`/`deploy` read API-Token auth, not the browser session. Reuse the auto-generated token from `~/.edgeone/<hash>` (`value.Token`) as `EDGEONE_PAGES_API_TOKEN` / `-t`. See Token Login note above. |
+| `makers dev` hangs on an interactive "Link existing / Create and link" menu | The dev server needs project linking, which prompts interactively (blocks headless). Skip dev and go straight to `edgeone makers deploy -n <name> -t <token> --json`, which auto-creates + links non-interactively. |
+| `curl` to the deploy URL returns 302 → DingTalk SSO login | Preview gateway requires browser-based `eo_token` validation (JS), which `curl` can't do. Open the full `?eo_token=...&eo_time=...` URL in a real browser — it validates the token and bypasses SSO. Not a code bug. |
 
 ---
 

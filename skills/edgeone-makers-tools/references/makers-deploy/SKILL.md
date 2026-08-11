@@ -45,7 +45,7 @@ Deploy any project to **EdgeOne Makers**.
    ```
    Then append any other notes (console URL, caveats, etc.).
 5. **Ask the user to choose China or Global site** before browser login. Never assume. (Token login via `edgeone login --token` auto-detects site, no need to ask.)
-6. **Auto-detect the login method** — browser login in desktop environments, token login in headless/remote/CI environments. Follow the decision table below.
+6. **Prefer Browser Login; fall back to Token only after browser login is confirmed to fail** (see Login section for the ~60s fallback threshold and the Agent-in-IDE clarification — WorkBuddy is NOT headless). Token-first only when the user explicitly requests it.
 7. **After token login, ask if the user wants to save the token locally** for future use.
 8. **Before triggering any browser popup (login / registration), explain the reason and the benefits to the user first** — never silently launch a browser window.
 
@@ -103,8 +103,8 @@ cat edgeone.json 2>/dev/null
 | Not installed or < 1.6.0 | — | → Go to **Install CLI** |
 | `≥ 1.6.0` ✓ | Logged in (or token present) | → Go to **Deploy** |
 | `≥ 1.6.0` ✓ | Not logged in, has saved token | → Go to **Deploy with Token** (use saved token) |
-| `≥ 1.6.0` ✓ | Not logged in, no saved token, **interactive desktop** | → Go to **Login** (browser) |
-| `≥ 1.6.0` ✓ | Not logged in, no saved token, **non-interactive (Agent/CI/headless)** | → Ask user for a **token**; browser login is unavailable and `deploy` will fail fast with a token hint |
+| `≥ 1.6.0` ✓ | Not logged in, no saved token | → **Try Browser Login first** (see Login section). If the browser doesn't open or nothing happens within ~60 seconds, **fall back to Token Login**. Do NOT preemptively skip browser login by guessing "this looks like an Agent/CI environment" — that guess is often wrong. In particular, **WorkBuddy is a desktop IDE sandbox and fully supports browser login** (host browser + OAuth callback are bridged into the sandbox). |
+| `≥ 1.6.0` ✓ | User explicitly provides a token or requests token login | → Go to **Deploy with Token** / **Token Login** |
 
 ---
 
@@ -132,7 +132,7 @@ Tell the user:
 > - **What happens next**: I'll run `edgeone login`, and your default browser will open the Tencent Cloud login page. Please complete the login/registration and authorize access, then come back here.
 > - **If you get stuck**: If the browser doesn't open, or the CLI keeps waiting after you've logged in, let me know — I'll switch to Token login instead.
 
-If the user does not respond for an extended period (e.g., more than 1–2 minutes), **proactively ask** about their status (whether the browser opened, any errors, or if they want to switch to Token login). Do not wait indefinitely.
+If the user does not respond within ~60 seconds (no browser popup or no progress reported), **proactively ask** about their status (whether the browser opened, any errors, or if they want to switch to Token login). Do not wait indefinitely.
 
 ### 1. Ask the user to choose a site, then ALWAYS pass `--site`
 
@@ -149,13 +149,14 @@ On CLI ≥ 1.6.0, a bare `login` in a non-interactive context fails fast asking 
 `--site` (it no longer pops an interactive site-picker that would hang). The site choice
 is meant to happen here in the conversation, not inside the CLI.
 
-### 2. Detect environment and choose login method
+### 2. Login methods reference
 
-| Condition | Method |
-|-----------|--------|
-| Local desktop IDE (VS Code, Cursor, WorkBuddy, etc.) | **Browser Login** |
-| Remote / SSH / container / CI / cloud IDE / headless | **Token Login** |
-| User explicitly requests token | **Token Login** |
+Two login methods are available. **Per Rule 6, always try Browser Login first**; the table below is a reference for when each method applies, not a decision procedure — do not use it to guess the environment.
+
+| Method | When it applies |
+|--------|-----------------|
+| **Browser Login** | Default. Works in all local desktop IDEs (VS Code, Cursor, WorkBuddy) — the IDE bridges the OS browser + OAuth callback into the sandbox. |
+| **Token Login** | Fallback after Browser Login is confirmed to fail (no browser popup / no progress within ~60s), OR when the user explicitly provides a token or requests token login. Also the only option in truly detached environments (SSH-only, CI runners, browserless containers). |
 
 #### Browser Login
 
