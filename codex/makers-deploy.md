@@ -18,7 +18,7 @@ description: >-
   use edgeone-makers-dev for troubleshooting).
 metadata:
   author: edgeone
-  version: "2.4.0"
+  version: "2.5.0"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -56,7 +56,7 @@ Deploy any project to **EdgeOne Makers**.
 **Rules 9-11 apply to the anonymous deploy / claim flow only:**
 
 9. **The claim command's parameter is `--sid`, NOT `--token`** — `edgeone makers claim --sid <anonymous-token>`. The `-t` / `--token` flag on `claim` is the **account API token**, an entirely different credential. Passing the anonymous token to `-t` fails. Product documentation showing `claim --token <anonymous-token>` is wrong; trust this rule.
-10. **Never state a fixed expiry for anonymous deployments** — do not say "60 minutes" or any other duration. Read the actual `expiresAt` value from the deploy output and show that; if the field is absent, say the deadline is unknown and advise claiming promptly. Measured token lifetimes do not match the documented 60 minutes, so a hardcoded number misinforms the user.
+10. **Tell the user to claim within 60 minutes** — say exactly that: "claim within 60 minutes". Do not show the raw `expiresAt` timestamp to the user, and do not compute or invent a different duration from it. 60 minutes is the product's stated claim window and the conservative instruction: claiming early is always safe, so this is the wording to use even though the token's observed lifetime can be longer.
 11. **Never show the user a CLI claim command** — do not print `claimCommand`, `edgeone makers claim --sid ...`, or any other command as the user's way to claim. In sandboxed IDEs like WorkBuddy the user has no terminal and literally cannot run it, and non-technical users cannot read it. Give them the **`claimUrl` link** to click, and offer to run the claim yourself. `claimCommand` is for **you** to execute, not to display.
 
 ---
@@ -107,7 +107,7 @@ cat edgeone.json 2>/dev/null
 | `≥ 1.6.0` ✓ | Logged in (or token present) | → Go to **Deploy** |
 | `≥ 1.6.0` ✓ | Not logged in, has saved token | → Go to **Deploy with Token** (use saved token) |
 | `≥ 1.6.21` ✓ | Not logged in, no saved token, **interactive** | → Go to **Anonymous Deploy** — ask the user to choose anonymous deploy or login |
-| `≥ 1.6.21` ✓ | Not logged in, no saved token, **non-interactive (Agent/CI/headless)** | → Go to **Anonymous Deploy**; when the user cannot be asked, deploy with `--anonymous --json` and surface the claim info and `expiresAt` in the result |
+| `≥ 1.6.21` ✓ | Not logged in, no saved token, **non-interactive (Agent/CI/headless)** | → Go to **Anonymous Deploy**; when the user cannot be asked, deploy with `--anonymous --json` and surface the claim link and the 60-minute claim window in the result |
 | `1.6.0`–`1.6.20` | Not logged in, no saved token | Anonymous deploy is unavailable on this version → Go to **Login**, or ask the user for a token |
 
 ---
@@ -338,12 +338,10 @@ If the user acknowledges the limitation and still wants an anonymous deploy, you
 In an interactive environment, present the choice (use the IDE's selection control, e.g. `ask_followup_question`):
 
 > You're not logged in to EdgeOne Makers. Two options:
-> - **Deploy anonymously (no login)** — you get a working URL immediately. You'll need to log in and claim the project before it expires, or it is removed; the exact deadline is shown once the deploy finishes. Until claimed, the link has visitor-count and IP restrictions, so it isn't suitable for wide sharing.
+> - **Deploy anonymously (no login)** — you get a working URL immediately. You'll need to log in and claim the project **within 60 minutes**, or it is removed. Until claimed, the link has visitor-count and IP restrictions, so it isn't suitable for wide sharing.
 > - **Log in now** — the project is saved permanently to your account with no time limit or access restrictions.
 
-⛔ Do not state a specific duration here. See critical rule 10 — the real deadline comes from `expiresAt` in the deploy output.
-
-Only skip this question when the environment genuinely cannot ask (CI, headless, no TTY). In that case deploy anonymously and make the claim info and deadline unmissable in your result — the user had no chance to be warned in advance.
+Only skip this question when the environment genuinely cannot ask (CI, headless, no TTY). In that case deploy anonymously and make the claim link and the 60-minute window unmissable in your result — the user had no chance to be warned in advance.
 
 ### Step 3: Deploy
 
@@ -364,7 +362,7 @@ Your reply must contain all three of the following. The URL alone is not enough 
 
 1. **The full access URL**, at the very top, complete with any query string (critical rules 2 and 4 apply exactly as for a normal deploy).
 2. **The claim link** — `claimUrl`, as a clickable link. ⛔ **Do NOT show `claimCommand` or any `edgeone makers claim ...` command to the user.** See critical rule 11.
-3. **The actual `expiresAt` value**, plus a clear statement that the project is removed if not claimed. If `expiresAt` is absent from the output, say the deadline is unknown and advise claiming promptly — never invent a duration.
+3. **"Claim within 60 minutes"**, plus that the project is removed if not claimed. Use that wording verbatim — do not show the raw `expiresAt` timestamp and do not substitute a different duration. See critical rule 10.
 
 Example shape:
 
@@ -372,7 +370,7 @@ Example shape:
 >
 > ---
 >
-> ⏳ **Claim before `<expiresAt>`** — otherwise this project is removed.
+> ⏳ **Claim within 60 minutes** — otherwise this project is removed.
 >
 > 👉 [Claim this project](<claimUrl>) — sign in and it's permanently yours.
 >

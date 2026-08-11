@@ -76,7 +76,7 @@ Do not pass these — they have no effect and will mislead the user:
 | `anonymousToken` | Anonymous identity token (the Sid). Needed to claim. |
 | `claimUrl` | Web claim URL, on the console domain matching `site`. **This is what you show the user** — a clickable link. |
 | `claimCommand` | Ready-to-run CLI claim command. **For you to execute, never to display** — see the note below. |
-| `expiresAt` | **Actual** claim deadline, ISO 8601. Always show this value; never substitute a hardcoded duration. Omitted when the backend returns no usable expiry timestamp — in that case say the deadline is unknown and advise claiming promptly, and still never invent a duration. |
+| `expiresAt` | Token expiry as an ISO 8601 timestamp, when the backend returns one. **Do not show this to the user** — tell them to claim within 60 minutes (see below). Useful to you for diagnostics. May be absent. |
 | `site` | `china` or `global` — the API site this project lives on. |
 
 ### Failure
@@ -91,17 +91,23 @@ Do not pass these — they have no effect and will mislead the user:
 
 ---
 
-## Three different expiry windows — do not conflate them
+## What to tell the user about the deadline
+
+**Always say "claim within 60 minutes".** That is the product's stated claim window, and it is the conservative instruction — claiming early is never wrong.
+
+Do **not** show the raw `expiresAt` timestamp, and do not derive a different duration from it.
+
+Why the rule is worded this way: `expiresAt` reflects only the anonymous **token's** lifetime, which in a recorded test-environment response was ~12 hours — longer than 60 minutes. But token lifetime is not the same as the claim window. The unclaimed link is also bounded by visitor-count and IP restrictions that can cut access short, and the product spec's window is 60 minutes. Quoting a 12-hour timestamp would therefore over-promise. Quoting 60 minutes is safe in both directions.
+
+Three distinct windows exist — do not conflate them:
 
 | Window | Where it comes from | What it governs |
 |--------|--------------------|-----------------|
-| **Anonymous token validity** | `expiresAt` in `--json` output | The claim deadline. This is the only one users care about. |
+| Claim window | Product spec: **60 minutes** | What you tell the user. |
+| Anonymous token validity | `expiresAt` in `--json` output | The token itself. Diagnostics only; not user-facing. |
 | COS credential validity | `cosExpiredTime` / `cosExpiration` in the state file | A single upload operation. Irrelevant once deploy succeeds. |
-| Product target spec | TAPD requirement (unclaimed 60 min → 24 h after claim, 3 renewals) | Not implemented in the current backend. Do not quote it to users. |
 
-⛔ **Never hardcode a duration.** Both the product plan and the CLI implementation doc state "60 minutes", but measured responses contradict this: in the recorded test-environment response the anonymous token lasted ~12 hours and the COS credential 30 minutes. Read `expiresAt` and show that.
-
-When you have not yet run the deploy (for example while asking the user whether to go anonymous), use wording with no number: "you'll need to log in and claim it before it expires; the exact deadline is shown once the deploy finishes".
+> The TAPD requirement describes a future target (unclaimed 60 min → 24 h after claim, renewable 3×). The post-claim renewal part is not implemented; do not describe it to users.
 
 ---
 
@@ -253,4 +259,4 @@ Present all three of these to the user together after an anonymous deploy — th
 
 1. the full access URL,
 2. the `claimUrl` as a clickable link, plus an offer to run the claim for them (**never** the `claimCommand` itself),
-3. the actual `expiresAt` value, and that the project is lost if unclaimed.
+3. "claim within 60 minutes", and that the project is lost if unclaimed (not the raw `expiresAt` value).
