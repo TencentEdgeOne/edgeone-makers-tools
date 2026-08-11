@@ -108,7 +108,7 @@ export function onRequest(context) {
 
 ## KV Storage (Edge Functions only)
 
-> Cross-reference: if your code uses `context.store` or KV APIs, also read `skills/makers-storage/SKILL.md`.
+> Cross-reference: if your code uses `context.store` or KV APIs, also read `../makers-storage/SKILL.md`.
 
 ⚠️ **Prerequisites**: You must enable KV Storage in the EdgeOne Makers console, create a namespace, and bind it to your project before using KV. See [kv-storage.md](kv-storage.md) for full setup instructions (same directory).
 

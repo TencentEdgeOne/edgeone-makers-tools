@@ -21,15 +21,15 @@ When you need EdgeOne Makers platform development guidance, read the matching Sk
 
 | Task | Read |
 |------|------|
-| AI Agent development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI) | skills/makers-agents/SKILL.md |
-| Deploy project to EdgeOne | skills/makers-deploy/SKILL.md |
-| Edge Functions (V8 lightweight functions) | skills/makers-edge-functions/SKILL.md |
-| Cloud Functions (Node.js / Go / Python APIs) | skills/makers-cloud-functions/SKILL.md |
-| KV + Blob Storage | skills/makers-storage/SKILL.md |
-| Persist dynamic data for a site (messages, uploads, votes, save-state) — **no database; use Blob** | skills/makers-storage/SKILL.md |
-| Middleware (auth, rewrites, routing) | skills/makers-middleware/SKILL.md |
-| CLI command reference | skills/makers-cli/SKILL.md |
-| Project structure / scaffolding | skills/makers-recipes/SKILL.md |
-| Environment adaptation (WorkBuddy / sandbox / CI) | skills/makers-env-adaption/SKILL.md |
+| AI Agent development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI) | references/makers-agents/SKILL.md |
+| Deploy project to EdgeOne | references/makers-deploy/SKILL.md |
+| Edge Functions (V8 lightweight functions) | references/makers-edge-functions/SKILL.md |
+| Cloud Functions (Node.js / Go / Python APIs) | references/makers-cloud-functions/SKILL.md |
+| KV + Blob Storage | references/makers-storage/SKILL.md |
+| Persist dynamic data for a site (messages, uploads, votes, save-state) — **no database; use Blob** | references/makers-storage/SKILL.md |
+| Middleware (auth, rewrites, routing) | references/makers-middleware/SKILL.md |
+| CLI command reference | references/makers-cli/SKILL.md |
+| Project structure / scaffolding | references/makers-recipes/SKILL.md |
+| Environment adaptation (WorkBuddy / sandbox / CI) | references/makers-env-adaption/SKILL.md |
 
 ⚠️ Only read the Skill relevant to the current task. Do not load all skills at once.

@@ -6,7 +6,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { shouldWriteSignalLog, writeSignalLog } from './signal-log.mjs';
 
 const HOOKS_DIR = dirname(fileURLToPath(import.meta.url));
-const DEFAULT_SKILLS_DIR = join(HOOKS_DIR, '..', 'skills');
+// Single-skill layout: capabilities (each carrying its own validate rules in
+// frontmatter) live under the one skill's references/ directory.
+const DEFAULT_SKILLS_DIR = join(HOOKS_DIR, '..', 'skills', 'edgeone-makers-tools', 'references');
 const WRITE_TOOL_NAMES = new Set(['Edit', 'Write', 'replace_in_file', 'write_to_file']);
 const WRITE_CONTENT_KEYS = ['content', 'new_string', 'new_str', 'newString', 'text'];
 const PATH_KEYS = ['file_path', 'filePath', 'path', 'target_file'];

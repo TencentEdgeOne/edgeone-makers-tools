@@ -15,14 +15,7 @@
       },
       "strict": false,
       "skills": [
-        "./skills/makers-agents",
-        "./skills/makers-deploy",
-        "./skills/makers-edge-functions",
-        "./skills/makers-cloud-functions",
-        "./skills/makers-storage",
-        "./skills/makers-middleware",
-        "./skills/makers-cli",
-        "./skills/makers-recipes"
+        "./skills/edgeone-makers-tools"
       ],
       "hooks": "./hooks/hooks.json"
     }
