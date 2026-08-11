@@ -48,6 +48,7 @@ Deploy any project to **EdgeOne Makers**.
 6. **Prefer Browser Login; fall back to Token only after browser login is confirmed to fail** (see Login section for the ~60s fallback threshold and the Agent-in-IDE clarification — WorkBuddy is NOT headless). Token-first only when the user explicitly requests it.
 7. **After token login, ask if the user wants to save the token locally** for future use.
 8. **Before triggering any browser popup (login / registration), explain the reason and the benefits to the user first** — never silently launch a browser window.
+9. **On any CLI failure, surface the actual error text to the user before retrying, switching commands, or proposing a workaround.** Do NOT paraphrase (e.g. don't rewrite `Makers project exceeds 40 limit` into "maybe a name conflict or permission"). Do NOT silently pivot from `makers dev` to `makers deploy` (or vice versa) hoping to bypass — a systemic failure (auth / quota / permission) hits both with the same cause. Quote the raw error, name the root cause, then propose the fix or ask the user.
 
 ---
 
@@ -368,6 +369,7 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 | Auth error with token | Token may be expired — regenerate at the console |
 | Login appears successful but `deploy` reports auth error | Browser reused a session from the wrong site, binding the wrong account. Click "Sign in with a different account" on the login page, or log out from all Tencent Cloud consoles first |
 | `edgeone whoami` shows an unexpected account | Browser session reuse. Click "Sign in with a different account" or log out from all consoles and re-login |
+| `Failed to create pages project` (dev) / `Makers project exceeds 40 limit` (deploy) | Account has hit the **40-project cap**. Both `makers dev` (creates a project for local preview) and `makers deploy` (creates for upload) fail with the same cause — retrying the other command does NOT bypass it. Tell the user immediately. Two ways to unblock: ① delete unused projects in the EdgeOne console to free a slot; ② deploy into an existing linked project via `-n <existing-project-name>` (skip the "create new" path). |
 | Project name conflict | Use a different name with `-n` |
 | Build failure | Check logs — usually missing deps or bad build script |
 | `whoami` says "not authenticated" but `edgeone login` just succeeded | Expected in agent/headless: `whoami` and `makers dev`/`deploy` read API-Token auth, not the browser session. Reuse the auto-generated token from `~/.edgeone/<hash>` (`value.Token`) as `EDGEONE_PAGES_API_TOKEN` / `-t`. See Token Login note above. |
