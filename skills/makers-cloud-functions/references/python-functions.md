@@ -240,7 +240,7 @@ These are not scanned or copied to build output:
 ## Local Development
 
 ```bash
-npm install -g edgeone          # Install CLI
+npm install -g edgeone@latest --registry=https://registry.npmmirror.com   # Install CLI (mirror; fallback: registry.npmjs.org)
 edgeone makers dev               # Start local dev server
 ```
 

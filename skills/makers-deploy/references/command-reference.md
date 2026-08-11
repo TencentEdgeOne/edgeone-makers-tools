@@ -44,7 +44,7 @@ edgeone makers link --name <project> -t <token>   # Non-interactive
 
 | Action | Command |
 |--------|---------|
-| Install CLI | `npm install -g edgeone@latest` |
+| Install CLI | `npm install -g edgeone@latest --registry=https://registry.npmmirror.com` (fallback: `--registry=https://registry.npmjs.org`) |
 | Check version | `edgeone -v` (require ≥ 1.6.0) |
 | Login (China, browser) | `edgeone login --site china` |
 | Login (Global, browser) | `edgeone login --site global` |

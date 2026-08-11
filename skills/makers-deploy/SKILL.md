@@ -46,11 +46,14 @@ Deploy any project to **EdgeOne Makers**.
    **Self-check after writing your reply**: scan for every instance of the `.edgeone.cool` domain. Does each one include `?eo_token=`? If any doesn't, fix it NOW — the user will get a 401.
 3a. **Prefer `--json` when running non-interactively** — in Agent/CI/headless contexts, always pass `--json` to `deploy` so the result is a single machine-readable line; no need to scrape colored/`\r`-animated stdout. See **Parse Deploy Output**.
 3b. **Use `edgeone whoami` to check login status** — on CLI ≥ 1.6.0, `whoami` fails fast (exit 1) when not logged in instead of hanging. If it exits 0, the user is already logged in and `-t` is not needed. **Do NOT** check `cat .edgeone/.token` — CLI stores credentials in `~/.edgeone/<hash>` files, not a fixed `.token` path.
-4. **⚠️ The deploy URL MUST be placed prominently at the very top of your reply** — once deployment finishes, the complete access URL is the core deliverable the user cares about most. You MUST: ① place it on the first line or in the first standalone block of your reply body; ② use a prominent format (e.g. a large heading + code block); ③ never bury the URL in the middle of a long paragraph where the user has to hunt for it. Example format:
+4. **⚠️ The deploy result block is a fixed format — open your reply with it and add nothing extra.** Your reply MUST begin with the line `🎉 部署成功，页面已上线至 EdgeOne Makers`, followed by the complete access URL, followed by the console URL — and nothing else about the deployment. **Do NOT append caveats, expiry claims, access-policy claims, or console menu paths.** See **Present the Deploy Result** for the exact template and the list of banned fabrications.
    ```
-   🌐 Live URL: https://my-project-abc123.edgeone.cool?<auth_query_params>
+   🎉 部署成功，页面已上线至 EdgeOne Makers
+
+   🌐 https://my-project-abc123.edgeone.cool?<auth_query_params>
+
+   控制台：<consoleUrl returned by the CLI, verbatim>
    ```
-   Then append any other notes (console URL, caveats, etc.).
 5. **Ask the user to choose China or Global site** before browser login. Never assume. (Token login via `edgeone login --token` auto-detects site, no need to ask.)
 6. **Auto-detect the login method** — browser login in desktop environments, token login in headless/remote/CI environments. Follow the decision table below.
 7. **After token login, ask if the user wants to save the token locally** for future use.
@@ -110,11 +113,23 @@ cat edgeone.json 2>/dev/null
 
 ## Install CLI
 
+**Default — install from the npmmirror registry** (much faster in mainland China; identical package):
+
 ```bash
-npm install -g edgeone@latest
+npm install -g edgeone@latest --registry=https://registry.npmmirror.com
 ```
 
-Verify: `edgeone -v` — confirm output is `1.6.0` or higher. Retry installation if not. (Versions < 1.6.0 hang on `whoami`/login in non-interactive environments and lack `--json`.)
+Verify: `edgeone -v` — confirm output is `1.6.0` or higher.
+
+If the mirror install fails, or the version is still below `1.6.0`, retry **once** against the official registry (npmmirror is a lazy-sync mirror and can lag behind a fresh publish):
+
+```bash
+npm install -g edgeone@latest --registry=https://registry.npmjs.org
+```
+
+(Versions < 1.6.0 hang on `whoami`/login in non-interactive environments and lack `--json`.)
+
+> For the full install error reference (`ETIMEDOUT`, `EACCES`, PATH issues), see the `makers-cli` skill's **Install** section.
 
 ---
 
@@ -331,9 +346,43 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 | **Project ID** | Value after `EDGEONE_PROJECT_ID=` | — |
 | **Console URL** | Line after "You can view your deployment..." | — |
 
-**Show the user — the deploy URL MUST be placed at the very top of your reply, in the most prominent position:**
+## ⛔ Present the Deploy Result (exact format — no improvisation)
 
-⚠️ **URL Integrity Rules (read before composing your reply):**
+Your reply MUST open with this line, verbatim:
+
+```
+🎉 部署成功，页面已上线至 EdgeOne Makers
+```
+
+Then the full access URL, then the console URL. Nothing else.
+
+**Template:**
+
+> 🎉 部署成功，页面已上线至 EdgeOne Makers
+>
+> 🌐 `https://my-project-abc123.edgeone.cool?eo_token=abc123&eo_time=1234567890`
+>
+> 控制台：`<the consoleUrl value returned by the CLI, verbatim>`
+
+### ⛔ No extra description — this is the rule most often broken
+
+**Do NOT add any description, caveat, or guidance about the URL, the project, or the console.** Output only the three lines above. Specifically, NEVER write any of these — every one of them has been fabricated by a model at some point and is either wrong or unverifiable:
+
+| ❌ Never write | Why |
+|---------------|-----|
+| Any console menu path (e.g. "设置 → 数据管理 → 我发布的应用", "Settings → My Apps") | **These menus do not exist.** You cannot know the console's navigation structure. Paste the `consoleUrl` and stop. |
+| "永久有效" / "permanent" / "公开访问" / "no auth needed" / "anyone can access" | You cannot verify the URL's access policy or lifetime |
+| ICP filing / 备案 explanations, CDN policy explanations | Unverifiable from deploy output |
+| Invented expiry times ("链接 3 小时后失效", "valid for 24 hours") | Only state an expiry if the CLI output contains one |
+| Custom-domain binding instructions, DNS steps | Not part of the deploy result |
+| Invented next steps ("你可以在控制台开启 xxx") | You do not know which features exist |
+
+If the CLI's JSON output contains an `instruction` field, follow it exactly. If it contains `expiredTime`, you may state that specific expiry — otherwise say nothing about expiry.
+
+> Rule of thumb: **if a fact is not literally present in the CLI's output, it does not go into your reply.**
+
+
+### URL Integrity Rules (read before composing your reply)
 
 | Rule | Detail |
 |------|--------|
@@ -342,13 +391,7 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 | **Concrete, not abstract** | Use the actual URL from deploy output. Do not replace query params with `...` or `(params omitted)` or any placeholder in user-facing text. |
 | **Self-check before sending** | Search your draft for `.edgeone.cool` — every hit must have `?eo_token=`. |
 
-> 🌐 **Live URL**: `https://my-project-abc123.edgeone.cool?eo_token=abc123&eo_time=1234567890`
->
-> ---
->
-> - **Console URL**: `https://console.cloud.tencent.com/edgeone/pages/project/...`
->
-> ℹ️ Note: This preview URL is for quick deployment verification. When accessed from mainland China, the link may become restricted (e.g., 401) after some time or when shared, due to domain ICP filing status or CDN acceleration policies. For long-term stable public access, bind a custom domain with proper ICP filing.
+> **Scope**: these presentation rules govern the deploy-result block. A later summary of the work (architecture, code walkthrough, follow-up suggestions) is fine — but any URL quoted there must still be complete, and the fabrication bans above still apply.
 
 ---
 
@@ -356,8 +399,8 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 
 | Error | Solution |
 |-------|----------|
-| `command not found: edgeone` | Run `npm install -g edgeone@latest` |
-| CLI version < 1.6.0 | Reinstall: `npm install -g edgeone@latest`. Older versions hang on whoami/login in non-interactive contexts |
+| `command not found: edgeone` | Run `npm install -g edgeone@latest --registry=https://registry.npmmirror.com` (see **Install CLI** for the official-registry fallback) |
+| CLI version < 1.6.0 | Reinstall: `npm install -g edgeone@latest --registry=https://registry.npmmirror.com`. If the version is still low, retry on `--registry=https://registry.npmjs.org` (mirror lag). Older versions hang on whoami/login in non-interactive contexts |
 | Browser does not open during login | Switch to token login |
 | "not authenticated" / exit 1 from `whoami` (CLI ≥ 1.6.0) | Expected when not logged in — whoami now fails fast instead of hanging. Run `edgeone login` (desktop) or provide a token |
 | Non-interactive deploy says "browser login is unavailable" + exits 1 | Expected fail-fast in Agent/CI/headless with no token. Provide a token via `-t <token>` or set `EDGEONE_PAGES_API_TOKEN` |

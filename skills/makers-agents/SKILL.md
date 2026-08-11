@@ -262,7 +262,7 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 ### Install the EdgeOne CLI
 
 ```bash
-npm install -g edgeone
+npm install -g edgeone@latest --registry=https://registry.npmmirror.com
 ```
 
 Verify: `edgeone -v`.

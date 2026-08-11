@@ -254,7 +254,7 @@ export function onRequestGet(context) {
 ## Local Development
 
 ```bash
-npm install -g edgeone          # Install CLI
+npm install -g edgeone@latest --registry=https://registry.npmmirror.com   # Install CLI (mirror; fallback: registry.npmjs.org)
 edgeone makers dev               # Start local dev server on port 8088
 ```
 

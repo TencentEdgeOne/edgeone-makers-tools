@@ -12,11 +12,34 @@ metadata:
 
 ## Install
 
+**Default — install from the npmmirror registry** (significantly faster for users in mainland China; the CLI package itself is identical on both registries):
+
 ```bash
-npm install -g edgeone
+npm install -g edgeone@latest --registry=https://registry.npmmirror.com
 ```
 
-Verify: `edgeone -v`
+Verify: `edgeone -v` — output must be `1.6.7` or higher.
+
+### If the mirror install fails → retry once against the official registry
+
+npmmirror is a lazy-sync mirror, so a freshly published CLI version can lag behind by minutes. If the mirror install fails, or `edgeone -v` reports a version below `1.6.7`, fall back to the official registry:
+
+```bash
+npm install -g edgeone@latest --registry=https://registry.npmjs.org
+```
+
+Tell the user which registry you used and why before running the fallback. Do not silently retry more than once per registry.
+
+### Install error reference
+
+| Error | Cause | Action |
+|-------|-------|--------|
+| `ETIMEDOUT` / `ENOTFOUND` / `EAI_AGAIN` / `network` | Registry unreachable | Retry once on the other registry (see above) |
+| `edgeone -v` < `1.6.7` after install | Mirror lag, or a stale global install | Retry on the official registry |
+| `EACCES` / `permission denied` | No write access to the global prefix | Do NOT use `sudo` unprompted. Tell the user and suggest `npm config set prefix ~/.npm-global` (plus adding `~/.npm-global/bin` to PATH), or ask them to run the install themselves |
+| `command not found: edgeone` right after a successful install | Global bin dir not on PATH | Report the npm global prefix (`npm prefix -g`) and ask the user to add its `bin/` to PATH |
+
+> ⚠️ Version `>= 1.6.7` is required. Older versions hang on interactive prompts in Agent/CI/sandbox environments and lack `--json` output. Never proceed with an outdated version.
 
 ## Commands
 
@@ -52,7 +75,7 @@ Or inline: `PAGES_SOURCE=skills edgeone makers dev`
 
 ### First-time setup
 ```bash
-npm install -g edgeone
+npm install -g edgeone@latest --registry=https://registry.npmmirror.com
 edgeone login
 PAGES_SOURCE=skills edgeone makers link
 PAGES_SOURCE=skills edgeone makers env pull
