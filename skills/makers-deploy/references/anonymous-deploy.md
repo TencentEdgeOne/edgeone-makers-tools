@@ -87,7 +87,7 @@ Do not pass these — they have no effect and will mislead the user:
 
 `suggestion` is only present for the rate-limit case. `errorCode` may be absent for generic failures.
 
-⛔ **Never print `claimCommand` to the user.** Sandboxed IDEs (WorkBuddy and similar) give the user no terminal, so they cannot run it — and non-technical users cannot read it anyway. Show the `claimUrl` link and offer to run the claim yourself. `claimCommand` exists for **you** to execute.
+⛔ **Never print `claimCommand` to the user.** Sandboxed IDEs (WorkBuddy and similar) give the user no terminal, so they cannot run it — and non-technical users cannot read it anyway. Show the `claimUrl` link and stop there; do not also offer to claim on their behalf. `claimCommand` exists for **you** to execute, and only when the user explicitly asks you to.
 
 ---
 
@@ -220,9 +220,9 @@ The backend claims **asynchronously** and only migrates projects whose deploymen
 
 Two independent routes. Pick by who acts:
 
-**Route A — the user claims in the browser (default, and the only one to advertise).** Give them the `claimUrl` link. They sign in and the project transfers. Nothing to run.
+**Route A — the user claims in the browser. This is the flow, and the only one you present.** Give them the `claimUrl` link. They sign in and the project transfers. Nothing to run, and no alternative to offer.
 
-**Route B — you claim on their behalf**, when the user says "claim it" or is already logged in:
+**Route B — you claim on their behalf. Fallback only**, when the user explicitly asks you to. Do not advertise it:
 
 1. **Deploy must have succeeded.** Only `Success` deployments are migrated.
 2. **Log in.** In an interactive environment the CLI opens a browser when needed; in CI, pass `-t <api-token>`.
@@ -275,5 +275,5 @@ edgeone makers claim --json     # reads .edgeone/anonymous.json
 Present all three of these to the user together after an anonymous deploy — the URL alone is not enough, because an unclaimed project expires:
 
 1. the full access URL,
-2. the `claimUrl` as a clickable link, plus an offer to run the claim for them (**never** the `claimCommand` itself),
+2. the `claimUrl` as a clickable link — that alone (**never** the `claimCommand`, and no offer to claim for them),
 3. "claim within 60 minutes", and that the project is lost if unclaimed (not the raw `expiresAt` value).

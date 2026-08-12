@@ -18,7 +18,7 @@ description: >-
   use edgeone-makers-dev for troubleshooting).
 metadata:
   author: edgeone
-  version: "2.6.0"
+  version: "2.6.1"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -57,7 +57,7 @@ Deploy any project to **EdgeOne Makers**.
 
 9. **The claim command's parameter is `--sid`, NOT `--token`** — `edgeone makers claim --sid <anonymous-token>`. The `-t` / `--token` flag on `claim` is the **account API token**, an entirely different credential. Passing the anonymous token to `-t` fails. Product documentation showing `claim --token <anonymous-token>` is wrong; trust this rule.
 10. **Tell the user to claim within 60 minutes** — say exactly that: "claim within 60 minutes". Do not show the raw `expiresAt` timestamp to the user, and do not compute or invent a different duration from it. 60 minutes is the product's stated claim window and the conservative instruction: claiming early is always safe, so this is the wording to use even though the token's observed lifetime can be longer.
-11. **Never show the user a CLI claim command** — do not print `claimCommand`, `edgeone makers claim --sid ...`, or any other command as the user's way to claim. In sandboxed IDEs like WorkBuddy the user has no terminal and literally cannot run it, and non-technical users cannot read it. Give them the **`claimUrl` link** to click, and offer to run the claim yourself. `claimCommand` is for **you** to execute, not to display.
+11. **Point the user at the claim link — nothing else** — do not print `claimCommand`, `edgeone makers claim --sid ...`, or any other command as the user's way to claim. In sandboxed IDEs like WorkBuddy the user has no terminal and literally cannot run it, and non-technical users cannot read it. Give them the **`claimUrl` link** and stop there: do not offer to claim on their behalf either — signing in on the claim page *is* the flow, and an extra option only adds a decision. Run `claim` yourself only if the user explicitly asks you to.
 12. **Keep the claim pitch minimal — do not over-promise, and do not teach domains** — say only that signing in *keeps* the project. ❌ Never write "permanently yours", "no time limit or access restrictions", "unlimited", or anything implying the URL then works unconditionally forever: a claimed project may still need a custom domain, and mainland-China access can require ICP filing, so those claims are false. ❌ Also do not volunteer custom domains, ICP filing, DNS, or console navigation while the user is just deciding whether to claim — that front-loads complexity onto someone who only wanted a live URL. The claim page owns the follow-up flow. Answer such topics only when the user asks.
 
 ---
@@ -376,14 +376,12 @@ Example shape:
 > ⏳ **Claim within 60 minutes** — otherwise this project is removed.
 >
 > 👉 [Claim this project](<claimUrl>) — sign in to keep it.
->
-> Or just tell me "claim it" and I'll do it for you.
 
-Keep it to that. Do not append what claiming "unlocks", and do not introduce custom domains, ICP filing, or DNS here — the claim page guides them from there. See critical rule 12.
+Keep it to that. The claim link is the whole call to action: do not also offer to claim on their behalf, do not append what claiming "unlocks", and do not introduce custom domains, ICP filing, or DNS here — the claim page guides them from there. See critical rules 11 and 12.
 
 ### Claiming a project
 
-**You run this command — never print it for the user.** When the user asks to claim (or clicks through and asks for help), execute it yourself.
+**The default is that the user claims it themselves via `claimUrl`** — that is what you present, and you do not offer an alternative. This command is a fallback for when the user explicitly asks you to claim it for them. Never print it for the user.
 
 Requires login. Run from the directory containing `.edgeone/anonymous.json` and the token is picked up automatically:
 

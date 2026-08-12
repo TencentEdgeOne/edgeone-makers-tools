@@ -10,7 +10,7 @@ description: >-
   NEVER python -m http.server / npx serve), dev server requirements.
 metadata:
   author: edgeone
-  version: "1.2.0"
+  version: "1.2.1"
 ---
 
 # Runtime Environment Adaptation Guide
@@ -281,7 +281,7 @@ The user has **no terminal** in the WorkBuddy sandbox. Any command you print as 
 
 | Situation | Do this | Not this |
 |---|---|---|
-| Anonymous project needs claiming | Give the `claimUrl` as a clickable link, and offer to claim it yourself | ❌ Printing `edgeone makers claim --sid <token>` |
+| Anonymous project needs claiming | Give the `claimUrl` as a clickable link and stop there | ❌ Printing `edgeone makers claim --sid <token>`, or offering to claim it for them |
 | The user needs to log in | Explain, then run `edgeone login --site <china\|global> --local` yourself | ❌ "Run `edgeone login` in your terminal" |
 | Something needs installing | Run it yourself in Bash | ❌ "Please run `npm install -g edgeone`" |
 
