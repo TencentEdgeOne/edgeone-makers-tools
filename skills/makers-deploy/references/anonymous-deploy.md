@@ -93,11 +93,13 @@ Do not pass these — they have no effect and will mislead the user:
 
 ## What to tell the user about the deadline
 
-**Always say "claim within 60 minutes".** That is the product's stated claim window, and it is the conservative instruction — claiming early is never wrong.
+**Tell them the link expires in 60 minutes unless they claim it.** Frame it as the *link expiring*, not as the project being deleted — from the user's point of view what they lose is a working URL, and "your project will be removed" reads as data loss, which is needlessly alarming.
+
+Convey that meaning in the user's own language. The English wording here specifies intent, not a string to copy.
 
 Do **not** show the raw `expiresAt` timestamp, and do not derive a different duration from it.
 
-Why the rule is worded this way: `expiresAt` reflects only the anonymous **token's** lifetime, which in a recorded test-environment response was ~12 hours — longer than 60 minutes. But token lifetime is not the same as the claim window. The unclaimed link is also bounded by visitor-count and IP restrictions that can cut access short, and the product spec's window is 60 minutes. Quoting a 12-hour timestamp would therefore over-promise. Quoting 60 minutes is safe in both directions.
+Why 60 minutes and not the timestamp: `expiresAt` reflects only the anonymous **token's** lifetime, which in a recorded test-environment response was ~12 hours — longer than 60 minutes. But token lifetime is not the same as the usable window. The unclaimed link is also bounded by visitor-count and IP restrictions that can cut access short, and the product spec's window is 60 minutes. Quoting a 12-hour timestamp would therefore over-promise. Quoting 60 minutes is safe in both directions.
 
 Three distinct windows exist — do not conflate them:
 
@@ -276,4 +278,6 @@ Present all three of these to the user together after an anonymous deploy — th
 
 1. the full access URL,
 2. the `claimUrl` as a clickable link — that alone (**never** the `claimCommand`, and no offer to claim for them),
-3. "claim within 60 minutes", and that the project is lost if unclaimed (not the raw `expiresAt` value).
+3. that the link expires in 60 minutes unless claimed (not the raw `expiresAt` value).
+
+Write all three in the user's language — the English phrasing in this file specifies meaning, not wording.
