@@ -1,5 +1,5 @@
 ---
-name: makers-cloud-functions
+name: edgeone-makers-cloud-functions
 description: >-
   EdgeOne Makers Cloud Functions — Node.js, Go, and Python runtimes.
   Use when building server-side APIs, Express/Koa patterns, or backend logic.
