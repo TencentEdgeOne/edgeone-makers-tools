@@ -18,7 +18,7 @@ description: >-
   use edgeone-makers-dev for troubleshooting).
 metadata:
   author: edgeone
-  version: "2.7.0"
+  version: "2.8.0"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -52,12 +52,12 @@ Deploy any project to **EdgeOne Makers**.
 6. **Auto-detect the login method** — browser login in desktop environments, token login in headless/remote/CI environments. Follow the decision table below.
 7. **After token login, ask if the user wants to save the token locally** for future use.
 8. **Before triggering any browser popup (login / registration), explain the reason and the benefits to the user first** — never silently launch a browser window.
-9. **Write every user-facing message in the user's own language** — **all** example text, blockquotes, and prompts in this skill are written in English purely to specify *meaning*; none of it is a string to paste. If the user writes to you in Chinese, speak Chinese — the login explanation, the site choice, the token question, the deploy result, the claim prompt, all of it. Likewise for any other language. Emitting this skill's English strings into a non-English conversation is a bug. Only literal CLI commands, flags, env var names, and JSON field names stay verbatim.
+9. **Write every user-facing message in the user's own language** — **all** prose, blockquotes, and prompts in this skill are written in English purely to specify *meaning*; none of it is a string to paste. If the user writes to you in Chinese, speak Chinese — the login explanation, the site choice, the token question, the deploy result, all of it. Likewise for any other language. Emitting this skill's English strings into a non-English conversation is a bug. Only literal CLI commands, flags, env var names, and JSON field names stay verbatim. ⚠️ Where this skill gives a **fixed template** (Step 4 of Anonymous Deploy), translating it is required but rewriting or extending it is not allowed — match it line for line.
 
 **Rules 10-13 apply to the anonymous deploy / claim flow only:**
 
 10. **The claim command's parameter is `--sid`, NOT `--token`** — `edgeone makers claim --sid <anonymous-token>`. The `-t` / `--token` flag on `claim` is the **account API token**, an entirely different credential. Passing the anonymous token to `-t` fails. Product documentation showing `claim --token <anonymous-token>` is wrong; trust this rule.
-11. **Tell the user the link expires in 60 minutes unless they claim it** — convey that meaning; do not show the raw `expiresAt` timestamp and do not substitute a different duration. 60 minutes is the product's stated claim window and the conservative instruction: claiming early is always safe, so use it even though the token's observed lifetime can be longer. Frame it as the *link* expiring, not the project being deleted.
+11. **Present the anonymous deploy result with the fixed template in Step 4** — it is a template, not an example: reproduce it exactly, substituting only the URL and the claim link. Never show the raw `expiresAt` timestamp, never state a different duration, and never add lines to it. 60 minutes is the product's stated claim window and the conservative instruction, so that is what the template says even though the token's observed lifetime can be longer. It frames the *link* as expiring, not the project as being deleted.
 12. **Point the user at the claim link — nothing else** — do not print `claimCommand`, `edgeone makers claim --sid ...`, or any other command as the user's way to claim. In sandboxed IDEs like WorkBuddy the user has no terminal and literally cannot run it, and non-technical users cannot read it. Give them the **`claimUrl` link** and stop there: do not offer to claim on their behalf either — signing in on the claim page *is* the flow, and an extra option only adds a decision. Run `claim` yourself only if the user explicitly asks you to.
 13. **Keep the claim pitch minimal — do not over-promise, and do not teach domains** — say only that signing in *keeps* the project. ❌ Never write "permanently yours", "no time limit or access restrictions", "unlimited", or anything implying the URL then works unconditionally forever: a claimed project may still need a custom domain, and mainland-China access can require ICP filing, so those claims are false. ❌ Also do not volunteer custom domains, ICP filing, DNS, or console navigation while the user is just deciding whether to claim — that front-loads complexity onto someone who only wanted a live URL. The claim page owns the follow-up flow. Answer such topics only when the user asks.
 
@@ -358,37 +358,35 @@ Add `--site china` or `--site global` only when the site must be pinned (the use
 
 Do **not** pass `-n`, `-e`, or `--area` — they are ignored under `--anonymous`. The project name is generated automatically.
 
-### Step 4: Present the result — all three parts are mandatory
+### Step 4: Present the result — use the fixed template below
 
 Parse the **last line** of stdout as JSON (human-readable output precedes it). Fields are **camelCase**: `url`, `projectId`, `deploymentId`, `anonymousToken`, `claimUrl`, `claimCommand`, `expiresAt`, `site`.
 
-Your reply must contain all three of the following. The URL alone is not enough — an unclaimed link stops working.
+⛔ **This is a fixed template, not a suggestion.** Reproduce it exactly: same four lines, same order, same emoji, same separator. Substitute **only** `<url>` and `<claimUrl>` with the values from the JSON. Do not reword, merge, split, or reorder lines. Do not add a sentence before or after it. Do not append project ID, deployment ID, console URL, `expiresAt`, next steps, or commentary of any kind.
 
-1. **The full access URL**, at the very top, complete with any query string (critical rules 2 and 4 apply exactly as for a normal deploy).
-2. **The claim link** — `claimUrl`, as a clickable link. ⛔ **Do NOT show `claimCommand` or any `edgeone makers claim ...` command to the user.** See critical rule 12.
-3. **That the link expires in 60 minutes unless claimed.** Convey that meaning — do not show the raw `expiresAt` timestamp and do not substitute a different duration. See critical rule 11.
-
-Example shape — this is the **meaning and layout** to reproduce, **not** text to copy. Write it in the user's language (critical rule 9):
+**English-speaking user — emit exactly this:**
 
 > 🌐 **Live URL**: `<url>`
 >
 > ---
 >
-> ⏳ **This link expires in 60 minutes** — claim it to keep it working.
+> ⏳ **This link expires in 60 minutes**.
 >
-> 👉 [Claim this project](<claimUrl>) — sign in to keep it.
+> 👉 [Claim this project](<claimUrl>) — please claim it within 60 minutes.
 
-Same thing for a Chinese-speaking user:
+**Chinese-speaking user — emit exactly this:**
 
 > 🌐 **访问地址**：`<url>`
 >
 > ---
 >
-> ⏳ **该链接 60 分钟后失效** —— 认领后即可长期使用。
+> ⏳ **该链接 60 分钟后失效**。
 >
-> 👉 [认领这个项目](<claimUrl>) —— 登录后归入你的账号。
+> 👉 [认领这个项目](<claimUrl>) —— 请在 60 分钟内完成认领。
 
-Keep it to that. The claim link is the whole call to action: do not also offer to claim on their behalf, do not append what claiming "unlocks", and do not introduce custom domains, ICP filing, or DNS here — the claim page guides them from there. See critical rules 12 and 13.
+For any other language, translate **this** template and nothing more — keep the four lines, the emoji, the separator, and the exact same content. Do not take the freedom to add or explain.
+
+Afterwards, stop. Anything you feel like adding here — what claiming unlocks, custom domains, ICP filing, DNS, console navigation, an offer to claim on their behalf — is prohibited by critical rules 12 and 13. Answer those topics only if the user asks.
 
 ### Claiming a project
 

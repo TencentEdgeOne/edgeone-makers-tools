@@ -274,10 +274,6 @@ edgeone login --site global
 edgeone makers claim --json     # reads .edgeone/anonymous.json
 ```
 
-Present all three of these to the user together after an anonymous deploy — the URL alone is not enough, because an unclaimed project expires:
+After an anonymous deploy, present the result using the **fixed template in [SKILL.md](../SKILL.md) Step 4** — do not assemble your own message. Substitute only the URL and the claim link; translate it into the user's language; add nothing.
 
-1. the full access URL,
-2. the `claimUrl` as a clickable link — that alone (**never** the `claimCommand`, and no offer to claim for them),
-3. that the link expires in 60 minutes unless claimed (not the raw `expiresAt` value).
-
-Write all three in the user's language — the English phrasing in this file specifies meaning, not wording.
+It carries exactly three things, and that is deliberate: the access URL, the `claimUrl` link (**never** the `claimCommand`, and no offer to claim for them), and that the link expires in 60 minutes (**never** the raw `expiresAt` value).
