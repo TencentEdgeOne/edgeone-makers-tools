@@ -1,5 +1,5 @@
 ---
-name: makers-migration
+name: edgeone-makers-migration
 description: >-
   Migrate existing AI agent projects (LangChain, LangGraph, OpenAI Agents SDK,
   Claude Agent SDK, CrewAI) to EdgeOne Makers platform conventions.

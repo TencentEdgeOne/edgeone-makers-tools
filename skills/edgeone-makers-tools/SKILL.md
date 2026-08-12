@@ -12,7 +12,7 @@ description: >-
   read only the sub-skill relevant to the current task, never all of them at once.
 metadata:
   author: edgeone
-  version: "1.0.4"
+  version: "2.0.0"
 ---
 
 # EdgeOne Makers Skills

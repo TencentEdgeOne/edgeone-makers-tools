@@ -196,7 +196,7 @@ my-app/
 
 ## Edge API + KV counter
 
-⚠️ **Prerequisites**: You must enable KV Storage in the console and bind a namespace first. See [kv-storage.md](kv-storage.md) (same directory)
+⚠️ **Prerequisites**: You must enable KV Storage in the console and bind a namespace first. See [../makers-storage/references/kv.md](../makers-storage/references/kv.md)
 
 ```
 my-app/
