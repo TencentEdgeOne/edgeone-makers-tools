@@ -291,3 +291,11 @@ If the project named by `--name` does not exist remotely, the `link` command cre
 | @edgeone/pages-blob | >= 0.0.14 | Older versions have known bugs |
 
 Use `create-next-app@latest` rather than manually pinning an older version.
+
+---
+
+### 13. Native browser dialogs (`alert` / `confirm` / `prompt`) don't work in WorkBuddy's built-in browser
+
+WorkBuddy's right-side preview panel does NOT render `window.alert()` / `window.confirm()` / `window.prompt()`. The call returns immediately without user interaction, so any handler gated on `if (confirm("Delete?"))` silently no-ops (a delete button appears to do nothing). The same page works fine in the user's real Chrome / Safari.
+
+**Rule**: for any confirmation, prompt, or notification in the page, use an **in-page custom modal** (a `<div>` overlay with buttons wired via JS). Do NOT rely on the browser's built-in `alert` / `confirm` / `prompt` — the code looks correct in code review, works when the user opens the deployed URL in their own browser, and is silently broken in the WorkBuddy preview during dev/verification.
