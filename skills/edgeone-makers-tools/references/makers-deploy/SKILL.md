@@ -373,7 +373,7 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 | Project name conflict | Use a different name with `-n` |
 | Build failure | Check logs — usually missing deps or bad build script |
 | `whoami` says "not authenticated" but `edgeone login` just succeeded | Expected in agent/headless: `whoami` and `makers dev`/`deploy` read API-Token auth, not the browser session. Reuse the auto-generated token from `~/.edgeone/<hash>` (`value.Token`) as `EDGEONE_PAGES_API_TOKEN` / `-t`. See Token Login note above. |
-| `makers dev` hangs on an interactive "Link existing / Create and link" menu | The dev server needs project linking, which prompts interactively (blocks headless). Skip dev and go straight to `edgeone makers deploy -n <name> -t <token> --json`, which auto-creates + links non-interactively. |
+| `makers dev` hangs on an interactive "Link existing / Create and link" menu | Dev was started without `-n` and fell into the interactive picker. Kill it, then restart with `edgeone makers dev -n <project-name> --skip-env-sync` — dev auto-creates the project if missing and links it internally. Always pass `-n` to dev whenever the project uses Blob/KV. |
 | `curl` to the deploy URL returns 302 → DingTalk SSO login | Preview gateway requires browser-based `eo_token` validation (JS), which `curl` can't do. Open the full `?eo_token=...&eo_time=...` URL in a real browser — it validates the token and bypasses SSO. Not a code bug. |
 
 ---

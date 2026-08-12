@@ -13,6 +13,8 @@ metadata:
 > 🗄️ **There is NO managed database on this platform** — no SQL, no MongoDB, no Prisma, no ORM. Do **not** reach for `sqlite`, `pg`, `mysql`, `mongodb`, or an in-memory array (it resets on every cold start / redeploy). **Blob IS your database.** Any dynamic data a generated site needs to persist — guestbook messages, uploaded drawings, votes, leaderboards, per-user save state, form submissions — is modeled as Blob keys. Model your "tables" as **key prefixes** (`messages/<id>.json`, `users/<uid>.json`). See [references/blob.md](references/blob.md) → "Blob as your backend".
 
 > ⚠️ **Local dev does NOT always require login.** `edgeone makers dev` runs without authentication for **pure-static** previews. Login only becomes necessary through this chain: **using Blob ⇒ the project must be `link`ed ⇒ linking requires a logged-in account first.** So if (and only if) dev/deploy must read/write **Blob** (or any credentialed backend), run `edgeone login` (browser) or pass `-t <token>` before linking/starting dev. **If your site has no backend, skip login and just run `edgeone makers dev`.** See also makers-env-adaption (Login authentication + Project linking).
+>
+> ⛔ **When the project uses Blob/KV, ALWAYS pass `-n <project-name>` to `edgeone makers dev`.** Bare `edgeone makers dev` drops into an interactive "Link existing / Create and link" picker that hangs in sandbox / non-interactive environments. With `-n`, the CLI auto-creates the project if the name doesn't exist yet — one command, no separate step needed.
 
 EdgeOne Makers provides two storage services. **Choose based on your runtime and data type:**
 
