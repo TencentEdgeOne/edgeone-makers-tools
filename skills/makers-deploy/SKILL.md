@@ -18,7 +18,7 @@ description: >-
   use edgeone-makers-dev for troubleshooting).
 metadata:
   author: edgeone
-  version: "2.5.0"
+  version: "2.6.0"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -53,11 +53,12 @@ Deploy any project to **EdgeOne Makers**.
 7. **After token login, ask if the user wants to save the token locally** for future use.
 8. **Before triggering any browser popup (login / registration), explain the reason and the benefits to the user first** — never silently launch a browser window.
 
-**Rules 9-11 apply to the anonymous deploy / claim flow only:**
+**Rules 9-12 apply to the anonymous deploy / claim flow only:**
 
 9. **The claim command's parameter is `--sid`, NOT `--token`** — `edgeone makers claim --sid <anonymous-token>`. The `-t` / `--token` flag on `claim` is the **account API token**, an entirely different credential. Passing the anonymous token to `-t` fails. Product documentation showing `claim --token <anonymous-token>` is wrong; trust this rule.
 10. **Tell the user to claim within 60 minutes** — say exactly that: "claim within 60 minutes". Do not show the raw `expiresAt` timestamp to the user, and do not compute or invent a different duration from it. 60 minutes is the product's stated claim window and the conservative instruction: claiming early is always safe, so this is the wording to use even though the token's observed lifetime can be longer.
 11. **Never show the user a CLI claim command** — do not print `claimCommand`, `edgeone makers claim --sid ...`, or any other command as the user's way to claim. In sandboxed IDEs like WorkBuddy the user has no terminal and literally cannot run it, and non-technical users cannot read it. Give them the **`claimUrl` link** to click, and offer to run the claim yourself. `claimCommand` is for **you** to execute, not to display.
+12. **Keep the claim pitch minimal — do not over-promise, and do not teach domains** — say only that signing in *keeps* the project. ❌ Never write "permanently yours", "no time limit or access restrictions", "unlimited", or anything implying the URL then works unconditionally forever: a claimed project may still need a custom domain, and mainland-China access can require ICP filing, so those claims are false. ❌ Also do not volunteer custom domains, ICP filing, DNS, or console navigation while the user is just deciding whether to claim — that front-loads complexity onto someone who only wanted a live URL. The claim page owns the follow-up flow. Answer such topics only when the user asks.
 
 ---
 
@@ -339,7 +340,9 @@ In an interactive environment, present the choice (use the IDE's selection contr
 
 > You're not logged in to EdgeOne Makers. Two options:
 > - **Deploy anonymously (no login)** — you get a working URL immediately. You'll need to log in and claim the project **within 60 minutes**, or it is removed. Until claimed, the link has visitor-count and IP restrictions, so it isn't suitable for wide sharing.
-> - **Log in now** — the project is saved permanently to your account with no time limit or access restrictions.
+> - **Log in now** — the project is saved to your account right away, with no claim deadline.
+
+⛔ **Do not over-promise what claiming gives them.** Say the project is *kept* / *saved to their account*, and nothing more. Specifically, do **not** say "no access restrictions", "permanently yours", or anything implying the URL is then unconditionally public and final — a claimed project can still need a custom domain and, for mainland-China access, ICP filing. Do **not** raise custom domains, ICP filing, or DNS at this point either: the user is deciding whether to log in, and those concepts are noise here. The claim page walks them through next steps.
 
 Only skip this question when the environment genuinely cannot ask (CI, headless, no TTY). In that case deploy anonymously and make the claim link and the 60-minute window unmissable in your result — the user had no chance to be warned in advance.
 
@@ -350,7 +353,7 @@ export PAGES_SOURCE=skills
 edgeone makers deploy --anonymous --json
 ```
 
-Add `--site china` or `--site global` when you need a specific site; otherwise it is auto-detected from the egress IP.
+Add `--site china` or `--site global` only when the site must be pinned (the user told you which, or CI needs determinism). Otherwise omit it — **the CLI detects the site itself** from its own egress IP. Do not probe for the site yourself and do not synthesise `--site` from your own check.
 
 Do **not** pass `-n`, `-e`, or `--area` — they are ignored under `--anonymous`. The project name is generated automatically.
 
@@ -372,9 +375,11 @@ Example shape:
 >
 > ⏳ **Claim within 60 minutes** — otherwise this project is removed.
 >
-> 👉 [Claim this project](<claimUrl>) — sign in and it's permanently yours.
+> 👉 [Claim this project](<claimUrl>) — sign in to keep it.
 >
 > Or just tell me "claim it" and I'll do it for you.
+
+Keep it to that. Do not append what claiming "unlocks", and do not introduce custom domains, ICP filing, or DNS here — the claim page guides them from there. See critical rule 12.
 
 ### Claiming a project
 
@@ -392,7 +397,7 @@ edgeone makers claim --sid <anonymousToken> --json
 
 Claim only after the deploy has finished — the backend only migrates deployments in `Success` state. On success the local state file is deleted and the project becomes a normal one, managed with `edgeone makers deploy`.
 
-Report the outcome in plain language — the project name and its live URL — not the raw JSON.
+Report the outcome in plain language — the project name and its live URL — not the raw JSON. Confirm it is saved to their account and stop there; do not add what they "can now do" (see critical rule 12).
 
 For the full JSON schema, rate limits, error codes, state-file fields, and site-resolution rules, see [references/anonymous-deploy.md](references/anonymous-deploy.md).
 

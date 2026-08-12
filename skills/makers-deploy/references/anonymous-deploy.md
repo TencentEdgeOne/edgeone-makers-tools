@@ -21,7 +21,7 @@ edgeone makers claim [--sid <anonymous-token>] [-t <api-token>] [--json]
 | Parameter | Type | Notes |
 |-----------|------|-------|
 | `--anonymous` | boolean | Enables login-free deploy. **Ignored when already logged in** — the CLI prints a notice and runs the normal deploy flow. **No `-a` short option exists** (`-a` is already taken by `--area`). |
-| `--site` | `china` \| `global` | Which API site to use. Auto-detected by egress IP when omitted. |
+| `--site` | `china` \| `global` | Which API site to use. **The CLI auto-detects by egress IP when omitted** — you do not need to probe it yourself. |
 | `--json` | boolean | Emit a machine-readable result line. |
 
 ### Claim parameters
@@ -107,7 +107,6 @@ Three distinct windows exist — do not conflate them:
 | Anonymous token validity | `expiresAt` in `--json` output | The token itself. Diagnostics only; not user-facing. |
 | COS credential validity | `cosExpiredTime` / `cosExpiration` in the state file | A single upload operation. Irrelevant once deploy succeeds. |
 
-> The TAPD requirement describes a future target (unclaimed 60 min → 24 h after claim, renewable 3×). The post-claim renewal part is not implemented; do not describe it to users.
 
 ---
 
@@ -137,13 +136,31 @@ Treat it as a secret: it holds an ephemeral credential, valid until claimed or e
 
 ---
 
+## What NOT to promise about claiming
+
+Claiming moves the project into the user's account. That is all it does. Say that, and stop.
+
+| ❌ Do not say | Why it is wrong |
+|---|---|
+| "permanently yours" / "no time limit or access restrictions" | A claimed project's preset URL is still a preview-grade domain. Mainland-China access can be restricted (e.g. 401) depending on ICP filing status and CDN policy — claiming does not change that. |
+| "unlimited" / "fully public now" | Overstates it. Stable public access generally needs a custom domain, and in mainland China a filing. |
+| Anything about custom domains, ICP filing, DNS, or console navigation | Correct, but wrong moment. The user is deciding whether to claim, or has just claimed. Front-loading these concepts onto someone who wanted a live URL is exactly the confusion the anonymous flow exists to avoid. The claim page owns that flow. |
+
+Raise domains or filing **only** when the user asks about stable / production / shareable access. The normal-deploy path in [SKILL.md](../SKILL.md) already has the correct ICP wording for that case.
+
+---
+
 ## Site resolution (`--site`)
+
+**The CLI resolves the site by itself, inside its own process.** You do not need to detect anything.
 
 | Situation | Behaviour |
 |-----------|-----------|
-| `--site` passed | Used as-is. Prefer this in Agent/CI contexts for determinism. |
-| `--site` omitted | Detected via `GET https://api.edgeone.ai/e-func/ip/isCN` (3 s timeout): `isCN: true` → `china`, otherwise `global`. |
-| Detection fails | Falls back to `global`. |
+| `--site` passed | The CLI uses it as-is and skips detection. Prefer this in Agent/CI contexts for determinism. |
+| `--site` omitted | **The CLI itself** issues `GET https://api.edgeone.ai/e-func/ip/isCN` (3 s timeout): `isCN: true` → `china`, otherwise `global`. |
+| Detection fails | The CLI falls back to `global`. |
+
+⛔ **Do not call the `isCN` endpoint yourself** and do not build `--site` from your own probe. The CLI already does this at `deploy.ts` → `resolveSite()`. Probing yourself is a wasted request, and in a sandboxed IDE your Bash egress IP may differ from the CLI's, so you could force the *wrong* site. Pass `--site` only when you have an independent reason to pin it (the user said which site, or CI must be deterministic).
 
 `claim` reads `site` from `.edgeone/anonymous.json` and **does not re-detect by IP** — the token and project are bound to one site, and egress IP can change between commands (VPN, different CI runner).
 
@@ -216,7 +233,7 @@ Two independent routes. Pick by who acts:
    # or, with the state file present:
    edgeone makers claim --json
    ```
-5. **On success** the CLI prints the project name, ID, and URL, then deletes `.edgeone/anonymous.json`. The project is now permanent and managed with the normal `edgeone makers deploy` flow. Relay the project name and URL in plain language; do not paste the JSON.
+5. **On success** the CLI prints the project name, ID, and URL, then deletes `.edgeone/anonymous.json`. The project now belongs to the account and is managed with the normal `edgeone makers deploy` flow. Relay the project name and URL in plain language; do not paste the JSON, and do not describe what claiming "unlocks" — see the note below.
 
 ---
 
