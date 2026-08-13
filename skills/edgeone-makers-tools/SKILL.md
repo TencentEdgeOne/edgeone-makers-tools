@@ -22,6 +22,7 @@ When you need EdgeOne Makers platform development guidance, read the matching Sk
 | Task | Read |
 |------|------|
 | AI Agent development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI) | references/makers-agents/SKILL.md |
+| Migrate existing agent project to EdgeOne Makers format | references/makers-migration/SKILL.md |
 | Deploy project to EdgeOne | references/makers-deploy/SKILL.md |
 | Edge Functions (V8 lightweight functions) | references/makers-edge-functions/SKILL.md |
 | Cloud Functions (Node.js / Go / Python APIs) | references/makers-cloud-functions/SKILL.md |
