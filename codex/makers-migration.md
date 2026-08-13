@@ -1,18 +1,12 @@
 ---
-name: makers-migration
+name: edgeone-makers-migration
 description: >-
   Migrate existing AI agent projects (LangChain, LangGraph, OpenAI Agents SDK,
   Claude Agent SDK, CrewAI) to EdgeOne Makers platform conventions.
   Use when the user wants to adapt a standard agent project to run on EdgeOne Makers,
   convert Express/Next.js API routes to Makers handlers, or add platform capabilities
   (context.tools, context.sandbox, context.store).
-  Do NOT trigger for new agent projects (use edgeone-makers-agents instead).
-pathPatterns:
-  - agents/**
-  - cloud-functions/**
-validate:
-  - pattern: "process\\.env|os\\.environ"
-    message: "Migration checklist: replace process.env / os.environ with context.env (TS) or ctx env access (Python)."
+  Do NOT trigger for new agent projects (use makers-agents instead).
 metadata:
   author: edgeone
   version: "1.0.0"
@@ -458,23 +452,6 @@ After migration, verify these items before deploying:
 ## See Also
 
 - Agent development guide: [makers-agents/SKILL.md](../makers-agents/SKILL.md)
-
-### Framework reference index
-
-Reference files in this skill link back here instead of climbing two directory
-levels. Full framework patterns live in `makers-agents`:
-
-| Framework | Node | Python |
-|---|---|---|
-| LangGraph | [node-frameworks/langgraph.md](../makers-agents/references/node-frameworks/langgraph.md) | [python-frameworks/langgraph.md](../makers-agents/references/python-frameworks/langgraph.md) |
-| DeepAgents | [node-frameworks/deepagents.md](../makers-agents/references/node-frameworks/deepagents.md) | [python-frameworks/deepagents.md](../makers-agents/references/python-frameworks/deepagents.md) |
-| OpenAI Agents | [node-frameworks/openai-agents.md](../makers-agents/references/node-frameworks/openai-agents.md) | [python-frameworks/openai-agents.md](../makers-agents/references/python-frameworks/openai-agents.md) |
-| Claude Agent SDK | [node-frameworks/claude-sdk.md](../makers-agents/references/node-frameworks/claude-sdk.md) | [python-frameworks/claude-sdk.md](../makers-agents/references/python-frameworks/claude-sdk.md) |
-| CrewAI | — (Python only) | [python-frameworks/crewai.md](../makers-agents/references/python-frameworks/crewai.md) |
-
-Platform capabilities: [capabilities/sandbox.md](../makers-agents/references/capabilities/sandbox.md) ·
-[capabilities/store.md](../makers-agents/references/capabilities/store.md) ·
-[capabilities/tools.md](../makers-agents/references/capabilities/tools.md)
 - Platform conventions: [makers-agents/references/platform/](../makers-agents/references/platform/)
 - CLI commands: [makers-cli/SKILL.md](../makers-cli/SKILL.md)
 - Deploy guide: [makers-deploy/SKILL.md](../makers-deploy/SKILL.md)

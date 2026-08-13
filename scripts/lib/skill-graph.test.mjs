@@ -5,6 +5,7 @@ import { tmpdir } from 'node:os';
 import test from 'node:test';
 
 import {
+  listDeclaredSkillNames,
   checkFileManifest,
   findBrokenLinks,
   findDanglingSkillNames,
@@ -522,6 +523,37 @@ test('skill-graph.findMissingTocs only exempts a real SKILL.md, not a lookalike 
       findMissingTocs(root).map((x) => x.file),
       ['makers-a/references/MY-SKILL.md'],
     );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.listDeclaredSkillNames collects names from nested SKILL.md files', async () => {
+  // 单 skill 路由布局：路由页在顶层，各能力的 SKILL.md 藏在 references/ 下。
+  const root = await makeSkills({
+    'tools/SKILL.md': '---\nname: edgeone-makers-tools\n---\n',
+    'tools/references/cap-a/SKILL.md': '---\nname: edgeone-makers-a\n---\n',
+    'tools/references/cap-b/SKILL.md': '---\nname: edgeone-makers-b\n---\n',
+  });
+  try {
+    assert.deepEqual(
+      [...listDeclaredSkillNames(root)].sort(),
+      ['edgeone-makers-a', 'edgeone-makers-b', 'edgeone-makers-tools'],
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findDanglingSkillNames accepts nested declarations in a single-router layout', async () => {
+  const root = await makeSkills({
+    'tools/SKILL.md': '---\nname: edgeone-makers-tools\n---\n\nSee edgeone-makers-a.\n',
+    'tools/references/cap-a/SKILL.md': '---\nname: edgeone-makers-a\n---\n\nUse edgeone-pages-ghost.\n',
+  });
+  try {
+    const dangling = findDanglingSkillNames(root);
+    assert.equal(dangling.length, 1);
+    assert.equal(dangling[0].name, 'edgeone-pages-ghost');
   } finally {
     await rm(root, { recursive: true, force: true });
   }

@@ -1,13 +1,8 @@
 ---
-name: makers-cloud-functions
+name: edgeone-makers-cloud-functions
 description: >-
   EdgeOne Makers Cloud Functions — Node.js, Go, and Python runtimes.
   Use when building server-side APIs, Express/Koa patterns, or backend logic.
-pathPatterns:
-  - cloud-functions/**
-validate:
-  - pattern: "process\\.env|os\\.environ"
-    message: "Read env via context.env inside cloud-functions/, never process.env or os.environ."
 metadata:
   author: edgeone
   version: "1.0.0"

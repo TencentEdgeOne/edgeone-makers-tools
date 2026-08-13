@@ -3,12 +3,6 @@ name: edgeone-makers-middleware
 description: >-
   Edge middleware for EdgeOne Makers — request interception, redirects, rewrites,
   auth guards, A/B testing, and header injection at the edge (V8 runtime).
-pathPatterns:
-  - middleware.js
-  - middleware.ts
-validate:
-  - pattern: "NextRequest|NextResponse|next/server"
-    message: "Framework projects must use the framework's own middleware. This platform format takes a context object with next/redirect/rewrite — not NextRequest/NextResponse."
 metadata:
   author: edgeone
   version: "1.0.0"

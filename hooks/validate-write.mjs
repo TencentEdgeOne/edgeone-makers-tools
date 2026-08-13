@@ -6,7 +6,9 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { shouldWriteSignalLog, writeSignalLog } from './signal-log.mjs';
 
 const HOOKS_DIR = dirname(fileURLToPath(import.meta.url));
-const DEFAULT_SKILLS_DIR = join(HOOKS_DIR, '..', 'skills');
+// Single-skill layout: capabilities (each carrying its own validate rules in
+// frontmatter) live under the one skill's references/ directory.
+const DEFAULT_SKILLS_DIR = join(HOOKS_DIR, '..', 'skills', 'edgeone-makers-tools', 'references');
 const WRITE_TOOL_NAMES = new Set(['Edit', 'Write', 'replace_in_file', 'write_to_file']);
 const WRITE_CONTENT_KEYS = ['content', 'new_string', 'new_str', 'newString', 'text'];
 const PATH_KEYS = ['file_path', 'filePath', 'path', 'target_file'];
@@ -113,11 +115,11 @@ function parseSkillValidateRule(skillPath) {
 }
 
 /**
- * 读取各 skill 声明的 validate 规则。
+ * 读取各能力声明的 validate 规则。
  *
  * 读不到就返回空数组，绝不抛错：本函数跑在 PreToolUse 钩子里，
- * 模型每写一个文件都会经过它。skills/ 不存在（部分安装、CLAUDE_PLUGIN_ROOT
- * 解析错位）时若抛 ENOENT，用户每次写文件都会看到一次报错。
+ * 模型每写一个文件都会经过它。references/ 不存在（部分安装、
+ * CLAUDE_PLUGIN_ROOT 解析错位）时若抛 ENOENT，用户每次写文件都会看到一次报错。
  * 校验器失效的正确表现是「不提醒」，而不是「报错」。
  */
 export function loadSkillValidateRules(skillsDir = DEFAULT_SKILLS_DIR) {
@@ -168,9 +170,9 @@ function getToolWriteContent(payload) {
 /**
  * 返回所有 pathPatterns 命中该路径的规则。
  *
- * 不能只取第一条：规则按 skills/ 的字母序加载，而 `agents/**` 与
+ * 不能只取第一条：规则按目录字母序加载，而 `agents/**` 与
  * `cloud-functions/**` 这类前缀天然会重叠。只取首条等于让「哪条铁律生效」
- * 由目录名的字母序偶然决定，多个 skill 共管同一路径时会静默丢提醒。
+ * 由目录名的字母序偶然决定，多个能力共管同一路径时会静默丢提醒。
  */
 function findSkillsForPath(filePath, rules) {
   if (!filePath) return [];

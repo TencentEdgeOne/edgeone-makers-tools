@@ -10,26 +10,16 @@ Official AI Agent Skills for developing and deploying projects on [EdgeOne Maker
 npx skills add TencentEdgeOne/edgeone-makers-tools
 ```
 
-This installs **9 independent sub-skills** (one per capability) into your
-agent's skills directory (`.codebuddy/skills/<name>/`, `.claude/skills/<name>/`,
-`.cursor/skills/<name>/`, …). Your agent loads only the matching skill per
-task — no router indirection.
+This installs **one skill — `edgeone-makers-tools`** into your agent's skills
+directory (`.codebuddy/skills/edgeone-makers-tools/`, `.claude/skills/edgeone-makers-tools/`,
+`.cursor/skills/edgeone-makers-tools/`, …). Its `SKILL.md` is a router that loads the
+matching capability under `references/` on demand — one skill in your list, full
+coverage inside.
 
 ### Option B — CodeBuddy plugin marketplace / SkillHub
 
 Search and install `edgeone-makers-tools` from the CodeBuddy plugin marketplace or
-SkillHub. These platforms install the skill from the
-[`skillhub`](https://github.com/TencentEdgeOne/edgeone-makers-tools/tree/skillhub)
-branch, which adds a frontmatter to the root `SKILL.md` so the platform can
-register it as a single root skill (it then routes to the same 9 sub-skills
-internally).
-
-> Why two branches? The two install ecosystems have **incompatible
-> requirements** on the root `SKILL.md` (one wants no frontmatter, the other
-> requires one). The `main` branch is optimized for `npx skills add`; the
-> `skillhub` branch is optimized for CodeBuddy / SkillHub. See
-> [`BRANCH.md`](https://github.com/TencentEdgeOne/edgeone-makers-tools/blob/skillhub/BRANCH.md)
-> on the `skillhub` branch for the maintenance flow.
+SkillHub. They register the same single `edgeone-makers-tools` skill.
 
 ### Option C — Claude Code plugin marketplace
 
@@ -40,9 +30,11 @@ internally).
 
 After installation, your AI coding agent will automatically detect relevant tasks and load the right skill.
 
-## Skills
+## Capabilities
 
-| Skill | Description |
+The single `edgeone-makers-tools` skill routes to these capabilities (each lives under `skills/edgeone-makers-tools/references/<name>/`):
+
+| Capability | Description |
 |-------|-------------|
 | `makers-agents` | AI Agent development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI) |
 | `makers-deploy` | Deploy projects to EdgeOne |
@@ -52,6 +44,8 @@ After installation, your AI coding agent will automatically detect relevant task
 | `makers-middleware` | Middleware (auth, rewrites, routing) |
 | `makers-cli` | CLI command reference |
 | `makers-recipes` | Project structure templates & scaffolding |
+| `makers-migration` | Migrate existing agent projects to EdgeOne Makers |
+| `makers-env-adaption` | Environment adaptation (WorkBuddy / sandbox / CI) |
 
 ## Usage Examples
 
@@ -99,34 +93,32 @@ Create a Claude Agent SDK endpoint with sandbox code execution
 
 ## Skill Structure
 
+One skill, capabilities bundled as reference docs it routes to on demand:
+
 ```
 skills/
-├── makers-agents/               # AI Agent development
-│   ├── SKILL.md                 # Decision tree, red lines, framework routing
-│   └── references/
-│       ├── platform/            # Entry conventions, env, SSE protocol
-│       ├── capabilities/        # Store, sandbox, tools
-│       ├── node-frameworks/     # Claude SDK, LangGraph, OpenAI Agents, DeepAgents
-│       └── python-frameworks/   # Claude SDK, LangGraph, OpenAI Agents, DeepAgents, CrewAI
-├── makers-deploy/               # Deployment workflow
-│   ├── SKILL.md
-│   └── references/
-├── makers-edge-functions/       # V8 edge runtime
-│   └── SKILL.md
-├── makers-cloud-functions/      # Node.js / Go / Python
-│   ├── SKILL.md
-│   └── references/
-├── makers-storage/              # KV + Blob storage
-│   └── SKILL.md
-├── makers-middleware/           # Request interception
-│   └── SKILL.md
-├── makers-cli/                  # CLI commands
-│   └── SKILL.md
-└── makers-recipes/              # Project templates
-    └── SKILL.md
+└── edgeone-makers-tools/
+    ├── SKILL.md                     # Router — matches the task, loads a capability below
+    └── references/
+        ├── makers-agents/           # AI Agent development
+        │   ├── SKILL.md             # Decision tree, red lines, framework routing
+        │   └── references/
+        │       ├── platform/        # Entry conventions, env, SSE protocol
+        │       ├── capabilities/    # Store, sandbox, tools
+        │       ├── node-frameworks/     # Claude SDK, LangGraph, OpenAI Agents, DeepAgents
+        │       └── python-frameworks/   # Claude SDK, LangGraph, OpenAI Agents, DeepAgents, CrewAI
+        ├── makers-deploy/           # Deployment workflow
+        ├── makers-edge-functions/   # V8 edge runtime
+        ├── makers-cloud-functions/  # Node.js / Go / Python
+        ├── makers-storage/          # KV + Blob storage
+        ├── makers-middleware/       # Request interception
+        ├── makers-cli/              # CLI commands
+        ├── makers-recipes/          # Project templates
+        ├── makers-migration/        # Migrate existing agent projects
+        └── makers-env-adaption/     # Sandbox / WorkBuddy / CI adaptation
 ```
 
-Each skill follows the [skill-creator](https://github.com/anthropics/skills) standard:
+The skill follows the [skill-creator](https://github.com/anthropics/skills) standard:
 - `SKILL.md` — YAML frontmatter (name + description) + core instructions
 - `references/` — detailed docs loaded on demand, routed from `SKILL.md`
 

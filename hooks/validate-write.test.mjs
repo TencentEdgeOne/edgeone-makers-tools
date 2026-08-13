@@ -10,7 +10,7 @@ test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.1 loads validate ru
   const rules = await loadSkillValidateRules();
   const edgeFunctions = rules.find((rule) => rule.skill === 'edgeone-makers-edge-functions');
 
-  assert.ok(edgeFunctions, 'edge-functions skill should declare validate rules');
+  assert.ok(edgeFunctions, 'edge-functions capability should declare validate rules');
   assert.deepEqual(edgeFunctions.pathPatterns, ['edge-functions/**', 'functions/**']);
 
   // 断言不变量而不是冻结的数组：每加一条规则都让测试失败，只会逼着人改断言。
@@ -202,7 +202,6 @@ test('plugin-skill-injection-optimization.SIGNAL_LOGGING.3 logs validate matches
     await rm(tmp, { recursive: true, force: true });
   }
 });
-
 test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.7 aggregates matches from every skill whose pathPatterns match', () => {
   const rules = [
     {

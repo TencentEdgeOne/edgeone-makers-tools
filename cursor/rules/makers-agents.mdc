@@ -11,20 +11,10 @@ description: >-
   agent endpoint", "wire LangGraph into Makers", "stream LLM responses with SSE",
   "review my agent template", "use context.store / context.sandbox / context.tools".
   Do NOT trigger for plain Edge Functions, Cloud Functions, or middleware
-  (those don't run AI logic — use edgeone-makers-edge-functions,
-  makers-cloud-functions, or edgeone-makers-middleware instead).
-  Do NOT trigger for deployment workflows (use edgeone-makers-deploy).
+  (those don't run AI logic — use edgeone-pages-dev instead).
+  Do NOT trigger for deployment workflows (use edgeone-pages-deploy).
   Do NOT trigger for generic AI framework development outside
   an EdgeOne Makers project.
-pathPatterns:
-  - agents/**
-validate:
-  - pattern: "process\\.env|os\\.environ"
-    message: "Read env via context.env inside agents/ and cloud-functions/, never process.env or os.environ (Critical Rule 3)."
-  - pattern: "headers\\s*\\.\\s*get\\s*\\("
-    message: "Headers are plain objects here: context.request.headers['x-name'], not .get('x-name') (Critical Rule 4)."
-  - pattern: "langgraphStore\\s*\\?\\?\\s*store"
-    message: "Never write `store?.langgraphStore ?? store` — in cloud-function context it falls back to a store with no .get and crashes (Critical Rule 12)."
 metadata:
   author: edgeone
   version: "1.0.0"
@@ -48,11 +38,11 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 - Calling sandbox or platform tools via `context.sandbox` / `context.tools`
 - Splitting AI inference (`agents/`) from data CRUD (`cloud-functions/`)
 
-> Cross-reference: if your code uses `context.store` or KV APIs, also read [makers-storage/SKILL.md](../makers-storage/SKILL.md).
+> Cross-reference: if your code uses `context.store` or KV APIs, also read `../makers-storage/SKILL.md`.
 
 **Do NOT use for:**
-- Plain Edge Functions / Cloud Functions / Middleware → use `edgeone-makers-edge-functions`, `makers-cloud-functions`, or `edgeone-makers-middleware`
-- Deployment workflows → use `edgeone-makers-deploy`
+- Plain Edge Functions / Cloud Functions / Middleware → use `edgeone-pages-dev`
+- Deployment workflows → use `edgeone-pages-deploy`
 - Generic AI framework development outside an EdgeOne Makers project
 - Other platforms (Cloudflare Workers AI, Vercel AI SDK, AWS Bedrock)
 
@@ -251,8 +241,6 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 | LangGraph (Python) | [python-frameworks/langgraph.md](references/python-frameworks/langgraph.md) |
 | DeepAgents (Python) | [python-frameworks/deepagents.md](references/python-frameworks/deepagents.md) |
 | CrewAI (Python only) | [python-frameworks/crewai.md](references/python-frameworks/crewai.md) |
-| CrewAI — tool integration, review checklist, pitfalls | [python-frameworks/crewai-integration.md](references/python-frameworks/crewai-integration.md) |
-| Python runtime conventions (all Python routes) | [python-frameworks/python-runtime-conventions.md](references/python-frameworks/python-runtime-conventions.md) |
 | Review checklist | [review-checklist.md](references/review-checklist.md) |
 
 ---

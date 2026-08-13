@@ -86,6 +86,11 @@ export function formatReport(summary) {
   return lines.join('\n');
 }
 
+/**
+ * 扫描根固定为 skills/，而不是单个 skill 的 references/ 目录。
+ * 这样 checkFileManifest 拼出的 `skills/...` 前缀与 _meta.json 的 files 一致，
+ * findMissingTocs 的 SKILL.md 豁免也能同时覆盖路由页与各 capability 的 SKILL.md。
+ */
 export function main(skillsDir = join(REPO_ROOT, 'skills')) {
   const summary = summarize(collect(skillsDir));
   console.log(formatReport(summary));

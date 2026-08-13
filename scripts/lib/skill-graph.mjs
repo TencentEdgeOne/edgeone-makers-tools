@@ -178,10 +178,20 @@ const ANCHOR_LINK_TARGET = /\]\(#[^)]*\)/g;
  * 一个权限异常的文件不该把整份报告换成裸栈。漏读的文件由
  * findBrokenLinks 那条 unreadable 记录负责报出来。
  */
+/**
+ * 收集所有 SKILL.md frontmatter 声明的 name。
+ *
+ * 不能只看 root 的直接子目录：单 skill 路由结构下，
+ * skills/edgeone-makers-tools/SKILL.md 是路由页，
+ * 各能力的 SKILL.md 藏在 references/<capability>/ 里，
+ * 只扫一层会把 10 个真实存在的名字全判成悬空。
+ * 改为遍历任意深度的 SKILL.md，兼容扁平与嵌套两种布局。
+ */
 export function listDeclaredSkillNames(root) {
   const names = new Set();
-  for (const dir of listSkillDirs(root)) {
-    const text = readMarkdownText(root, join(dir, 'SKILL.md'));
+  for (const file of listMarkdownFiles(root)) {
+    if (file !== 'SKILL.md' && !file.endsWith('/SKILL.md')) continue;
+    const text = readMarkdownText(root, file);
     if (text === null) continue;
     const match = /^name:\s*(.+)$/m.exec(text);
     if (match) names.add(match[1].trim().replace(/^["']|["']$/g, ''));
