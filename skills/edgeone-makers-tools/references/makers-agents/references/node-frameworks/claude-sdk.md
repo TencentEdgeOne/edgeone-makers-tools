@@ -86,7 +86,6 @@ async function resolveClaudeSessionBinding(
     if (sessionId) {
       const info = await getSessionInfo(sessionId, { dir: cwd, sessionStore });
       if (info) {
-        logger.log(`[session] resume Claude SDK sessionId=${sessionId}`);
         return { resume: sessionId };              // transcript exists → resume
       }
       return { sessionId };                        // new session
@@ -127,7 +126,7 @@ async function resolveLegacySessionBinding(
 >
 > **Important**: Claude SDK has its own session/`resume`/`fork` mechanism via `context.store.claudeSessionStore()` (no-arg — unique to the Claude SDK). **Do not mix this with a langgraph checkpointer** — the two state models are incompatible. See [`langgraph.md`](./langgraph.md) for the langgraph-style alternative.
 >
-> **Transcript lifecycle**: the Claude transcript lives in the runtime SessionStore (`claude_sessions/...`), not process memory — that is what makes resume survive a process restart. Deleting the conversation via `store.deleteConversation(conversationId)` cleans the mapping and the transcript.
+> **Transcript lifecycle**: the transcript lives in the runtime SessionStore (`claude_sessions/...`) — not process memory — which is what makes resume survive a restart. Mapping and deletion semantics: see `capabilities/store.md` §7.2 / §7.4.
 
 ### 4. Sandbox readiness probe + file upload (with cold-start retry)
 ```typescript

@@ -160,7 +160,7 @@ async def resolve_session_binding(ctx) -> dict:
 
 > ⚠️ The Python Claude Agent SDK session mechanism mirrors the Node version. Use `ctx.store` for persistence — do not mix with LangGraph checkpointer.
 >
-> **Transcript lifecycle**: the transcript lives in the runtime SessionStore (`claude_sessions/...`), not process memory — that is what makes resume survive a process restart. Deleting the conversation via `ctx.store.delete_conversation(conversation_id)` cleans the mapping and the transcript.
+> **Transcript lifecycle**: the transcript lives in the runtime SessionStore (`claude_sessions/...`) — not process memory — which is what makes resume survive a restart. Mapping and deletion semantics: see `capabilities/store.md` §7.2 / §7.4.
 
 ### 4. /stop endpoint
 
