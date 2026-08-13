@@ -87,7 +87,7 @@ Do not pass these — they have no effect and will mislead the user:
 
 `suggestion` is only present for the rate-limit case. `errorCode` may be absent for generic failures.
 
-⛔ **Never print `claimCommand` to the user.** Sandboxed IDEs (WorkBuddy and similar) give the user no terminal, so they cannot run it — and non-technical users cannot read it anyway. Show the `claimUrl` link and stop there; do not also offer to claim on their behalf. `claimCommand` exists for **you** to execute, and only when the user explicitly asks you to.
+⛔ **Never print `claimCommand` to the user.** Sandboxed IDEs (WorkBuddy and similar) give the user no terminal, so they cannot run it — and non-technical users cannot read it anyway. Show the `claimUrl` link and stop there. When the user asks you to claim it for them, **open the claim link in their browser** — that is what claiming means. `claimCommand` is a fallback for headless/CI environments with no browser, executed by you, never displayed.
 
 ---
 
@@ -220,11 +220,17 @@ The backend claims **asynchronously** and only migrates projects whose deploymen
 
 ## Claim flow
 
-Two independent routes. Pick by who acts:
+**Route A — open the claim page in the user's browser. This is the flow, and the only one you present.** Present the `claimUrl` link in the result. When the user asks you to claim it for them, open it for them:
 
-**Route A — the user claims in the browser. This is the flow, and the only one you present.** Give them the `claimUrl` link. They sign in and the project transfers. Nothing to run, and no alternative to offer.
+```bash
+open "<claimUrl>"          # macOS (local, or WorkBuddy host)
+xdg-open "<claimUrl>"      # Linux
+start "" "<claimUrl>"      # Windows
+```
 
-**Route B — you claim on their behalf. Fallback only**, when the user explicitly asks you to. Do not advertise it:
+Then confirm plainly: the claim page is open, please sign in there. Do not re-paste the URL or add guidance. Nothing else to run.
+
+**Route B — CLI claim. Fallback only**, for headless/CI environments where no browser can be opened. Never advertise it, never show the command to the user:
 
 1. **Deploy must have succeeded.** Only `Success` deployments are migrated.
 2. **Log in.** In an interactive environment the CLI opens a browser when needed; in CI, pass `-t <api-token>`.
@@ -276,4 +282,4 @@ edgeone makers claim --json     # reads .edgeone/anonymous.json
 
 After an anonymous deploy, present the result using the **fixed template in [SKILL.md](../SKILL.md) Step 4** — do not assemble your own message. Substitute only the URL and the claim link; translate it into the user's language; add nothing.
 
-It carries exactly three things, and that is deliberate: the access URL, the `claimUrl` link (**never** the `claimCommand`, and no offer to claim for them), and that the link expires in 60 minutes (**never** the raw `expiresAt` value).
+It carries exactly three things, and that is deliberate: the access URL, the `claimUrl` link (**never** the `claimCommand`), and that the link expires in 60 minutes (**never** the raw `expiresAt` value).

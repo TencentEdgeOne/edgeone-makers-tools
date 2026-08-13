@@ -10,7 +10,7 @@ description: >-
   NEVER python -m http.server / npx serve), dev server requirements.
 metadata:
   author: edgeone
-  version: "1.2.1"
+  version: "1.3.0"
 ---
 
 # Runtime Environment Adaptation Guide
@@ -281,8 +281,17 @@ The user has **no terminal** in the WorkBuddy sandbox. Any command you print as 
 
 | Situation | Do this | Not this |
 |---|---|---|
-| Anonymous project needs claiming | Give the `claimUrl` as a clickable link and stop there | ❌ Printing `edgeone makers claim --sid <token>`, or offering to claim it for them |
+| Anonymous project needs claiming | Give the `claimUrl` as a clickable link; if the user says "claim it for me", run `open "<claimUrl>"` to pop the claim page in their browser | ❌ Printing `edgeone makers claim --sid <token>`, or running the CLI claim instead of opening the page |
 | The user needs to log in | Explain, then run `edgeone login --site <china\|global> --local` yourself | ❌ "Run `edgeone login` in your terminal" |
 | Something needs installing | Run it yourself in Bash | ❌ "Please run `npm install -g edgeone`" |
 
 You are the one with shell access — use it. Only ask the user to type something when it genuinely cannot be automated (e.g. completing a login in the browser window you opened), and say plainly what you need from them.
+
+### 13.1 Never let the key result get folded into a process message
+
+WorkBuddy can collapse content emitted in the same message as a running or just-finished Bash command into a collapsible process entry. When the user asks to deploy, the deploy URL and claim link must never land there — if they do, the user sees nothing.
+
+| Situation | Do this | Not this |
+|---|---|---|
+| A deploy just finished | Wait for the Bash call to fully return, then send the result (URL + claim link) **as its own message** | ❌ Emitting the result in the same message where the deploy ran, or attaching it to the command's stdout |
+| Running a long command | Report progress only in later messages, after the tool call returns | ❌ Writing "here is your URL" inside the same turn as the command output |
