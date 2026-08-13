@@ -376,6 +376,7 @@ Parse the **last line** of stdout as JSON (human-readable output precedes it). F
 
 **Chinese-speaking user — emit exactly this:**
 
+> 🎉 匿名部署成功
 > 🌐 **访问地址**：`<url>`
 >
 > ---
