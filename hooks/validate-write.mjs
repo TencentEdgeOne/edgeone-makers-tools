@@ -114,12 +114,32 @@ function parseSkillValidateRule(skillPath) {
   };
 }
 
+/**
+ * 读取各能力声明的 validate 规则。
+ *
+ * 读不到就返回空数组，绝不抛错：本函数跑在 PreToolUse 钩子里，
+ * 模型每写一个文件都会经过它。references/ 不存在（部分安装、
+ * CLAUDE_PLUGIN_ROOT 解析错位）时若抛 ENOENT，用户每次写文件都会看到一次报错。
+ * 校验器失效的正确表现是「不提醒」，而不是「报错」。
+ */
 export function loadSkillValidateRules(skillsDir = DEFAULT_SKILLS_DIR) {
   if (skillsDir === DEFAULT_SKILLS_DIR && cachedRules) return cachedRules;
-  const rules = readdirSync(skillsDir, { withFileTypes: true })
+  let entries;
+  try {
+    entries = readdirSync(skillsDir, { withFileTypes: true });
+  } catch {
+    return [];
+  }
+  const rules = entries
     .filter((entry) => entry.isDirectory())
     .map((entry) => join(skillsDir, entry.name, 'SKILL.md'))
-    .map((skillPath) => parseSkillValidateRule(skillPath))
+    .map((skillPath) => {
+      try {
+        return parseSkillValidateRule(skillPath);
+      } catch {
+        return null;
+      }
+    })
     .filter(Boolean);
   if (skillsDir === DEFAULT_SKILLS_DIR) cachedRules = rules;
   return rules;
@@ -147,21 +167,33 @@ function getToolWriteContent(payload) {
   return '';
 }
 
-function findSkillForPath(filePath, rules) {
-  if (!filePath) return null;
-  for (const rule of rules) {
-    if (rule.pathPatterns.some((pattern) => globToRegExp(pattern).test(filePath))) return rule;
-  }
-  return null;
+/**
+ * 返回所有 pathPatterns 命中该路径的规则。
+ *
+ * 不能只取第一条：规则按目录字母序加载，而 `agents/**` 与
+ * `cloud-functions/**` 这类前缀天然会重叠。只取首条等于让「哪条铁律生效」
+ * 由目录名的字母序偶然决定，多个能力共管同一路径时会静默丢提醒。
+ */
+function findSkillsForPath(filePath, rules) {
+  if (!filePath) return [];
+  return rules.filter((rule) =>
+    rule.pathPatterns.some((pattern) => globToRegExp(pattern).test(filePath)),
+  );
 }
 
-function selectValidationMatches(content, rule) {
+/**
+ * 收集全部命中的校验项，message 去重并保留首次出现顺序。
+ * 每项带上来源 skill，供 signal log 归因。
+ */
+function selectValidationMatches(content, matchedRules) {
   const seen = new Set();
   const matches = [];
-  for (const item of rule.validate) {
-    if (new RegExp(item.pattern).test(content) && !seen.has(item.message)) {
+  for (const rule of matchedRules) {
+    for (const item of rule.validate) {
+      if (!new RegExp(item.pattern).test(content)) continue;
+      if (seen.has(item.message)) continue;
       seen.add(item.message);
-      matches.push(item);
+      matches.push({ ...item, skill: rule.skill });
     }
   }
   return matches;
@@ -176,13 +208,13 @@ export function buildValidateWriteOutput(payload, options = {}) {
   const content = getToolWriteContent(payload);
   if (!content) return null;
 
-  const rule = findSkillForPath(
+  const matchedRules = findSkillsForPath(
     getToolPath(getToolInput(payload)),
     options.rules || loadSkillValidateRules(),
   );
-  if (!rule) return null;
+  if (matchedRules.length === 0) return null;
 
-  const matches = selectValidationMatches(content, rule);
+  const matches = selectValidationMatches(content, matchedRules);
   if (matches.length === 0) return null;
 
   if (shouldWriteSignalLog(options)) {
@@ -191,7 +223,7 @@ export function buildValidateWriteOutput(payload, options = {}) {
         {
           hook: 'PreToolUse',
           trigger: 'validate',
-          matchedSkill: rule.skill,
+          matchedSkill: match.skill,
           reason: match.message,
           toolName: getToolName(payload),
         },
@@ -216,17 +248,33 @@ async function readStdin() {
   return input;
 }
 
+/**
+ * 钩子入口。任何异常都吞掉并静默返回：
+ * 这段代码挡在模型每一次 Edit/Write 前面，宁可漏一次提醒，
+ * 也不能因为自身出错（stdin 不是合法 JSON、规则读不到等）
+ * 让用户每写一个文件都看到一次报错。
+ */
 export async function main() {
-  const rawInput = await readStdin();
-  const payload = rawInput.trim() ? JSON.parse(rawInput) : {};
-  const output = buildValidateWriteOutput(payload, { enableSignalLog: true });
+  let payload;
+  try {
+    const rawInput = await readStdin();
+    payload = rawInput.trim() ? JSON.parse(rawInput) : {};
+  } catch {
+    return;
+  }
+
+  let output;
+  try {
+    output = buildValidateWriteOutput(payload, { enableSignalLog: true });
+  } catch {
+    return;
+  }
+
   if (!output) return;
   process.stdout.write(`${JSON.stringify(output, null, 2)}\n`);
 }
 
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
-  main().catch((error) => {
-    console.error(error instanceof Error ? error.message : String(error));
-    process.exit(1);
-  });
+  // main() 内部已兜住所有异常；这里再兜一层，保证退出码始终是 0。
+  main().catch(() => {});
 }

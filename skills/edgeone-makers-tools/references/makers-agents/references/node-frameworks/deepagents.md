@@ -1,5 +1,13 @@
 # DeepAgents (Node)
 
+## Contents
+
+- [Dependencies](#dependencies)
+- [When to Pick DeepAgents](#when-to-pick-deepagents)
+- [Core Pattern](#core-pattern)
+- [Memory](#memory)
+- [Review Checklist](#review-checklist)
+
 > Use when: long-running tasks with automatic context compression, sub-agent orchestration, middleware (retry/call-limit).
 > Core pattern: `createDeepAgent({ model, systemPrompt, tools, middleware })` + `agent.stream({ messages }, { streamMode })`.
 

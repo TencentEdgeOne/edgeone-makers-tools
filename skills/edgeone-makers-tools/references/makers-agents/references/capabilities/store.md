@@ -1,5 +1,17 @@
 # Memory / Store Cheat Sheet (Five Frameworks → context.store Adapters)
 
+## Contents
+
+- [0. One-Sentence Mental Model](#0-one-sentence-mental-model)
+- [1. Two Entry Points (First Decide Which Directory the Endpoint Lives In)](#1-two-entry-points-first-decide-which-directory-the-endpoint-lives-in)
+- [2. Five-Framework Adapter Matrix (Core Cheat Sheet)](#2-five-framework-adapter-matrix-core-cheat-sheet)
+- [3. API Signature Essentials (**single-object input — do not use two-arg form**)](#3-api-signature-essentials-single-object-input-do-not-use-two-arg-form)
+- [4. Copy-Paste Snippets](#4-copy-paste-snippets)
+- [5. Limits Cheat Sheet](#5-limits-cheat-sheet)
+- [6. Choosing the Right Storage](#6-choosing-the-right-storage)
+- [Python Store API (Route E and future Python routes)](#python-store-api-route-e-and-future-python-routes)
+- [7. Review Red Lines (Spot Issues in 5 Seconds)](#7-review-red-lines-spot-issues-in-5-seconds)
+
 > One-page reference: on EdgeOne Makers, which store entry point each Agent framework should use, how short-term/long-term memory is wired up, and how cloud-functions read it.
 
 ---

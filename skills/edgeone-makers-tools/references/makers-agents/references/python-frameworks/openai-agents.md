@@ -1,5 +1,14 @@
 # Route C (Python): OpenAI Agents SDK
 
+## Contents
+
+- [Dependencies](#dependencies)
+- [When to Use This Route (Python)](#when-to-use-this-route-python)
+- [Core Pattern Breakdown](#core-pattern-breakdown)
+- [Key Differences from Node Route C](#key-differences-from-node-route-c)
+- [Review Checklist (Python OpenAI Agents)](#review-checklist-python-openai-agents)
+- [See Also](#see-also)
+
 > Use when: multi-agent collaboration (`handoff`), `guardrails`, or scenarios that need `Session` to auto-prepend history.
 > Core pattern: `Agent` + `Runner.run()` streaming + session + event-to-SSE mapping.
 > Python runtime — see [../platform/python-entry.md](./../platform/python-entry.md) for entry signature, ctx object, and SSE conventions.

@@ -1,5 +1,17 @@
 # Tools Registry (context.tools)
 
+## Contents
+
+- [2.1 ToolsContext Interface (@edgeone/pages-agent-toolkit)](#21-toolscontext-interface-edgeonepages-agent-toolkit)
+- [2.2 Three Types of Tool Access](#22-three-types-of-tool-access)
+- [2.3 Framework-Specific Tool Wiring](#23-framework-specific-tool-wiring)
+- [2.4 Code Examples Per Framework](#24-code-examples-per-framework)
+- [2.5 Getting a Single Tool / Group](#25-getting-a-single-tool-group)
+- [⭐ web_search Configuration Requirements](#websearch-configuration-requirements)
+- [web_search Return Value](#websearch-return-value)
+- [web_search Input Parameters](#websearch-input-parameters)
+- [web_search vs browser_* — when to use which](#websearch-vs-browser-when-to-use-which)
+
 > Covers: ToolsContext interface, agents.framework-driven shape, 5-framework integration, built-in tools inventory.
 
 ---

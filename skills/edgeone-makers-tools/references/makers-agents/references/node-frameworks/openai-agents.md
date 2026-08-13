@@ -1,5 +1,14 @@
 # Route C: OpenAI Agents SDK (`@openai/agents`)
 
+## Contents
+
+- [Dependencies](#dependencies)
+- [When to use Route C](#when-to-use-route-c)
+- [Core pattern breakdown](#core-pattern-breakdown)
+- [Route C review checklist](#route-c-review-checklist)
+- [Frontend call examples](#frontend-call-examples)
+- [Quick diff vs. other frameworks](#quick-diff-vs-other-frameworks)
+
 > Use when: multi-agent collaboration (`handoff`), `guardrails`, or scenarios that need `Session` to auto-prepend history.
 > Core pattern: `Agent` + `run()` streaming + `context.store.openaiSession()` + event-to-SSE mapping.
 

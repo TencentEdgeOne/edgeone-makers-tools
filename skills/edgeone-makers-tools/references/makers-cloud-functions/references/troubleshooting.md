@@ -1,5 +1,15 @@
 # Debugging & Troubleshooting
 
+## Contents
+
+- [Local Preview / Dev Server Verification](#local-preview-dev-server-verification)
+- [General Issues](#general-issues)
+- [Edge Functions](#edge-functions)
+- [KV Storage](#kv-storage)
+- [Cloud Functions — Node.js](#cloud-functions-nodejs)
+- [Cloud Functions — Go](#cloud-functions-go)
+- [Cloud Functions — Python](#cloud-functions-python)
+
 ## Local Preview / Dev Server Verification
 
 > **Scope: WorkBuddy only.** The symptoms and conclusions below were verified by hands-on testing in the **WorkBuddy** environment.

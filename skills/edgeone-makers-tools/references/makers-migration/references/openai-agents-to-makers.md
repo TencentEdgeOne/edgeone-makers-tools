@@ -1,5 +1,11 @@
 # Migration: OpenAI Agents SDK (`@openai/agents`) → EdgeOne Makers
 
+## Contents
+
+- [Node](#node)
+- [Python equivalent](#python-equivalent)
+- [Conversion Checklist](#conversion-checklist)
+
 OpenAI Agents SDK has no special server format — it runs anywhere Node runs. The migration is about: routing the model through AI Gateway, replacing hand-built tools with `context.tools.all()`, swapping hand-managed history for `openaiSession`, and mapping SDK stream events to Makers SSE.
 
 ---

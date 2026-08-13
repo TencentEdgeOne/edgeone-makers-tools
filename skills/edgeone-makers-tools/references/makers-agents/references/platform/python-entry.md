@@ -1,5 +1,19 @@
 # Python Agent Runtime Convention
 
+## Contents
+
+- [Prerequisites](#prerequisites)
+- [1. Entry Signature](#1-entry-signature)
+- [2. Context Object (`ctx`)](#2-context-object-ctx)
+- [3. SSE Streaming](#3-sse-streaming)
+- [4. Return Values](#4-return-values)
+- [5. Memory / Store API](#5-memory-store-api)
+- [6. Abort / Stop Convention](#6-abort-stop-convention)
+- [7. Node ↔ Python Naming Mapping](#7-node-python-naming-mapping)
+- [8. Blocking Code (Critical for Python)](#8-blocking-code-critical-for-python)
+- [9. File Routing (same as Node)](#9-file-routing-same-as-node)
+- [See Also](#see-also)
+
 > The Python agent runtime is an ASGI application (uvicorn). It shares the same platform conventions as the Node runtime (file-based routing, `makers-conversation-id` header contract, SSE protocol, etc.), but uses Python idioms.
 > Applies to: Route E (CrewAI) and any future Python-based routes (LangGraph Python, DeepAgents Python, etc.).
 

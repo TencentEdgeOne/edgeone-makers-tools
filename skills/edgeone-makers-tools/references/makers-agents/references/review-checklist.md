@@ -1,5 +1,20 @@
 # EdgeOne Makers Agent Review Checklist
 
+## Contents
+
+- [A. Directory Structure](#a-directory-structure)
+- [B. Entry Point & Signature](#b-entry-point-signature)
+- [C. Environment Variables & Models](#c-environment-variables-models)
+- [D. SSE Protocol (where consistency tends to slip)](#d-sse-protocol-where-consistency-tends-to-slip)
+- [E. Conversation ID & the /stop Dual Channel](#e-conversation-id-the-stop-dual-channel)
+- [F. Robustness](#f-robustness)
+- [G. Sandbox / Tools](#g-sandbox-tools)
+- [H. Memory / Persistence (built on the official context.store API)](#h-memory-persistence-built-on-the-official-contextstore-api)
+- [I. Frontend Integration (app/)](#i-frontend-integration-app)
+- [Remediation Table: from "generic Vercel style" → "EdgeOne Makers style"](#remediation-table-from-generic-vercel-style-edgeone-makers-style)
+- [J. Python Routes (Route E and future Python routes)](#j-python-routes-route-e-and-future-python-routes)
+- [Bulk Refactor Workflow (SOP for teammates)](#bulk-refactor-workflow-sop-for-teammates)
+
 > Purpose: when bulk-auditing or refactoring existing templates, walk this list top-to-bottom. Items marked ⚠️ are common foot-guns.
 
 ---

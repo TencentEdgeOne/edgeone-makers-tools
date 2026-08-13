@@ -1,5 +1,11 @@
 # Migration: LangGraph (Node + Python) → EdgeOne Makers
 
+## Contents
+
+- [Node](#node)
+- [Python equivalent](#python-equivalent)
+- [Conversion Checklist](#conversion-checklist)
+
 LangGraph's graph/state API is unchanged on Makers — you only swap three things: model endpoint, checkpointer/store backend, and the HTTP server. This file shows the native format and the exact changes.
 
 ---

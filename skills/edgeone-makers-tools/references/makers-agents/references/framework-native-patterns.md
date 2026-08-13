@@ -1,5 +1,15 @@
 # Native Code Patterns Across Five Frameworks (Migration Reference)
 
+## Contents
+
+- [0. Framework Positioning and Officially Recommended Path](#0-framework-positioning-and-officially-recommended-path)
+- [1. LangGraph](#1-langgraph)
+- [2. OpenAI Agents SDK](#2-openai-agents-sdk)
+- [3. CrewAI](#3-crewai)
+- [4. DeepAgents / LangChain createAgent](#4-deepagents-langchain-createagent)
+- [5. Claude Agent SDK](#5-claude-agent-sdk)
+- [6. Native → Makers Injection Cheat Sheet](#6-native-makers-injection-cheat-sheet)
+
 > ⚠️ **Purpose**: This document shows the **official native patterns** for each Agent framework (i.e. what they look like *without* EdgeOne Makers injection).
 > **Do NOT copy these patterns into Makers templates** — on Makers, models go through the `context.env` gateway, tools come from `context.tools`, and storage comes from `context.store`.
 > Use this file to: ① understand the native shape of each framework, ② see by contrast what Makers injection saves you, ③ help teammates migrate from native usage to Makers.

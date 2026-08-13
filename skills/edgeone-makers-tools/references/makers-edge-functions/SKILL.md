@@ -13,6 +13,8 @@ validate:
     message: "Use plain object headers for this runtime surface."
   - pattern: "fs\\.writeFile"
     message: "Edge Functions do not support filesystem writes."
+  - pattern: "Response\\.json\\s*\\("
+    message: "Response.json() is not available in this V8 runtime — use new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } })."
 metadata:
   author: edgeone
   version: "1.0.0"

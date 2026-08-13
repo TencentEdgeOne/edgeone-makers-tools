@@ -1,5 +1,14 @@
 # Route B (Python): Claude Agent SDK
 
+## Contents
+
+- [Dependencies](#dependencies)
+- [When to Use This Route (Python)](#when-to-use-this-route-python)
+- [Core Pattern Breakdown](#core-pattern-breakdown)
+- [Key Differences from Node Route B](#key-differences-from-node-route-b)
+- [Review Checklist (Python Claude SDK)](#review-checklist-python-claude-sdk)
+- [See Also](#see-also)
+
 > Use when: multi-step agentic flows, sandbox code execution, file processing, session memory.
 > Core pattern: `claude_agent_sdk.query()` + MCP servers + session binding + SSE streaming.
 > Python runtime — see [../platform/python-entry.md](./../platform/python-entry.md) for entry signature, ctx object, and SSE conventions.

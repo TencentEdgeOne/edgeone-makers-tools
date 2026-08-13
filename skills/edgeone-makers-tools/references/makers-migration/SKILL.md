@@ -7,6 +7,12 @@ description: >-
   convert Express/Next.js API routes to Makers handlers, or add platform capabilities
   (context.tools, context.sandbox, context.store).
   Do NOT trigger for new agent projects (use makers-agents instead).
+pathPatterns:
+  - agents/**
+  - cloud-functions/**
+validate:
+  - pattern: "process\\.env|os\\.environ"
+    message: "Migration checklist: replace process.env / os.environ with context.env (TS) or ctx env access (Python)."
 metadata:
   author: edgeone
   version: "1.0.0"

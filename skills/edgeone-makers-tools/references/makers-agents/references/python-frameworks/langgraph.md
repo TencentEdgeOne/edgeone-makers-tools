@@ -1,5 +1,15 @@
 # LangGraph (Python)
 
+## Contents
+
+- [Dependencies](#dependencies)
+- [When to Pick LangGraph (Python)](#when-to-pick-langgraph-python)
+- [Core Pattern](#core-pattern)
+- [Memory](#memory)
+- [Stream Modes](#stream-modes)
+- [Human-in-the-Loop](#human-in-the-loop)
+- [Review Checklist](#review-checklist)
+
 > Use when: fine-grained graph orchestration, custom node/edge control, human-in-the-loop (interrupt/resume), persistent thread state.
 > Core pattern: `StateGraph` + `compile(checkpointer=..., store=...)` + `graph.astream()` → SSE.
 > Python runtime — see [../platform/python-entry.md](./../platform/python-entry.md) for entry signature, ctx object, and SSE conventions.

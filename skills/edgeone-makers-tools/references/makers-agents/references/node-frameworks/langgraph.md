@@ -1,5 +1,15 @@
 # LangGraph (Node)
 
+## Contents
+
+- [Dependencies](#dependencies)
+- [When to Pick LangGraph](#when-to-pick-langgraph)
+- [Core Pattern](#core-pattern)
+- [Memory](#memory)
+- [Stream Modes](#stream-modes)
+- [Human-in-the-Loop](#human-in-the-loop)
+- [Review Checklist](#review-checklist)
+
 > Use when: fine-grained graph orchestration, custom node/edge control, human-in-the-loop (interrupt/resume), persistent thread state.
 > Core pattern: `StateGraph` + `compile({ checkpointer, store })` + `graph.stream()` → SSE.
 
