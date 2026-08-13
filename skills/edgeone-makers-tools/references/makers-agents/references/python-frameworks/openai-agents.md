@@ -171,6 +171,57 @@ async def handler(ctx):
     }
 ```
 
+### 5. Human-in-the-Loop (HITL) — `RunState` persistence
+
+A tool flagged `needs_approval=True` pauses the run mid-execution. The serializable execution snapshot (`RunState`) is kept in `ctx.store.state`, keyed by conversation. A later request restores it with `RunState.from_string`, then approves or rejects.
+
+```python
+from agents import Agent, RunState, Runner, function_tool
+
+@function_tool(needs_approval=True)
+def send_email(to: str, subject: str, body: str) -> str:
+    """Send an email (demo action; always requires human approval)."""
+    return f"Email sent to {to} (demo action)."
+
+async def handler(ctx):
+    body = ctx.request.body or {}
+    conversation_id = str(getattr(ctx, "conversation_id", "") or "").strip()
+    key = f"openai-agents-hitl:{conversation_id}"
+
+    action = body.get("action") if body.get("action") in ("approve", "reject") else None
+    agent = _create_agent(ctx)
+
+    if action:
+        stored = await ctx.store.state.get(key)
+        if not stored:
+            return {"status_code": 404, "body": {"code": "HITL_STATE_MISSING"}}
+        try:
+            state = await RunState.from_string(agent, stored)   # restore the paused run
+        except Exception:
+            return {"status_code": 409, "body": {"code": "HITL_STATE_CORRUPT"}}
+        approval = state.get_interruptions()[0]
+        state.approve(approval) if action == "approve" else state.reject(approval)
+        result = await Runner.run(agent, state=state)           # resume
+    else:
+        result = await Runner.run(agent, body["message"])
+
+    state = result.to_state()
+    pending = state.get_interruptions()
+    if pending:
+        await ctx.store.state.set(key, state.to_string())       # persist for the next request
+        return {"status": "needs_approval", "approval": _approval_summary(pending[0], 0)}
+
+    await ctx.store.state.delete(key)                           # completed → clean up
+    return {"status": "completed", "output": result.final_output or ""}
+```
+
+> Key points:
+> - The serialized `RunState` **never leaves the server** — the browser only sends `{ approved, approvalIndex }`.
+> - Persist via `ctx.store.state.set(key, state.to_string())`; restore via `RunState.from_string(agent, stored)`.
+> - Delete the state key after the run completes (idempotent).
+> - Error semantics: missing → 404 `HITL_STATE_MISSING`, corrupt → 409 `HITL_STATE_CORRUPT`, store unavailable → 503 `HITL_STATE_STORE_UNAVAILABLE`.
+> - Requires a runtime that ships `ctx.store.state` (post-2026-08).
+
 ---
 
 ## Key Differences from Node Route C
@@ -201,6 +252,8 @@ async def handler(ctx):
 - [ ] Stream events mapped: text delta → `ai_response`, tool_called → `tool_call`, tool_output → `tool_result`
 - [ ] Stream ends with `data: [DONE]\n\n`
 - [ ] `/stop` reads body only — no `makers-conversation-id` header
+- [ ] HITL flows persist `RunState` via `ctx.store.state` (`state.to_string()` / `RunState.from_string`), and delete the key after completion
+- [ ] HITL error codes are stable: `HITL_STATE_MISSING` / `HITL_STATE_CORRUPT` → 4xx, `HITL_STATE_STORE_UNAVAILABLE` → 503
 
 ---
 

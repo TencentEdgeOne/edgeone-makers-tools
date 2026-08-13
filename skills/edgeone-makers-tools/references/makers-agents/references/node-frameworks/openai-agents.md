@@ -247,6 +247,68 @@ async function readJsonBody(context: any) {
 ```
 > ⚠️ Inside a cloud-function, `context.request.body` behaves the same as in the agent runtime (already-parsed object), but some older templates/routes also expose an async `context.request.json()` as a fallback. Prefer `context.request.body`.
 
+### 8. Human-in-the-Loop (HITL) — `RunState` persistence
+
+A tool flagged `needsApproval: true` pauses the run mid-execution. EdgeOne Makers persists the serializable execution snapshot (`RunState`) through `context.store.state`, keyed by conversation. A later request restores it with `RunState.fromString`, then approves or rejects.
+
+```typescript
+import { Agent, OpenAIChatCompletionsModel, RunState, run, tool } from '@openai/agents';
+import { z } from 'zod';
+
+const RUN_STATE_KEY = 'openai.run-state';
+
+// Tool that must wait for human approval
+const submitOrder = tool({
+  name: 'submit_order',
+  description: 'Submit an order after the user explicitly asks you to place it.',
+  parameters: z.object({ order: z.string() }),
+  needsApproval: true,
+  execute: async ({ order }) => `order-submitted:${order}`,
+});
+
+export async function onRequest(context: any) {
+  const { store, conversation_id, request } = context;
+  const key = RUN_STATE_KEY;
+
+  // 1) Resume path — approve / reject a pending RunState
+  if (request.body.action === 'approve' || request.body.action === 'reject') {
+    const stored = await store.state.get<string>(key);
+    if (!stored) {
+      return json({ code: 'AGENT_STATE_NOT_FOUND', message: 'No pending approval exists.' }, 409);
+    }
+    let state: RunState<any, any>;
+    try {
+      state = await RunState.fromString(agent, stored);      // restore the paused run
+    } catch {
+      return json({ code: 'AGENT_STATE_CORRUPT', message: 'The pending approval state is corrupt' }, 409);
+    }
+    const interruptions = state.getInterruptions();
+    const approval = interruptions[request.body.approvalIndex ?? 0];
+    if (request.body.approved === true) state.approve(approval);
+    else if (request.body.approved === false) state.reject(approval, { message: 'User rejected this action.' });
+    const result = await run(agent, state, { signal: request.signal });   // resume
+    // …same pending/completed handling as below…
+  }
+
+  // 2) Start path — run the agent, persist the snapshot if it pauses
+  const result = await run(agent, request.body.message, { signal: request.signal });
+  const pending = result.state.getInterruptions();
+  if (pending.length > 0) {
+    await store.state.set(key, result.state.toString());      // persist for the next request
+    return json({ status: 'awaiting_approval', interruptions: [/* summary of pending[0] */] });
+  }
+  await store.state.delete(key);                               // completed → clean up
+  return json({ status: 'completed', output: result.finalOutput ?? '' });
+}
+```
+
+> Key points:
+> - The serialized `RunState` **never leaves the server** — the browser only sends `{ approved, approvalIndex }`.
+> - Persist via `context.store.state.set(key, state.toString())`; restore via `RunState.fromString(agent, stored)`.
+> - Delete the state key after the run completes (idempotent).
+> - Error semantics: missing → `AGENT_STATE_NOT_FOUND` (409), corrupt → `AGENT_STATE_CORRUPT` (409), store unavailable → `HITL_STATE_STORE_UNAVAILABLE` (503).
+> - Requires a runtime that ships `context.store.state` (post-2026-08).
+
 ---
 
 ## Route C review checklist
@@ -259,6 +321,8 @@ async function readJsonBody(context: any) {
 - [ ] Error classification: silence `AbortError` / "terminated"; emit everything else as `error_message`
 - [ ] `/stop` uses only the body `{ conversation_id }`; **does not** send the `makers-conversation-id` header
 - [ ] `/history` uses `context.agent.store.getMessages({ conversationId, limit })` (**single-object input**)
+- [ ] HITL flows persist `RunState` via `context.store.state` (`state.toString()` / `RunState.fromString`), and delete the key after completion
+- [ ] HITL error codes are stable: `AGENT_STATE_NOT_FOUND` / `AGENT_STATE_CORRUPT` → 409, `HITL_STATE_STORE_UNAVAILABLE` → 503
 - [ ] `context.request.headers['x-foo']` uses index access — **not** `.get('x-foo')`
 - [ ] ⭐ The frontend includes the `makers-conversation-id` header when calling `/chat`; **omits** it when calling `/stop` (uses the body instead)
 

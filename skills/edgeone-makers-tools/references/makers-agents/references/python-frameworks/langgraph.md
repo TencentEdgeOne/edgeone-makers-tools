@@ -197,6 +197,40 @@ config = {"configurable": {"thread_id": ctx.conversation_id}}
 
 LangGraph supports `interrupt` / `resume`. When `interrupt()` is called inside a node, the graph pauses and raises `GraphInterrupt`. The Python runtime handles this gracefully (not treated as an error).
 
+### Cross-process recovery (why it works)
+
+Checkpoints are persisted to the platform Blob via `ctx.store.langgraph_checkpointer` — **not** process memory. The checkpointer reads with strong consistency on every `get_tuple`, so the state survives a process restart / instance replacement:
+
+```
+start (interrupt() 落盘 checkpoint)
+  → process killed / instance recycled
+  → new process, same makers-conversation-id
+  → action:resume / graph.ainvoke(Command(resume=...), { configurable: { thread_id } })
+    → state restored from Blob, continues from the checkpoint
+```
+
+The checkpoint key is `langgraph_checkpoints/{thread_id}/...` where `thread_id = conversation_id`. Any instance handling the same `makers-conversation-id` reads the same keys.
+
+### Resuming a paused thread
+
+```python
+# Resume an interrupted thread from a new request / new process
+await graph.ainvoke(Command(resume=user_answer), {"configurable": {"thread_id": ctx.conversation_id}})
+```
+
+### Cleaning up — `delete_thread`
+
+Deleting a conversation via `ctx.store.delete_conversation(conversation_id)` cascades to LangGraph checkpoints through `delete_thread`:
+
+```python
+checkpointer = ctx.store.langgraph_checkpointer
+await checkpointer.delete_thread(conversation_id)   # removes langgraph_checkpoints/<thread>/...
+```
+
+### Corrupt checkpoint semantics — `MemoryCorruptError`
+
+If the persisted checkpoint JSON cannot be parsed, the runtime raises `MemoryCorruptError` instead of silently treating the thread as missing. Catch it and map to a stable error (e.g. `AGENT_STATE_CORRUPT`, HTTP 409); do not fall back to starting a brand-new run over corrupt data.
+
 ---
 
 ## Review Checklist
@@ -209,3 +243,5 @@ LangGraph supports `interrupt` / `resume`. When `interrupt()` is called inside a
 - [ ] Abort signal checked via `ctx.request.signal.is_set()`
 - [ ] SSE uses `ctx.utils.stream_sse(gen())`
 - [ ] Stream ends with `data: [DONE]\n\n`
+- [ ] Corrupt checkpoints caught via `MemoryCorruptError` and mapped to a stable error, not silently restarted
+- [ ] Conversation cleanup goes through `delete_conversation` (cascades `delete_thread`); no orphaned checkpoints

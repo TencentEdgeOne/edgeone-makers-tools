@@ -178,6 +178,42 @@ await graph.invoke(input, { configurable: { thread_id: context.conversation_id }
 
 LangGraph supports `interrupt` / `resume` for human-in-the-loop flows. When `interrupt()` is called inside a node, the graph pauses and raises `GraphInterrupt`. The runtime handles this gracefully (not treated as an error).
 
+### Cross-process recovery (why it works)
+
+Checkpoints are persisted to the platform Blob via `context.store.langgraphCheckpointer` — **not** process memory. The checkpointer reads with strong consistency on every `getTuple`, so the state survives a process restart / instance replacement:
+
+```
+start (interrupt() 落盘 checkpoint)
+  → process killed / instance recycled
+  → new process, same makers-conversation-id
+  → action:resume / graph.invoke(Command({ resume }), { configurable: { thread_id } })
+    → state restored from Blob, continues from the checkpoint
+```
+
+The checkpoint key is `langgraph_checkpoints/{thread_id}/...` where `thread_id = conversation_id`. Any instance handling the same `makers-conversation-id` reads the same keys.
+
+### Resuming a paused thread
+
+```typescript
+// Resume an interrupted thread from a new request / new process
+await graph.invoke(new Command({ resume: userAnswer }), {
+  configurable: { thread_id: context.conversation_id },
+});
+```
+
+### Cleaning up — `deleteThread`
+
+Deleting a conversation via `store.deleteConversation(conversationId)` cascades to LangGraph checkpoints through `deleteThread`:
+
+```typescript
+const checkpointer = context.store.langgraphCheckpointer;
+await checkpointer.deleteThread(conversationId);   // removes langgraph_checkpoints/<thread>/...
+```
+
+### Corrupt checkpoint semantics — `MemoryCorruptError`
+
+If the persisted checkpoint JSON cannot be parsed, the runtime throws `MemoryCorruptError` instead of silently treating the thread as missing. Catch it and map to a stable error (e.g. `AGENT_STATE_CORRUPT`, HTTP 409); do not fall back to starting a brand-new run over corrupt data.
+
 ---
 
 ## Review Checklist
@@ -189,3 +225,5 @@ LangGraph supports `interrupt` / `resume` for human-in-the-loop flows. When `int
 - [ ] Signal forwarded and checked inside the loop
 - [ ] Stream ends with `data: [DONE]\n\n`
 - [ ] Graph compiled at module level or cached (not rebuilt per request)
+- [ ] Corrupt checkpoints caught via `MemoryCorruptError` and mapped to a stable error, not silently restarted
+- [ ] Conversation cleanup goes through `deleteConversation` (cascades `deleteThread`); no orphaned checkpoints

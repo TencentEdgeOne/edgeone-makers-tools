@@ -141,13 +141,26 @@ async def handler(ctx):
 
 ### 3. Session binding (conversation memory)
 
+**Preferred (post-2026-08 runtime):** use the platform mapping API so **arbitrary** conversation IDs get a stable Claude session UUID. The mapping is persisted in the platform Blob and survives process restart → cross-process transcript resume.
+
 ```python
-# ctx.store provides claudeSessionStore equivalent
-# The Python SDK uses ctx.store directly for session persistence
-session_store = ctx.store  # ConversationMemory handles session state
+async def resolve_session_binding(ctx) -> dict:
+    conversation_id = str(getattr(ctx, "conversation_id", "") or "").strip()
+    if not conversation_id:
+        return {}
+    # ⭐ Platform-owned mapping: arbitrary conversation ID → stable UUID
+    session_id = await ctx.store.claude_session_binding(conversation_id)
+    if session_id:
+        info = await get_session_info(session_id, session_store=ctx.store)
+        if info:
+            return {"resume": session_id}     # transcript exists → resume
+        return {"session_id": session_id}     # new session
+    return {}
 ```
 
 > ⚠️ The Python Claude Agent SDK session mechanism mirrors the Node version. Use `ctx.store` for persistence — do not mix with LangGraph checkpointer.
+>
+> **Transcript lifecycle**: the transcript lives in the runtime SessionStore (`claude_sessions/...`), not process memory — that is what makes resume survive a process restart. Deleting the conversation via `ctx.store.delete_conversation(conversation_id)` cleans the mapping and the transcript.
 
 ### 4. /stop endpoint
 
@@ -178,6 +191,7 @@ async def handler(ctx):
 | SSE | `createSSEResponse(gen, signal)` | `ctx.utils.stream_sse(gen())` |
 | Abort signal | `signal?.aborted` | `ctx.request.signal.is_set()` |
 | Session store | `context.store.claudeSessionStore()` | `ctx.store` (direct) |
+| Session binding | `context.store.claudeSessionBinding(id)` | `ctx.store.claude_session_binding(id)` |
 
 ---
 

@@ -71,6 +71,34 @@ process.stdout.on('error', (err: any) => {
 > **Principle**: the Claude Agent SDK writes to stdout internally, and on EdgeOne the pipe may close early — you must swallow EPIPE.
 
 ### 3. Session binding (conversation memory)
+
+**Preferred (post-2026-08 runtime):** use the platform mapping API so **arbitrary** conversation IDs get a stable Claude session UUID. The mapping is persisted in the platform Blob and survives process restart → cross-process transcript resume.
+
+```typescript
+async function resolveClaudeSessionBinding(
+  store: any, sessionStore: any, conversationId: string, cwd: string
+): Promise<{ resume?: string; sessionId?: string }> {
+  if (!conversationId) return {};
+  if (typeof store?.claudeSessionBinding === 'function') {
+    // ⭐ Platform-owned mapping: arbitrary conversation ID → stable UUID
+    const binding = await store.claudeSessionBinding(conversationId);
+    const sessionId = typeof binding === 'string' ? binding : binding?.sessionId;
+    if (sessionId) {
+      const info = await getSessionInfo(sessionId, { dir: cwd, sessionStore });
+      if (info) {
+        logger.log(`[session] resume Claude SDK sessionId=${sessionId}`);
+        return { resume: sessionId };              // transcript exists → resume
+      }
+      return { sessionId };                        // new session
+    }
+  }
+  // Legacy fallback — UUID-only conversation IDs only
+  return resolveLegacySessionBinding(conversationId, cwd, sessionStore);
+}
+```
+
+**Legacy fallback** (runtimes without `claudeSessionBinding`): hash/normalise the conversation ID into a UUID — UUIDs reuse directly; arbitrary IDs cannot be bound.
+
 ```typescript
 /** Normalise an arbitrary conversationId into a valid UUID */
 function normalizeUuid(id: string): string | null {
@@ -81,9 +109,8 @@ function normalizeUuid(id: string): string | null {
   return `${hex.slice(0,8)}-${hex.slice(8,12)}-${hex.slice(12,16)}-${hex.slice(16,20)}-${hex.slice(20,32)}`;
 }
 
-/** Resume an existing session or start a new one */
-async function resolveClaudeSessionBinding(
-  sessionStore: any, conversationId: string, cwd: string
+async function resolveLegacySessionBinding(
+  conversationId: string, cwd: string, sessionStore: any
 ): Promise<{ resume?: string; sessionId?: string }> {
   const sessionId = normalizeUuid(conversationId);
   if (!sessionId) return {};
@@ -99,6 +126,8 @@ async function resolveClaudeSessionBinding(
 > **Principle**: take `conversation_id` from `context.conversation_id`, falling back to the `makers-conversation-id` header.
 >
 > **Important**: Claude SDK has its own session/`resume`/`fork` mechanism via `context.store.claudeSessionStore()` (no-arg — unique to the Claude SDK). **Do not mix this with a langgraph checkpointer** — the two state models are incompatible. See [`langgraph.md`](./langgraph.md) for the langgraph-style alternative.
+>
+> **Transcript lifecycle**: the Claude transcript lives in the runtime SessionStore (`claude_sessions/...`), not process memory — that is what makes resume survive a process restart. Deleting the conversation via `store.deleteConversation(conversationId)` cleans the mapping and the transcript.
 
 ### 4. Sandbox readiness probe + file upload (with cold-start retry)
 ```typescript
@@ -293,7 +322,7 @@ if (!sandboxWorking && uploadedFiles.length > 0) {
 - [ ] File upload has multiple strategies + fallback to inline text
 - [ ] Cross-request files use a process-level cache + re-upload every time (sandbox `/tmp/` is easily lost)
 - [ ] Custom tools use the `sseQueue` side channel; main loop drains it
-- [ ] Sessions normalised with `normalizeUuid` + `getSessionInfo` to decide resume/new
+- [ ] Sessions resolved via `context.store.claudeSessionBinding()` on new runtimes (arbitrary conversation IDs); legacy `normalizeUuid` + `getSessionInfo` only as fallback
 - [ ] AbortSignal forwarded to `query()` and checked inside the loop
 - [ ] `context.request.headers` accessed via `headers['x-foo']` indexing, **not** `.get('x-foo')`
 - [ ] `edgeone.json` has `agents.framework: "claude-agent-sdk"`

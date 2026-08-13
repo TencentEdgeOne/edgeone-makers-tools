@@ -178,6 +178,14 @@
 
 - [ ] Mind the limits: `getMessages` limit is 1–100, ≤10000 messages per conversation, ≤50MB per message content, `langgraphStore.search` has no vector search
 
+- [ ] Conversation-scoped flags / HITL `RunState` are persisted via `context.store.state` (get/set/delete), **not** `context.kv` (per-route temporary) — and the state key is deleted after completion
+
+- [ ] Claude session binding on new runtimes uses `context.store.claudeSessionBinding(conversationId)` (arbitrary conversation IDs → stable UUID, cross-process transcript resume); legacy UUID-hashing only as fallback
+
+- [ ] Corrupt LangGraph checkpoints / Claude JSONL are caught via `MemoryCorruptError` and mapped to a stable HTTP error — never silently treated as "missing"
+
+- [ ] Full conversation purge goes through `deleteConversation` (cascades `deleteThread` + state + Claude mapping/transcript); no hand-rolled partial cleanup
+
 ---
 
 ## I. Frontend Integration (app/)
