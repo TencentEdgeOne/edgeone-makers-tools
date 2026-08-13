@@ -478,7 +478,7 @@ async def handler(context):
     conversation_id = (
         body.get("conversation_id")
         or body.get("conversationId")
-        or ctx.conversation_id
+        or context.conversation_id
         or ""
     )
     if not conversation_id:
@@ -573,7 +573,7 @@ await fetch('/email/stop', {
 | Abort | `signal.aborted` | **`signal.is_set()`** |
 | Stream orchestration | SDK-built-in or hand-written | event_bus bridge + asyncio.Queue + asyncio.to_thread |
 | Multi-agent | C's Handoff / D's subAgents | **Crew + Process.sequential / hierarchical** |
-| Built-in memory option | None | CrewAI's own `memory=True` (typically replaced by ctx.store) |
+| Built-in memory option | None | Must be `memory=False`; cross-turn memory goes through `context.store` |
 | Skill loading | None | `Crew(skills=[dir])` loads local SKILL.md |
 | LiteLLM compatibility trap | None | ⭐ `provider="openai"` is mandatory (platform has no LiteLLM) |
 
@@ -591,7 +591,6 @@ await fetch('/email/stop', {
 8. **`requirements.txt` not pinned, or grossly diverging from the bundled platform versions** → dependency conflicts and failed deployment
 
 See also:
-- 
 - Route B (Claude Agent SDK): `../node-frameworks/claude-sdk.md`
 - Route C (OpenAI Agents SDK): `../node-frameworks/openai-agents.md`
 - Route D (LangGraph + DeepAgents): `../node-frameworks/langgraph.md`

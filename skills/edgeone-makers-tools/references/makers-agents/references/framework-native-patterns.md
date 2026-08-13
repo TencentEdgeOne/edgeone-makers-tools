@@ -3,7 +3,7 @@
 > ⚠️ **Purpose**: This document shows the **official native patterns** for each Agent framework (i.e. what they look like *without* EdgeOne Makers injection).
 > **Do NOT copy these patterns into Makers templates** — on Makers, models go through the `context.env` gateway, tools come from `context.tools`, and storage comes from `context.store`.
 > Use this file to: ① understand the native shape of each framework, ② see by contrast what Makers injection saves you, ③ help teammates migrate from native usage to Makers.
-> For the actual Makers patterns you should write, see `langchain-route.md`, `claude-sdk-route.md`, and `platform-conventions.md`.
+> For the actual Makers patterns you should write, see `node-frameworks/langgraph.md`, `node-frameworks/claude-sdk.md`, and `platform/node-entry.md`.
 
 ---
 
@@ -144,7 +144,7 @@ const agent = createAgent({
 })
 ```
 
-> **→ How the Makers version differs**: see `langchain-route.md`; the model goes through the gateway (`context.env`), tools come from `context.tools.all()` (with `agents.framework='deepagents'` or `'langgraph'`), and memory reuses the LangGraph adapters (direct properties `langgraphCheckpointer` / `langgraphStore`).
+> **→ How the Makers version differs**: see `node-frameworks/langgraph.md`; the model goes through the gateway (`context.env`), tools come from `context.tools.all()` (with `agents.framework='deepagents'` or `'langgraph'`), and memory reuses the LangGraph adapters (direct properties `langgraphCheckpointer` / `langgraphStore`).
 
 ---
 
@@ -162,7 +162,7 @@ const client = new Anthropic()
 //   → execute the tool → append tool_result back into messages → call again, until no more tool_use
 ```
 
-> **→ How the Makers version differs**: see `claude-sdk-route.md`; after setting `agents.framework: 'claude-agent-sdk'` in `edgeone.json`, the recommended way to wire tools is `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` (returns `{name,tools,allowedTools}` — a Claude SDK-specific capability), or feed `context.tools.all()` into `createSdkMcpServer({ name, tools, alwaysLoad: true })`; session comes from `context.store.claudeSessionStore()` (no arguments — ⭐ standalone usage; do not wrap it with langgraph).
+> **→ How the Makers version differs**: see `node-frameworks/claude-sdk.md`; after setting `agents.framework: 'claude-agent-sdk'` in `edgeone.json`, the recommended way to wire tools is `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` (returns `{name,tools,allowedTools}` — a Claude SDK-specific capability), or feed `context.tools.all()` into `createSdkMcpServer({ name, tools, alwaysLoad: true })`; session comes from `context.store.claudeSessionStore()` (no arguments — ⭐ standalone usage; do not wrap it with langgraph).
 
 ---
 
