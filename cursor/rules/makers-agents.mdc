@@ -43,7 +43,7 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 - Wiring DeepAgents / LangGraph / CrewAI / OpenAI Agents SDK / Claude Agent SDK into a Makers project
 - Reviewing an existing agent template against platform red lines
 - Implementing SSE streaming with abort support
-- Persisting conversation state via `context.store` (LangGraph checkpointer / OpenAI session / Claude session)
+- Persisting conversation state via `context.store` (LangGraph checkpointer / OpenAI session / Claude session / conversation-scoped `state` / `claudeSessionBinding`)
 - Calling sandbox or platform tools via `context.sandbox` / `context.tools`
 - Splitting AI inference (`agents/`) from data CRUD (`cloud-functions/`)
 
@@ -77,8 +77,8 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 10. **Cap your loops.** Manual bind-tools loops use a hard turn limit (e.g. `for (let i = 0; i < 4; i++)`); SDK routes set `maxTurns`. No unbounded "until model says stop" loops.
 11. **Errors must not crash the stream.** Wrap every model / tool call in try/catch. Swallow `AbortError` silently. Emit other errors as `error_message` events without ending the stream prematurely.
 12. **Pick the right `store` entry point — they are NOT shape-equivalent.**
-    - `context.store` (agent endpoints, `agents/<name>/`): full `AgentMemory`, includes **all** adapters (`openaiSession`, `claudeSessionStore`, `langgraphCheckpointer`, `langgraphStore`).
-    - `context.agent.store` (cloud-function endpoints, `cloud-functions/<name>/`): runtime **strips** `langgraphCheckpointer` and `langgraphStore`. Only generic message API + `openaiSession` + `claudeSessionStore` are available.
+    - `context.store` (agent endpoints, `agents/<name>/`): full `AgentMemory`, includes **all** adapters (`openaiSession`, `claudeSessionStore`, `langgraphCheckpointer`, `langgraphStore`, conversation `state`, `claudeSessionBinding`).
+    - `context.agent.store` (cloud-function endpoints, `cloud-functions/<name>/`): runtime **strips** `langgraphCheckpointer` and `langgraphStore`. Only generic message API + `openaiSession` + `claudeSessionStore` (+ `state` / `claudeSessionBinding`) are available.
     - **Consequence**: any endpoint that needs `langgraphStore.get/put` MUST live under `agents/`. Putting it in `cloud-functions/` will throw `kv.get is not a function` at runtime.
     - Never write `store?.langgraphStore ?? store` as a fake fallback — in cloud-function context this falls back to the store itself, which has no `.get`, and crashes.
 13. **Use injected `context.sandbox` / `context.tools`.** Do not hand-write `/v1/sandbox/*` calls or parse tokens. `context.tools` shape is determined by `edgeone.json`'s `agents.framework` (`claude-agent-sdk` / `openai-agents-sdk` / `langgraph` / `crewai` / `deepagents` — there is **no `basic`**). Use `context.tools.all()`, `.get(name)`, `.files()`, `.browser()`. Sandbox: `sandbox.runCode(...)` is **top-level** (not `code_interpreter.runCode`); `screenshot({ fullPage: true })` takes an object, not a boolean; timeout is in **seconds**.
