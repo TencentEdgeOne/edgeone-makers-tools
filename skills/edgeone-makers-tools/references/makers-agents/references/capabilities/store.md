@@ -51,7 +51,7 @@ Where is this endpoint built?
 
 | Framework | Short-term memory | Long-term memory | Adapter access | Notes |
 |------|---------|---------|-------------|------|
-| **Claude Agent SDK** ⭐ | SDK session (resume/fork) | Store messages + metadata | `context.store.claudeSessionStore()` (**no args**) | **Standalone usage**, its own world — do not graft langgraph onto it |
+| **Claude Agent SDK** ⭐ | SDK session (resume/fork) | Store messages + metadata | `context.store.claudeSessionStore()` (**no args**) + `claudeSessionBinding(conversationId)` for stable UUID | **Standalone usage**, its own world — do not graft langgraph onto it |
 | **OpenAI Agents SDK** | SDK Session (auto-prepend) | Store messages + metadata | `context.store.openaiSession(convId)` | Don't manually concatenate history |
 | **LangGraph** | `langgraphCheckpointer` | `langgraphStore` | `context.store.langgraphCheckpointer` / `.langgraphStore` | Direct properties; thread_id = conversation_id |
 | **DeepAgents** | Reuses LangGraph checkpointer | LangGraph store + filesystem | Same as LangGraph | Essentially LangGraph |
@@ -251,6 +251,8 @@ The Python runtime provides the same `ctx.store` (`ConversationMemory`) with **i
 | `store.toAnthropicMessages(messages)` | `ctx.store.to_anthropic_messages(messages)` | Sync (no await) |
 | `store.langgraphCheckpointer` | `ctx.store.langgraph_checkpointer` | Direct property (snake_case) |
 | `store.langgraphStore` | `ctx.store.langgraph_store` | Direct property (snake_case) |
+| `store.state.get/set/delete` | `ctx.store.state.get/set/delete` | Conversation-scoped persistent KV (see §Persistence primitives) |
+| `store.claudeSessionBinding(id)` | `ctx.store.claude_session_binding(id)` | Stable Claude session UUID for any conversation ID |
 
 ### Python Example
 
@@ -274,7 +276,85 @@ async def handler(ctx):
 
 ---
 
-## 7. Review Red Lines (Spot Issues in 5 Seconds)
+## 7. Persistence Primitives (2026-08: conversation state, Claude session binding, error semantics, cascade delete)
+
+Four capabilities added on top of the message/checkpoint adapters. Available on **agent endpoints and cloud-functions alike** (`context.store` / `context.agent.store`); the LangGraph-adapters-stripped rule above is unchanged.
+
+### 7.1 `context.store.state` — conversation-scoped persistent KV
+
+A tiny `get/set/delete` KV scoped to the current `conversation_id`. Unlike `context.kv` (per-route, temporary), `state` **persists across requests and process restarts**, isolated per conversation.
+
+```typescript
+// Agent endpoint
+const { store, conversation_id } = context;
+
+await store.state.set('order', { id: 'ord_123', amount: 99 });   // strict JSON values
+const order = await store.state.get<{ id: string }>('order');    // null if missing
+await store.state.delete('order');                               // idempotent
+```
+
+Python:
+
+```python
+await ctx.store.state.set("order", {"id": "ord_123", "amount": 99})
+order = await ctx.store.state.get("order")   # None if missing
+await ctx.store.state.delete("order")
+```
+
+- Scope: key = `conversation_id` + your key; no cross-conversation reads.
+- Values are strict JSON (no functions / BigInt / NaN / circular refs); `get` returns `null` / `None` for missing keys.
+- Primary uses: OpenAI `RunState` (HITL), resume payloads, conversation-level flags.
+- ⚠️ If the Memory isn't conversation-bound, `set` throws `MemoryValidationError`.
+
+### 7.2 `claudeSessionBinding()` — stable Claude session for any conversation ID
+
+Claude Agent SDK sessions are keyed by **UUID**, but platform conversation IDs are **not required to be UUIDs**. `context.store.claudeSessionBinding(conversationId)` returns a stable Claude session UUID for that conversation — reusing the ID directly when it is already a UUID, otherwise generating and persisting a mapping.
+
+```typescript
+const sessionId = await context.store.claudeSessionBinding(context.conversation_id);
+// → string (or { sessionId }) depending on runtime shape
+
+const info = await getSessionInfo(sessionId, { dir: cwd, sessionStore });
+if (info) {
+  await query({ prompt, options: { resume: sessionId, ... } });   // resume the transcript
+} else {
+  await query({ prompt, options: { sessionId, ... } });           // start a new session
+}
+```
+
+Python:
+
+```python
+session_id = await ctx.store.claude_session_binding(ctx.conversation_id)
+```
+
+- Mapping lives in the platform Blob (`claude_session_mapping/`) and **survives process restart** → cross-process transcript resume.
+- `deleteConversation` removes the mapping and the linked transcript.
+- Runtimes predating the binding API fall back to UUID-only conversation IDs.
+
+### 7.3 Corrupt-data errors — `MemoryCorruptError`
+
+When a LangGraph checkpoint or a Claude session JSONL part cannot be parsed, the runtime **no longer silently treats it as missing** — it throws/raises `MemoryCorruptError`:
+
+- `getTuple` on a corrupted checkpoint → `MemoryCorruptError` (not `undefined`)
+- Malformed Claude session JSONL → `MemoryCorruptError`
+
+Catch it explicitly and map to a stable HTTP error (e.g. `AGENT_STATE_CORRUPT`, HTTP 409) instead of a generic 500.
+
+### 7.4 `deleteConversation` cascade
+
+`store.deleteConversation(conversationId)` now also cleans:
+- conversation state (`state/*`)
+- LangGraph checkpoints (`langgraph_checkpoints/<thread>/...`, via `deleteThread`)
+- the Claude session mapping and its transcript (`claude_sessions/...`)
+
+LangGraph **Store** items are NOT deleted (scope not frozen).
+
+> ⚠️ These primitives require an updated runtime/CLI. If a deployed template reports `HITL_STATE_STORE_UNAVAILABLE` or `claudeSessionBinding` is missing, the runtime predates the 2026-08 persistence release.
+
+---
+
+## 8. Review Red Lines (Spot Issues in 5 Seconds)
 
 - [ ] Agent endpoints use `context.store`, cloud-functions use `context.agent.store` — is the entry point correct?
 - [ ] Are `appendMessage` / `getMessages` called with **single-object input**, not `(convId, options)` two args?
@@ -289,3 +369,7 @@ async def handler(ctx):
 - [ ] Structured business data that needs querying / sorting / aggregation has not been crammed into the store (that's MySQL's job)?
 - [ ] You are not relying on `langgraphStore.search` for semantic / full-text retrieval (it has no vector search)?
 - [ ] When sharing data across frameworks, a **single entry point** has been chosen as the source of truth — no expectation that different adapter namespaces will interoperate automatically?
+- [ ] Conversation-scoped flags / HITL `RunState` use `context.store.state`, **not** `context.kv` (per-route temporary)?
+- [ ] Arbitrary conversation IDs use `context.store.claudeSessionBinding()` (stable UUID mapping), **not** local UUID hashing on runtimes that support it?
+- [ ] Corrupt checkpoint / Claude JSONL is caught via `MemoryCorruptError` and mapped to a stable HTTP error — not silently ignored?
+- [ ] Full conversation purge goes through `deleteConversation` (state + checkpoints + Claude transcript); no hand-rolled partial cleanup?

@@ -100,6 +100,8 @@ const agent = new Agent({ name: 'Assistant', instructions: '...', tools, model }
 ```
 
 > **→ How the Makers version differs**: tools come from `context.tools.all()` (with `agents.framework='openai-agents-sdk'`); session comes from `context.store.openaiSession(conversationId)`, which auto-prepends history; env goes through `context.env` — never read `process.env`.
+>
+> **HITL / `RunState`**: natively a `RunState` is transient in-process — it dies with the process. On Makers, persist the serialized snapshot via `context.store.state` (`state.toString()` / `RunState.fromString`) so a `needsApproval` pause survives a process restart and is approved/rejected from a later request. See `node-frameworks/openai-agents.md` §8.
 
 ---
 
@@ -172,7 +174,7 @@ const client = new Anthropic()
 //   → execute the tool → append tool_result back into messages → call again, until no more tool_use
 ```
 
-> **→ How the Makers version differs**: see `node-frameworks/claude-sdk.md`; after setting `agents.framework: 'claude-agent-sdk'` in `edgeone.json`, the recommended way to wire tools is `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` (returns `{name,tools,allowedTools}` — a Claude SDK-specific capability), or feed `context.tools.all()` into `createSdkMcpServer({ name, tools, alwaysLoad: true })`; session comes from `context.store.claudeSessionStore()` (no arguments — ⭐ standalone usage; do not wrap it with langgraph).
+> **→ How the Makers version differs**: see `node-frameworks/claude-sdk.md`; after setting `agents.framework: 'claude-agent-sdk'` in `edgeone.json`, the recommended way to wire tools is `context.tools.toClaudeMcpServer('edgeone', { alwaysLoad: true })` (returns `{name,tools,allowedTools}` — a Claude SDK-specific capability), or feed `context.tools.all()` into `createSdkMcpServer({ name, tools, alwaysLoad: true })`; session comes from `context.store.claudeSessionStore()` (no arguments — ⭐ standalone usage; do not wrap it with langgraph). On updated runtimes, `context.store.claudeSessionBinding(conversationId)` maps **arbitrary** conversation IDs to a stable Claude session UUID so the transcript can resume across process restarts (see `capabilities/store.md` §7.2).
 
 ---
 
@@ -185,6 +187,8 @@ const client = new Anthropic()
 | Sandbox | You spin up containers/processes yourself | `context.sandbox` (commands/files/browser/code_interpreter) |
 | Short-term memory | checkpointer / SDK session | The matching adapter on `context.store` |
 | Long-term memory | PostgresSaver / store | `context.store.langgraphStore` / conversation metadata |
+| Durable agent state (HITL `RunState`, resume payloads) | transient in-process (lost on restart) | `context.store.state` (conversation-scoped persistent KV) |
+| External session identity (Claude SDK) | you manage the session UUID | `context.store.claudeSessionBinding(conversationId)` (stable UUID mapping) |
 | Entry point | `app/api/route.ts` + `POST(req)` | `agents/<name>/` + `onRequest(context)` |
 | Streaming | You assemble SSE yourself | `createSSEResponse` from `_shared.ts` + a unified event protocol |
 | Route registration | You maintain config yourself | Auto-scanned by the CLI at build time — **no** manual maintenance needed |
