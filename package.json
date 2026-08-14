@@ -1,0 +1,12 @@
+{
+  "name": "edgeone-makers-tools",
+  "version": "1.2.0",
+  "private": true,
+  "type": "module",
+  "description": "EdgeOne Makers platform development skills.",
+  "scripts": {
+    "test": "node --test hooks/*.test.mjs scripts/*.test.mjs scripts/lib/*.test.mjs",
+    "doctor": "node scripts/doctor.mjs",
+    "build": "node scripts/build.mjs"
+  }
+}

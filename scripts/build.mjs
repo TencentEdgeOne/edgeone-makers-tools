@@ -8,13 +8,20 @@
 import fs from 'fs';
 import path from 'path';
 
-const SKILLS_DIR = path.resolve('skills');
+// Single-skill layout: the one skill lives at skills/edgeone-makers-tools/, and each
+// capability is a directory under its references/. We generate per-capability
+// Cursor rules / Codex skills from those capability directories.
+const SKILLS_DIR = path.resolve('skills/edgeone-makers-tools/references');
 const CURSOR_RULES_DIR = path.resolve('cursor/rules');
 const CODEX_DIR = path.resolve('codex');
 
 function getSkillDirs() {
   return fs.readdirSync(SKILLS_DIR)
-    .filter(name => fs.statSync(path.join(SKILLS_DIR, name)).isDirectory())
+    .filter(name => {
+      const dir = path.join(SKILLS_DIR, name);
+      return fs.statSync(dir).isDirectory()
+        && fs.existsSync(path.join(dir, 'SKILL.md'));
+    })
     .sort();
 }
 
