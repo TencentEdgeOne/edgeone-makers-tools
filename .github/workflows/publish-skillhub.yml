@@ -112,23 +112,15 @@ jobs:
             .files = [.files[] | if startswith($prefix) then .[$prefix | length:] else . end]
           ' _meta.json > "$PUBLISH_DIR/_meta.json"
 
-          # 2. 按 _meta.json 的 files 列表逐个复制，去掉前缀映射到产物目录
-          #    用 jq 输出 "源路径\t目标路径" 避免子 shell 变量问题
-          jq -r --arg prefix "$STRIP_PREFIX" '
-            .files[] | . as $src |
-            (if startswith($prefix) then .[$prefix | length:] else . end) as $dst |
-            "\($src)\t\($dst)"
-          ' _meta.json | while IFS=$'\t' read -r src dst; do
-            mkdir -p "$PUBLISH_DIR/$(dirname "$dst")"
-            cp "$src" "$PUBLISH_DIR/$dst"
-          done
+          # 2. 从 skills/edgeone-makers-tools/ 目录复制所有文件到发布目录
+          #    这样自然去掉了前缀，产物结构为 SKILL.md + references/
+          cp -R skills/edgeone-makers-tools/* "$PUBLISH_DIR/"
 
-          # 3. 覆写根 SKILL.md frontmatter 里"顶层" version 行（不动 metadata.version）。
-          #    用 awk 替换，跨平台兼容（GNU/BSD sed 行为不一致，awk 更稳）。
+          # 3. 覆写根 SKILL.md frontmatter 里 metadata.version 字段。
+          #    当前格式：`  version: "2.0.0"`（缩进两空格，在 metadata: 块内）
           if [ -f "$PUBLISH_DIR/SKILL.md" ]; then
             awk -v ver="$VERSION" '
-              BEGIN { done = 0 }
-              /^version:[[:space:]]/ && !done { print "version: " ver; done = 1; next }
+              /^[[:space:]]+version:/ && !done { sub(/version:.*/, "version: \"" ver "\""); done = 1 }
               { print }
             ' "$PUBLISH_DIR/SKILL.md" > "$PUBLISH_DIR/SKILL.md.new"
             mv "$PUBLISH_DIR/SKILL.md.new" "$PUBLISH_DIR/SKILL.md"
@@ -149,12 +141,12 @@ jobs:
           echo "PUBLISH_DIR=$PUBLISH_DIR" >> "$GITHUB_ENV"
 
       - name: Sanity check version bump
-        # 强校验：publish 目录里 SKILL.md 顶层 version 必须等于 $VERSION，
-        # _meta.json 顶层 version 也必须等于 $VERSION。否则立刻失败，
-        # 避免发布到一个仍带占位 1.0.0 的产物，浪费 SkillHub 的版本号。
+        # 强校验：publish 目录里 SKILL.md 的 metadata.version 必须等于 $VERSION，
+        # _meta.json 顶层 version 也必须等于 $VERSION。否则立刻失败。
         run: |
           EXPECTED="$VERSION"
-          ACTUAL_SKILL=$(awk '/^version:[[:space:]]/ {print $2; exit}' "$PUBLISH_DIR/SKILL.md")
+          # 提取缩进的 version: "x.y.z" 行，去掉引号
+          ACTUAL_SKILL=$(awk '/^[[:space:]]+version:/ {gsub(/[" ]/, "", $2); print $2; exit}' "$PUBLISH_DIR/SKILL.md")
           ACTUAL_META=$(jq -r '.version' "$PUBLISH_DIR/_meta.json")
           echo "Expected:        $EXPECTED"
           echo "SKILL.md actual: $ACTUAL_SKILL"
