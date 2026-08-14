@@ -4,7 +4,6 @@
   "slug": "edgeone-makers-tools",
   "version": "2.0.0",
   "files": [
-    "CLAUDE.md",
     "skills/edgeone-makers-tools/SKILL.md",
     "skills/edgeone-makers-tools/references/makers-agents/SKILL.md",
     "skills/edgeone-makers-tools/references/makers-agents/references/capabilities/sandbox.md",

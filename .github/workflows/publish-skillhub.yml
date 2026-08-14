@@ -93,20 +93,34 @@ jobs:
           echo "==> Publishing version: $VERSION"
 
       - name: Prepare publish directory
-        # SkillHub 拒绝隐藏文件（如 .gitignore）和未在白名单的扩展名。
-        # 按 _meta.json 的 files 字段精确复制需要发布的文件到一个干净目录，
-        # 然后用自动版本号覆写 publish 目录里 SKILL.md 和 _meta.json 的 version。
+        # SkillHub 产物结构要求：
+        #   _meta.json
+        #   SKILL.md
+        #   references/
+        # 源码中文件位于 skills/edgeone-makers-tools/ 下，发布时去掉该前缀。
         run: |
           PUBLISH_DIR="$RUNNER_TEMP/skillhub-publish"
           mkdir -p "$PUBLISH_DIR"
 
-          # 1. 复制 _meta.json，并用自动版本号覆写顶层 version
-          jq --arg v "$VERSION" '.version = $v' _meta.json > "$PUBLISH_DIR/_meta.json"
+          # 要去掉的路径前缀
+          STRIP_PREFIX="skills/edgeone-makers-tools/"
 
-          # 2. 按 _meta.json 的 files 列表逐个复制
-          jq -r '.files[]' _meta.json | while read -r f; do
-            mkdir -p "$PUBLISH_DIR/$(dirname "$f")"
-            cp "$f" "$PUBLISH_DIR/$f"
+          # 1. 复制 _meta.json，并用自动版本号覆写顶层 version，
+          #    同时重写 files 列表去掉前缀（保持产物自洽）
+          jq --arg v "$VERSION" --arg prefix "$STRIP_PREFIX" '
+            .version = $v |
+            .files = [.files[] | if startswith($prefix) then .[$prefix | length:] else . end]
+          ' _meta.json > "$PUBLISH_DIR/_meta.json"
+
+          # 2. 按 _meta.json 的 files 列表逐个复制，去掉前缀映射到产物目录
+          #    用 jq 输出 "源路径\t目标路径" 避免子 shell 变量问题
+          jq -r --arg prefix "$STRIP_PREFIX" '
+            .files[] | . as $src |
+            (if startswith($prefix) then .[$prefix | length:] else . end) as $dst |
+            "\($src)\t\($dst)"
+          ' _meta.json | while IFS=$'\t' read -r src dst; do
+            mkdir -p "$PUBLISH_DIR/$(dirname "$dst")"
+            cp "$src" "$PUBLISH_DIR/$dst"
           done
 
           # 3. 覆写根 SKILL.md frontmatter 里"顶层" version 行（不动 metadata.version）。
