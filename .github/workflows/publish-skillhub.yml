@@ -113,11 +113,14 @@ jobs:
           ' _meta.json > "$PUBLISH_DIR/_meta.json"
 
           # 2. 按 _meta.json 的 files 列表逐个复制，去掉前缀映射到产物目录
-          jq -r '.files[]' _meta.json | while read -r f; do
-            # 计算目标路径：去掉 skills/edgeone-makers-tools/ 前缀
-            TARGET="${f#$STRIP_PREFIX}"
-            mkdir -p "$PUBLISH_DIR/$(dirname "$TARGET")"
-            cp "$f" "$PUBLISH_DIR/$TARGET"
+          #    用 jq 输出 "源路径\t目标路径" 避免子 shell 变量问题
+          jq -r --arg prefix "$STRIP_PREFIX" '
+            .files[] | . as $src |
+            (if startswith($prefix) then .[$prefix | length:] else . end) as $dst |
+            "\($src)\t\($dst)"
+          ' _meta.json | while IFS=$'\t' read -r src dst; do
+            mkdir -p "$PUBLISH_DIR/$(dirname "$dst")"
+            cp "$src" "$PUBLISH_DIR/$dst"
           done
 
           # 3. 覆写根 SKILL.md frontmatter 里"顶层" version 行（不动 metadata.version）。
