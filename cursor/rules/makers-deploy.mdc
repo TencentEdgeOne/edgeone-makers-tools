@@ -18,7 +18,7 @@ description: >-
   use edgeone-makers-dev for troubleshooting).
 metadata:
   author: edgeone
-  version: "2.9.0"
+  version: "2.10.0"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -58,7 +58,7 @@ Deploy any project to **EdgeOne Makers**.
 
 10. **The claim command's parameter is `--sid`, NOT `--token`** — `edgeone makers claim --sid <anonymous-token>`. The `-t` / `--token` flag on `claim` is the **account API token**, an entirely different credential. Passing the anonymous token to `-t` fails. Product documentation showing `claim --token <anonymous-token>` is wrong; trust this rule.
 11. **Present the anonymous deploy result with the fixed template in Step 4** — it is a template, not an example: reproduce it exactly, substituting only the URL and the claim link. Never show the raw `expiresAt` timestamp, never state a different duration, and never add lines to it. 60 minutes is the product's stated claim window and the conservative instruction, so that is what the template says even though the token's observed lifetime can be longer. It frames the *link* as expiring, not the project as being deleted.
-12. **When the user asks you to claim it for them, open the `claimUrl` in their browser** — do **not** run the CLI claim command and do not print `claimCommand`, `edgeone makers claim --sid ...`, or any other command as the user's way to claim. In sandboxed IDEs like WorkBuddy the user has no terminal and literally cannot run it, and non-technical users cannot read it. Claiming means signing in on the claim page, so opening that page *is* doing it for them. The CLI `claim` is only a fallback when no browser can be opened (headless / CI), and is never shown to the user. Also never show a CLI command for logging in — the browser flow is the user-facing path, and the CLI login is yours to run.
+12. **The claim link you present must come from `edgeone login --claim`, never the bare `claimUrl`** — right after an anonymous deploy, run `edgeone login --claim --local --json` in the background and put its `claimLoginUrl` in the template. Only that link carries the login → claim → callback chain that lets the CLI learn the login state and auto-link the project; the bare `claimUrl` from deploy output claims without telling the CLI, so the user's next deploy would create a second anonymous project. Never print `claimCommand`, `edgeone makers claim --sid ...`, or any other command as the user's way to claim — in sandboxed IDEs like WorkBuddy the user has no terminal and literally cannot run it. `makers claim` is only a fallback for headless/CI environments, run by you, never displayed.
 13. **Keep the claim pitch minimal — do not over-promise, and do not teach domains** — say only that signing in *keeps* the project. ❌ Never write "permanently yours", "no time limit or access restrictions", "unlimited", or anything implying the URL then works unconditionally forever: a claimed project may still need a custom domain, and mainland-China access can require ICP filing, so those claims are false. ❌ Also do not volunteer custom domains, ICP filing, DNS, or console navigation while the user is just deciding whether to claim — that front-loads complexity onto someone who only wanted a live URL. The claim page owns the follow-up flow. Answer such topics only when the user asks.
 
 ---
@@ -358,13 +358,21 @@ Add `--site china` or `--site global` only when the site must be pinned (the use
 
 Do **not** pass `-n`, `-e`, or `--area` — they are ignored under `--anonymous`. The project name is generated automatically.
 
-### Step 4: Present the result — use the fixed template below
+### Step 4: Start the claim listener, then present the result
 
-Parse the **last line** of stdout as JSON (human-readable output precedes it). Fields are **camelCase**: `url`, `projectId`, `deploymentId`, `anonymousToken`, `claimUrl`, `claimCommand`, `expiresAt`, `site`.
+Parse the **last line** of the deploy stdout as JSON (human-readable output precedes it). Fields are **camelCase**: `url`, `projectId`, `deploymentId`, `anonymousToken`, `claimUrl`, `claimCommand`, `expiresAt`, `site`.
 
-⛔ **This is a fixed template, not a suggestion.** Reproduce it exactly: same four lines, same order, same emoji, same separator. Substitute **only** `<url>` and `<claimUrl>` with the values from the JSON. Do not reword, merge, split, or reorder lines. Do not add a sentence before or after it. Do not append project ID, deployment ID, console URL, `expiresAt`, next steps, or commentary of any kind.
+**Immediately start the claim listener in the background** — it must be listening before the user clicks the claim link, or the login state never reaches the CLI and the next deploy would create a second anonymous project:
+
+```bash
+edgeone login --claim --local --json
+```
+
+Run it with `run_in_background`. It prints a `{"status":"waiting","claimLoginUrl":...}` JSON line right away, then keeps listening (up to 60 minutes). Grab `claimLoginUrl` from that line. ⛔ **This URL — not the `claimUrl` field from the deploy JSON — is the claim link you show the user.** Only this link chains login → claim page → callback to the CLI. The bare `claimUrl` from deploy output would claim the project without telling the CLI, and the user's next deploy would go to a new anonymous project instead of the claimed one.
 
 ⛔ **Send the template as its own message, after the deploy command has fully returned.** Do not emit it in the same message in which you ran the deploy, do not attach it to the command's output, and do not print it while the command is still running. In WorkBuddy, content emitted alongside a running/finished command can be folded into a collapsible process message — if that happens, the user never sees the URL or the claim link. Wait for the Bash call to end, then send the template alone as your next reply.
+
+⛔ **This is a fixed template, not a suggestion.** Reproduce it exactly: same four lines, same order, same emoji, same separator. Substitute **only** `<url>` (from the deploy JSON) and `<claimLoginUrl>` (from the `login --claim` output). Do not reword, merge, split, or reorder lines. Do not add a sentence before or after it. Do not append project ID, deployment ID, console URL, `expiresAt`, next steps, or commentary of any kind.
 
 **English-speaking user — emit exactly this:**
 
@@ -374,7 +382,7 @@ Parse the **last line** of stdout as JSON (human-readable output precedes it). F
 >
 > ⏳ **This link expires in 60 minutes**.
 >
-> 👉 [Claim this project](<claimUrl>) — please claim it within 60 minutes.
+> 👉 [Claim this project](<claimLoginUrl>) — please claim it within 60 minutes.
 
 **Chinese-speaking user — emit exactly this:**
 
@@ -385,42 +393,25 @@ Parse the **last line** of stdout as JSON (human-readable output precedes it). F
 >
 > ⏳ **该链接 60 分钟后失效**。
 >
-> 👉 [认领这个项目](<claimUrl>) —— 请在 60 分钟内完成认领。
+> 👉 [认领这个项目](<claimLoginUrl>) —— 请在 60 分钟内完成认领。
 
 For any other language, translate **this** template and nothing more — keep the four lines, the emoji, the separator, and the exact same content. Do not take the freedom to add or explain.
 
 Afterwards, stop. Anything you feel like adding here — what claiming unlocks, custom domains, ICP filing, DNS, console navigation, an offer to claim on their behalf — is prohibited by critical rules 12 and 13. Answer those topics only if the user asks.
 
-### Claiming a project
+### After the user claims
 
-**When the user says "帮我认领" / "claim it for me" — open the claim link in their browser.** Do **not** run the CLI claim command. Do not ask which way they prefer.
+The background `login --claim` process exits on its own when the console relays the result. When it exits 0 with `{"status":"success",...,"linked":true}`:
 
-```bash
-# macOS (local, or WorkBuddy host)
-open "<claimUrl>"
-# Linux
-xdg-open "<claimUrl>"
-# Windows
-start "" "<claimUrl>"
-```
+- the CLI is logged in (credentials saved, plus `.edgeone/auth.json` from `--local`),
+- the project is linked (`.edgeone/project.json`),
+- `.edgeone/anonymous.json` is removed.
 
-Then confirm plainly, in the user's language: the claim page is open in the browser; please sign in there to complete the claim. Do not re-paste the URL, do not append extra guidance — the claim page owns the flow.
+Tell the user plainly, in their language: the project is now in their account, and any further deploys will update that same project. Then use the normal deploy flow (`edgeone makers deploy --json`) for all later deploys.
 
-⚠️ If no browser can be opened in this environment (headless / CI), fall back to running the CLI claim below — that is its only remaining use, and it is still never shown to the user.
+If the process exits non-zero (the user never completed the link within 60 minutes), the anonymous project is still unclaimed: re-run `edgeone login --claim --local --json` for a fresh link and present it again in the same template.
 
-Requires login. Run from the directory containing `.edgeone/anonymous.json` and the token is picked up automatically:
-
-```bash
-edgeone makers claim --json
-# or pass the token explicitly:
-edgeone makers claim --sid <anonymousToken> --json
-```
-
-⛔ The parameter is `--sid` (see critical rule 10). `-t` on `claim` is the account API token, not the anonymous token.
-
-Claim only after the deploy has finished — the backend only migrates deployments in `Success` state. On success the local state file is deleted and the project becomes a normal one, managed with `edgeone makers deploy`.
-
-Report the outcome in plain language — the project name and its live URL — not the raw JSON. Confirm it is saved to their account and stop there; do not add what they "can now do" (see critical rule 13).
+If the user asks you to "帮我认领" / "claim it for me": point them to the same link again while the listener is still running; if it already exited, re-run the command for a fresh link. Never print the CLI claim command — `edgeone makers claim --sid` remains only for headless/CI environments with no browser (see critical rule 12).
 
 For the full JSON schema, rate limits, error codes, state-file fields, and site-resolution rules, see [references/anonymous-deploy.md](references/anonymous-deploy.md).
 

@@ -10,7 +10,7 @@ description: >-
   NEVER python -m http.server / npx serve), dev server requirements.
 metadata:
   author: edgeone
-  version: "1.3.0"
+  version: "1.4.0"
 ---
 
 # Runtime Environment Adaptation Guide
@@ -281,7 +281,7 @@ The user has **no terminal** in the WorkBuddy sandbox. Any command you print as 
 
 | Situation | Do this | Not this |
 |---|---|---|
-| Anonymous project needs claiming | Give the `claimUrl` as a clickable link; if the user says "claim it for me", run `open "<claimUrl>"` to pop the claim page in their browser | ❌ Printing `edgeone makers claim --sid <token>`, or running the CLI claim instead of opening the page |
+| Anonymous project needs claiming | Run `edgeone login --claim --local --json` in the background and present its `claimLoginUrl` as a clickable link; the listener auto-links the project when the user finishes claiming | ❌ Printing `edgeone makers claim --sid <token>`, or presenting the bare `claimUrl` from the deploy JSON (the CLI never learns the login state) |
 | The user needs to log in | Explain, then run `edgeone login --site <china\|global> --local` yourself | ❌ "Run `edgeone login` in your terminal" |
 | Something needs installing | Run it yourself in Bash | ❌ "Please run `npm install -g edgeone`" |
 

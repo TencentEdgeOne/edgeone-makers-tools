@@ -74,7 +74,7 @@ Do not pass these — they have no effect and will mislead the user:
 | `projectId` | Anonymous project ID. |
 | `deploymentId` | Deployment ID. |
 | `anonymousToken` | Anonymous identity token (the Sid). Needed to claim. |
-| `claimUrl` | Web claim URL, on the console domain matching `site`. **This is what you show the user** — a clickable link. |
+| `claimUrl` | Bare web claim URL. ⛔ **Do NOT present this to the user** — claiming through it leaves the CLI unaware, and the next deploy would create a second anonymous project. The user-facing claim link is the `claimLoginUrl` from `edgeone login --claim` (see Claim flow). |
 | `claimCommand` | Ready-to-run CLI claim command. **For you to execute, never to display** — see the note below. |
 | `expiresAt` | Token expiry as an ISO 8601 timestamp, when the backend returns one. **Do not show this to the user** — tell them to claim within 60 minutes (see below). Useful to you for diagnostics. May be absent. |
 | `site` | `china` or `global` — the API site this project lives on. |
@@ -87,7 +87,7 @@ Do not pass these — they have no effect and will mislead the user:
 
 `suggestion` is only present for the rate-limit case. `errorCode` may be absent for generic failures.
 
-⛔ **Never print `claimCommand` to the user.** Sandboxed IDEs (WorkBuddy and similar) give the user no terminal, so they cannot run it — and non-technical users cannot read it anyway. Show the `claimUrl` link and stop there. When the user asks you to claim it for them, **open the claim link in their browser** — that is what claiming means. `claimCommand` is a fallback for headless/CI environments with no browser, executed by you, never displayed.
+⛔ **Never print `claimCommand` to the user.** Sandboxed IDEs (WorkBuddy and similar) give the user no terminal, so they cannot run it — and non-technical users cannot read it anyway. The claim link you show comes from `edgeone login --claim`. `claimCommand` is a fallback for headless/CI environments with no browser, executed by you, never displayed.
 
 ---
 
@@ -220,17 +220,25 @@ The backend claims **asynchronously** and only migrates projects whose deploymen
 
 ## Claim flow
 
-**Route A — open the claim page in the user's browser. This is the flow, and the only one you present.** Present the `claimUrl` link in the result. When the user asks you to claim it for them, open it for them:
+**Route A — `edgeone login --claim` (the flow, and the only one you present).** Run it immediately after the anonymous deploy, in the background:
 
 ```bash
-open "<claimUrl>"          # macOS (local, or WorkBuddy host)
-xdg-open "<claimUrl>"      # Linux
-start "" "<claimUrl>"      # Windows
+edgeone login --claim --local --json
 ```
 
-Then confirm plainly: the claim page is open, please sign in there. Do not re-paste the URL or add guidance. Nothing else to run.
+What it does:
 
-**Route B — CLI claim. Fallback only**, for headless/CI environments where no browser can be opened. Never advertise it, never show the command to the user:
+1. Reads `.edgeone/anonymous.json` (fails fast if absent).
+2. Starts the login listener on a free port (from 1024) **without opening a browser**.
+3. Prints a `{"status":"waiting","claimLoginUrl":"...","port":...,"projectName":"..."}` JSON line immediately, then keeps listening (60-minute timeout, matching the claim window). The URL chains Tencent Cloud login → the claim page (carrying the anonymous token + port + state).
+4. The user logs in and claims on that page; the console relays the login state back to the listener after the claim completes.
+5. On success the CLI saves credentials (plus `.edgeone/auth.json` with `--local`), waits briefly for the async transfer to become visible, links the project (`.edgeone/project.json`), deletes `.edgeone/anonymous.json`, and exits 0 with `{"status":"success","projectId":...,"projectName":...,"linked":true}`.
+
+If it exits non-zero (timeout / not completed), the anonymous state file is still there — re-run the same command for a fresh link.
+
+The bare `claimUrl` from the deploy JSON bypasses all of this: the project gets claimed but the CLI never learns the login state, never links the project, and the next deploy starts a second anonymous project. Never present it.
+
+**Route B — CLI claim. Fallback only**, for headless/CI environments where no browser exists. Never advertise it, never show the command to the user:
 
 1. **Deploy must have succeeded.** Only `Success` deployments are migrated.
 2. **Log in.** In an interactive environment the CLI opens a browser when needed; in CI, pass `-t <api-token>`.
@@ -275,11 +283,11 @@ edgeone makers deploy --anonymous --json
 # 2. Verify the deployment is live
 curl -sSI "<url from the json>" | head -1
 
-# 3. Later, once the user has an account
-edgeone login --site global
-edgeone makers claim --json     # reads .edgeone/anonymous.json
+# 3. Start the claim listener in the background right away
+edgeone login --claim --local --json
+# → first JSON line has claimLoginUrl; process exits 0 once the user claims
 ```
 
 After an anonymous deploy, present the result using the **fixed template in [SKILL.md](../SKILL.md) Step 4** — do not assemble your own message. Substitute only the URL and the claim link; translate it into the user's language; add nothing.
 
-It carries exactly three things, and that is deliberate: the access URL, the `claimUrl` link (**never** the `claimCommand`), and that the link expires in 60 minutes (**never** the raw `expiresAt` value).
+It carries exactly three things, and that is deliberate: the access URL, the claim link (the `claimLoginUrl` from `login --claim` — never the bare `claimUrl`, never the `claimCommand`), and that the link expires in 60 minutes (**never** the raw `expiresAt` value).

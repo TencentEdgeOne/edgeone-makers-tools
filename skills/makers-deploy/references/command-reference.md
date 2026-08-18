@@ -49,6 +49,7 @@ edgeone makers link --name <project> -t <token>   # Non-interactive
 | Login (China, browser) | `edgeone login --site china` |
 | Login (Global, browser) | `edgeone login --site global` |
 | Login (token, auto-site) | `edgeone login --token <token>` |
+| Login + claim anonymous project | `edgeone login --claim --local --json` (run in background after an anonymous deploy; prints `claimLoginUrl`, then waits) |
 | View login info | `edgeone whoami` |
 | Logout | `edgeone logout` |
 | Switch account | `edgeone switch` |
