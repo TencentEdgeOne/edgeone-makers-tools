@@ -338,6 +338,7 @@ If the user acknowledges the limitation and still wants an anonymous deploy, you
 ### Step 2: Ask the user — do not deploy anonymously without asking
 
 In an interactive environment, present the choice (use the IDE's selection control, e.g. `ask_followup_question`). The option labels deliberately avoid the word "anonymous" — it is jargon and confuses non-technical users. Present these two options **exactly**, in the user's language. Do not paraphrase the labels, do not add caveats to the options themselves, and do not mention "anonymous" to the user at all.
+The option text must be placed in the `label` exactly as is; it must not be split into the `description`.
 
 **English-speaking user — present exactly these two options:**
 
@@ -346,8 +347,8 @@ In an interactive environment, present the choice (use the IDE's selection contr
 
 **Chinese-speaking user — present exactly these two options:**
 
-> - **直接发布，稍后再登录** —— 无需登录即可发布，先获得网站预览链接，之后可登录并认领网站
-> - **登录后发布** —— 登录 EdgeOne Makers 账户后发布，网站将直接保存到您的账户
+> - **直接发布，稍后再登录(无需登录即可发布，先获得网站预览链接，之后可登录并认领网站)**
+> - **登录后发布(登录 EdgeOne Makers 账户后发布，网站将直接保存到您的账户)**
 
 Map their pick to the flow:
 
@@ -397,7 +398,7 @@ Run it with `run_in_background`. It prints a `{"status":"waiting","claimLoginUrl
 
 **Chinese-speaking user — emit exactly this:**
 
-> 🎉 匿名部署成功
+> 🎉 部署成功
 > 🌐 **访问地址**：`<url>`
 >
 > ---
