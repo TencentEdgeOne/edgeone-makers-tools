@@ -18,7 +18,7 @@ description: >-
   use edgeone-makers-dev for troubleshooting).
 metadata:
   author: edgeone
-  version: "2.10.0"
+  version: "2.10.1"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -52,7 +52,7 @@ Deploy any project to **EdgeOne Makers**.
 6. **Auto-detect the login method** — browser login in desktop environments, token login in headless/remote/CI environments. Follow the decision table below.
 7. **After token login, ask if the user wants to save the token locally** for future use.
 8. **Before triggering any browser popup (login / registration), explain the reason and the benefits to the user first** — never silently launch a browser window.
-9. **Write every user-facing message in the user's own language** — **all** prose, blockquotes, and prompts in this skill are written in English purely to specify *meaning*; none of it is a string to paste. If the user writes to you in Chinese, speak Chinese — the login explanation, the site choice, the token question, the deploy result, all of it. Likewise for any other language. Emitting this skill's English strings into a non-English conversation is a bug. Only literal CLI commands, flags, env var names, and JSON field names stay verbatim. ⚠️ Where this skill gives a **fixed template** (Step 4 of Anonymous Deploy), translating it is required but rewriting or extending it is not allowed — match it line for line.
+9. **Write every user-facing message in the user's own language** — **all** prose, blockquotes, and prompts in this skill are written in English purely to specify *meaning*; none of it is a string to paste. If the user writes to you in Chinese, speak Chinese — the login explanation, the site choice, the token question, the deploy result, all of it. Likewise for any other language. Emitting this skill's English strings into a non-English conversation is a bug. Only literal CLI commands, flags, env var names, and JSON field names stay verbatim. ⚠️ Where this skill gives a **fixed template** (Steps 2 and 4 of Anonymous Deploy), translating it is required but rewriting or extending it is not allowed — match it line for line.
 
 **Rules 10-13 apply to the anonymous deploy / claim flow only:**
 
@@ -337,11 +337,22 @@ If the user acknowledges the limitation and still wants an anonymous deploy, you
 
 ### Step 2: Ask the user — do not deploy anonymously without asking
 
-In an interactive environment, present the choice (use the IDE's selection control, e.g. `ask_followup_question`). Phrase it in the user's language — the English below specifies the meaning, not the wording (critical rule 9):
+In an interactive environment, present the choice (use the IDE's selection control, e.g. `ask_followup_question`). The option labels deliberately avoid the word "anonymous" — it is jargon and confuses non-technical users. Present these two options **exactly**, in the user's language. Do not paraphrase the labels, do not add caveats to the options themselves, and do not mention "anonymous" to the user at all.
 
-> You're not logged in to EdgeOne Makers. Two options:
-> - **Deploy anonymously (no login)** — you get a working URL immediately, but the link expires in 60 minutes unless you sign in and claim it. Until claimed, it also has visitor-count and IP restrictions, so it isn't suitable for wide sharing.
-> - **Log in now** — the project is saved to your account right away, with no expiry to worry about.
+**English-speaking user — present exactly these two options:**
+
+> - **Publish now, log in later** — No login needed. Get a preview link right away; you can log in and claim the site whenever you're ready.
+> - **Log in, then publish** — Log in to your EdgeOne Makers account first; the site is saved straight to your account.
+
+**Chinese-speaking user — present exactly these two options:**
+
+> - **直接发布，稍后再登录** —— 无需登录即可发布，先获得网站预览链接，之后可登录并认领网站
+> - **登录后发布** —— 登录 EdgeOne Makers 账户后发布，网站将直接保存到您的账户
+
+Map their pick to the flow:
+
+- **Publish now, log in later** → this is the anonymous deploy path — continue to **Step 3**.
+- **Log in, then publish** → go to **Login** (browser flow), then continue with the normal deploy.
 
 ⛔ **Do not over-promise what claiming gives them.** Say the project is *kept* / *saved to their account*, and nothing more. Specifically, do **not** say "no access restrictions", "permanently yours", or anything implying the URL is then unconditionally public and final — a claimed project can still need a custom domain and, for mainland-China access, ICP filing. Do **not** raise custom domains, ICP filing, or DNS at this point either: the user is deciding whether to log in, and those concepts are noise here. The claim page walks them through next steps.
 
