@@ -29,6 +29,8 @@ Deploy any project to **EdgeOne Makers**.
 
 ## ⛔ Critical Rules (never skip)
 
+> 🔌 **Connector preAuth exception:** when invoked via the WorkBuddy EdgeOne connector, CLI install/version and login are already guaranteed by `cli.json` preAuth — skip the version check (Rule 1) and the login check / login steps, and deploy directly. Everything below still fully applies to standalone / CI use (no preAuth).
+
 1. **CLI version ≥ `1.6.0`** — reinstall if lower. Versions below `1.6.0` lack the non-interactive fixes (whoami fail-fast, `--json` output) and will hang in Agent/CI environments. Never proceed with an outdated version.
 2. **Never truncate the deploy URL — this applies to EVERY mention** — `EDGEONE_DEPLOY_URL` includes query parameters (`?eo_token=...&eo_time=...`) required for access. Without them the page returns 401. Always output the **complete** URL with full query string. This rule applies to: the primary display, summary tables, footnotes, comparisons, code blocks, `present_files` calls — **every single occurrence** of the URL in your reply. Truncation is any removal of the `?` and everything after it.
 
@@ -80,7 +82,9 @@ This tells the platform that the deployment is triggered from an AI skill contex
 
 ## Deployment Flow
 
-Run these checks first, then follow the decision table:
+> 🔌 **Under WorkBuddy connector preAuth: skip Check 1 and Check 2 below.** CLI version and login are already guaranteed before you start — do NOT run `edgeone -v` / `edgeone whoami`, and do NOT add a "check CLI env / login" task to your plan. Keep Check 0 (`PAGES_SOURCE`), then go straight to Check 3 (link) / Deploy. Run Check 1 & 2 only in standalone / CI use (no preAuth).
+
+Run these checks first (standalone / CI), then follow the decision table:
 
 ```bash
 # Check 0: Set environment variable (required before any edgeone command)
@@ -387,3 +391,28 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 ---
 
 For CLI command reference, environment variables, local dev setup, and token management details, see [references/command-reference.md](references/command-reference.md).
+
+---
+
+## Quick Deploy (Script)
+
+For a streamlined deploy experience, use the bundled script instead of manually composing CLI commands:
+
+```bash
+# Basic deploy
+node references/makers-deploy/scripts/deploy.mjs --name <project>
+
+# With token (CI / headless)
+node references/makers-deploy/scripts/deploy.mjs --name <project> --token <t>
+
+# Preview environment
+node references/makers-deploy/scripts/deploy.mjs --name <project> --preview
+```
+
+The script handles the full pipeline automatically:
+1. Checks CLI is installed and version ≥ 1.6.0
+2. Checks authentication (reads saved token if available)
+3. Executes `edgeone makers deploy --json`
+4. Outputs structured JSON: `{ status, url, projectId, consoleUrl }`
+
+Exit codes: `0` success · `1` deploy failed · `2` CLI missing · `3` not authenticated.
