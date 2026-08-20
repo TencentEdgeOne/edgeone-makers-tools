@@ -57,7 +57,7 @@ Do not pass these — they have no effect and will mislead the user:
 ```json
 {
   "status": "success",
-  "url": "https://my-app-a3f8b2c1.edgeone.dev",
+  "url": "https://my-app-a3f8b2c1.edgeone.dev?eo_token=abc123&eo_time=1234567890",
   "projectId": "makers-ihtxkls1k3jc",
   "deploymentId": "dppxfikip2rt",
   "anonymousToken": "98a71090aaae2670c6fe0024a250d6f3",
@@ -70,7 +70,7 @@ Do not pass these — they have no effect and will mislead the user:
 
 | Field | Meaning |
 |-------|---------|
-| `url` | Live access URL. Present it exactly as returned, never truncated — if it carries a query string, keep the whole thing. |
+| `url` | Live access URL. The CLI requests it signed (`NeedVisit: true`), so it arrives with `?eo_token=...&eo_time=...` — that signature is what makes it openable, including on the China site. Present it exactly as returned, never truncated. |
 | `projectId` | Anonymous project ID. |
 | `deploymentId` | Deployment ID. |
 | `anonymousToken` | Anonymous identity token (the Sid). Needed to claim. |
@@ -168,7 +168,7 @@ Raise domains or filing **only** when the user asks about stable / production / 
 
 China and Global are fully independent environments: tokens and projects do not cross over. If the site is wrong, the claim fails.
 
-> **China site status:** availability depends on backend anonymous-account configuration being in place for the China site. Confirm before relying on `--site china`. Note also that mainland-China access to preview links may be restricted by local regulations.
+> **China site status:** availability depends on backend anonymous-account configuration being in place for the China site. Confirm before relying on `--site china`. An *unsigned* preview link 401s in mainland China  — the signed URL from `NeedVisit: true` is what makes it accessible;
 
 ---
 
