@@ -1,5 +1,5 @@
 ---
-name: makers-cli
+name: edgeone-makers-cli
 description: >-
   EdgeOne Makers CLI command reference.
   Use when running edgeone CLI commands for dev, build, deploy, env management.

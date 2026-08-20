@@ -10,21 +10,23 @@ test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.1 loads validate ru
   const rules = await loadSkillValidateRules();
   const edgeFunctions = rules.find((rule) => rule.skill === 'edgeone-makers-edge-functions');
 
-  assert.ok(edgeFunctions);
-  assert.deepEqual(edgeFunctions.validate, [
-    {
-      pattern: 'process\\.env',
-      message: 'Use context.env in EdgeOne Makers runtime code.',
-    },
-    {
-      pattern: 'new\\s+Headers\\s*\\(',
-      message: 'Use plain object headers for this runtime surface.',
-    },
-    {
-      pattern: 'fs\\.writeFile',
-      message: 'Edge Functions do not support filesystem writes.',
-    },
-  ]);
+  assert.ok(edgeFunctions, 'edge-functions capability should declare validate rules');
+  assert.deepEqual(edgeFunctions.pathPatterns, ['edge-functions/**', 'functions/**']);
+
+  // 断言不变量而不是冻结的数组：每加一条规则都让测试失败，只会逼着人改断言。
+  assert.ok(edgeFunctions.validate.length >= 3);
+  for (const item of edgeFunctions.validate) {
+    assert.equal(typeof item.pattern, 'string');
+    assert.equal(typeof item.message, 'string');
+    assert.ok(item.message.length > 0);
+    assert.doesNotThrow(() => new RegExp(item.pattern));
+  }
+
+  // 三条原始红线必须始终在场，新增规则不得把它们挤掉。
+  const messages = edgeFunctions.validate.map((item) => item.message);
+  assert.ok(messages.includes('Use context.env in EdgeOne Makers runtime code.'));
+  assert.ok(messages.includes('Use plain object headers for this runtime surface.'));
+  assert.ok(messages.includes('Edge Functions do not support filesystem writes.'));
 });
 
 test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.2 warns on Edit content without blocking writes', () => {
@@ -199,4 +201,126 @@ test('plugin-skill-injection-optimization.SIGNAL_LOGGING.3 logs validate matches
   } finally {
     await rm(tmp, { recursive: true, force: true });
   }
+});
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.7 aggregates matches from every skill whose pathPatterns match', () => {
+  const rules = [
+    {
+      skill: 'skill-alpha',
+      pathPatterns: ['functions/**'],
+      validate: [{ pattern: 'process\\.env', message: 'Alpha says use context.env.' }],
+    },
+    {
+      skill: 'skill-beta',
+      pathPatterns: ['functions/**'],
+      validate: [{ pattern: 'process\\.env', message: 'Beta says the same thing differently.' }],
+    },
+  ];
+
+  const output = buildValidateWriteOutput(
+    {
+      tool_name: 'Write',
+      tool_input: { file_path: 'functions/index.ts', content: 'process.env.KEY' },
+    },
+    { rules },
+  );
+
+  assert.deepEqual(output, {
+    hookSpecificOutput: {
+      hookEventName: 'PreToolUse',
+      additionalContext:
+        'Validation reminder:\n- Alpha says use context.env.\n- Beta says the same thing differently.',
+    },
+  });
+});
+
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.7 deduplicates an identical message from two skills', () => {
+  const rules = [
+    {
+      skill: 'skill-alpha',
+      pathPatterns: ['functions/**'],
+      validate: [{ pattern: 'process\\.env', message: 'Use context.env.' }],
+    },
+    {
+      skill: 'skill-beta',
+      pathPatterns: ['functions/**'],
+      validate: [{ pattern: 'process\\.env', message: 'Use context.env.' }],
+    },
+  ];
+
+  const output = buildValidateWriteOutput(
+    {
+      tool_name: 'Write',
+      tool_input: { file_path: 'functions/index.ts', content: 'process.env.KEY' },
+    },
+    { rules },
+  );
+
+  assert.equal(
+    output.hookSpecificOutput.additionalContext,
+    'Validation reminder:\n- Use context.env.',
+  );
+});
+
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.7 ignores a skill whose pathPatterns do not match', () => {
+  const rules = [
+    {
+      skill: 'skill-alpha',
+      pathPatterns: ['edge-functions/**'],
+      validate: [{ pattern: 'process\\.env', message: 'Alpha.' }],
+    },
+    {
+      skill: 'skill-beta',
+      pathPatterns: ['agents/**'],
+      validate: [{ pattern: 'process\\.env', message: 'Beta.' }],
+    },
+  ];
+
+  const output = buildValidateWriteOutput(
+    {
+      tool_name: 'Write',
+      tool_input: { file_path: 'agents/chat/index.ts', content: 'process.env.KEY' },
+    },
+    { rules },
+  );
+
+  assert.equal(output.hookSpecificOutput.additionalContext, 'Validation reminder:\n- Beta.');
+});
+
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.8 every declared rule has usable patterns and paths', async () => {
+  const rules = await loadSkillValidateRules();
+  assert.ok(rules.length >= 8, `expected at least 8 skills with validate, got ${rules.length}`);
+
+  for (const rule of rules) {
+    assert.ok(rule.pathPatterns.length > 0, `${rule.skill} declares validate but no pathPatterns`);
+    assert.ok(rule.validate.length > 0, `${rule.skill} has an empty validate list`);
+    for (const item of rule.validate) {
+      assert.doesNotThrow(
+        () => new RegExp(item.pattern),
+        `${rule.skill}: invalid regex ${item.pattern}`,
+      );
+      assert.ok(item.message.length > 10, `${rule.skill}: message too short to be actionable`);
+    }
+  }
+});
+
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.9 returns no rules when the skills directory is missing', () => {
+  // 部分安装 / CLAUDE_PLUGIN_ROOT 解析错位时，skills/ 可能不存在。
+  // 校验器失效应当是「不提醒」，不能变成每次写文件都抛 ENOENT。
+  assert.deepEqual(loadSkillValidateRules('/nonexistent-skills-dir-for-test'), []);
+});
+
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.9 returns no rules when the skills path is a file', () => {
+  assert.deepEqual(loadSkillValidateRules('hooks/validate-write.mjs'), []);
+});
+
+test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.9 yields no output instead of throwing when rules cannot be loaded', () => {
+  const output = buildValidateWriteOutput(
+    {
+      tool_name: 'Write',
+      tool_input: { file_path: 'agents/chat/index.ts', content: 'process.env.KEY' },
+    },
+    { rules: loadSkillValidateRules('/nonexistent-skills-dir-for-test') },
+  );
+
+  assert.equal(output, null);
 });
