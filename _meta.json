@@ -2,7 +2,7 @@
   "ownerId": "442102",
   "publishedAt": 1781766512723,
   "slug": "edgeone-makers-tools",
-  "version": "2.0.0",
+  "version": "2.1.0",
   "files": [
     "skills/edgeone-makers-tools/SKILL.md",
     "skills/edgeone-makers-tools/references/makers-agents/SKILL.md",
@@ -33,6 +33,7 @@
     "skills/edgeone-makers-tools/references/makers-cloud-functions/references/python-functions.md",
     "skills/edgeone-makers-tools/references/makers-cloud-functions/references/troubleshooting.md",
     "skills/edgeone-makers-tools/references/makers-deploy/SKILL.md",
+    "skills/edgeone-makers-tools/references/makers-deploy/references/anonymous-deploy.md",
     "skills/edgeone-makers-tools/references/makers-deploy/references/command-reference.md",
     "skills/edgeone-makers-tools/references/makers-edge-functions/SKILL.md",
     "skills/edgeone-makers-tools/references/makers-env-adaption/SKILL.md",

@@ -8,6 +8,10 @@ description: >-
   "go live", "release", "publish a new version", "redeploy",
   "上线", "发布", "发一版", "重新部署",
   "搭建并部署", "开发并上线", "build and deploy", "create and deploy".
+  Also trigger for login-free deployment and project claiming:
+  "deploy without login", "no account yet", "anonymous deploy",
+  "claim project", "claim my deployment",
+  "免登录部署", "匿名部署", "还没有账号", "认领项目".
   ⚠️ Also trigger when any agent is about to execute `edgeone makers deploy` or `edgeone makers deploy`
   commands — the skill contains critical rules for parsing deploy output and presenting access URLs.
   Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy —
@@ -20,7 +24,7 @@ validate:
     message: "edgeone whoami does not accept -t. Check the exit code instead: 0 = logged in, 1 = not."
 metadata:
   author: edgeone
-  version: "2.2.0"
+  version: "2.10.1"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -29,7 +33,7 @@ Deploy any project to **EdgeOne Makers**.
 
 ## ⛔ Critical Rules (never skip)
 
-1. **CLI version ≥ `1.6.0`** — reinstall if lower. Versions below `1.6.0` lack the non-interactive fixes (whoami fail-fast, `--json` output) and will hang in Agent/CI environments. Never proceed with an outdated version.
+1. **CLI version ≥ `1.6.0`** — reinstall if lower. Versions below `1.6.0` lack the non-interactive fixes (whoami fail-fast, `--json` output) and hang in Agent/CI environments. Never proceed with an outdated version. **Anonymous deploy and `claim` additionally require `1.6.21`** — that is a higher, feature-specific floor; see **Anonymous Deploy**. Do not block a normal authenticated deploy because the CLI is below `1.6.21`.
 2. **Never truncate the deploy URL — this applies to EVERY mention** — `EDGEONE_DEPLOY_URL` includes query parameters (`?eo_token=...&eo_time=...`) required for access. Without them the page returns 401. Always output the **complete** URL with full query string. This rule applies to: the primary display, summary tables, footnotes, comparisons, code blocks, `present_files` calls — **every single occurrence** of the URL in your reply. Truncation is any removal of the `?` and everything after it.
 
    ❌ WRONG (truncated — will 401):
@@ -57,6 +61,14 @@ Deploy any project to **EdgeOne Makers**.
 7. **After token login, ask if the user wants to save the token locally** for future use.
 8. **Before triggering any browser popup (login / registration), explain the reason and the benefits to the user first** — never silently launch a browser window.
 9. **On any CLI failure, surface the actual error text to the user before retrying, switching commands, or proposing a workaround.** Do NOT paraphrase (e.g. don't rewrite `Makers project exceeds 40 limit` into "maybe a name conflict or permission"). Do NOT silently pivot from `makers dev` to `makers deploy` (or vice versa) hoping to bypass — a systemic failure (auth / quota / permission) hits both with the same cause. Quote the raw error, name the root cause, then propose the fix or ask the user.
+10. **Write every user-facing message in the user's own language** — **all** prose, blockquotes, and prompts in this skill are written in English purely to specify *meaning*; none of it is a string to paste. If the user writes to you in Chinese, speak Chinese — the login explanation, the site choice, the token question, the deploy result, all of it. Likewise for any other language. Emitting this skill's English strings into a non-English conversation is a bug. Only literal CLI commands, flags, env var names, and JSON field names stay verbatim. ⚠️ Where this skill gives a **fixed template** (Steps 2 and 4 of Anonymous Deploy), translating it is required but rewriting or extending it is not allowed — match it line for line.
+
+**Rules 11-14 apply to the anonymous deploy / claim flow only:**
+
+11. **The claim command's parameter is `--sid`, NOT `--token`** — `edgeone makers claim --sid <anonymous-token>`. The `-t` / `--token` flag on `claim` is the **account API token**, an entirely different credential. Passing the anonymous token to `-t` fails. Product documentation showing `claim --token <anonymous-token>` is wrong; trust this rule.
+12. **Present the anonymous deploy result with the fixed template in Step 4** — it is a template, not an example: reproduce it exactly, substituting only the URL and the claim link. Never show the raw `expiresAt` timestamp, never state a different duration, and never add lines to it. 60 minutes is the product's stated claim window and the conservative instruction, so that is what the template says even though the token's observed lifetime can be longer. It frames the *link* as expiring, not the project as being deleted.
+13. **The claim link you present must come from `edgeone login --claim`, never the bare `claimUrl`** — right after an anonymous deploy, run `edgeone login --claim --local --json` in the background and put its `claimLoginUrl` in the template. Only that link carries the login → claim → callback chain that lets the CLI learn the login state and auto-link the project; the bare `claimUrl` from deploy output claims without telling the CLI, so the user's next deploy would create a second anonymous project. Never print `claimCommand`, `edgeone makers claim --sid ...`, or any other command as the user's way to claim — in sandboxed IDEs like WorkBuddy the user has no terminal and literally cannot run it. `makers claim` is only a fallback for headless/CI environments, run by you, never displayed.
+14. **Keep the claim pitch minimal — do not over-promise, and do not teach domains** — say only that signing in *keeps* the project. ❌ Never write "permanently yours", "no time limit or access restrictions", "unlimited", or anything implying the URL then works unconditionally forever: a claimed project may still need a custom domain, and mainland-China access can require ICP filing, so those claims are false. ❌ Also do not volunteer custom domains, ICP filing, DNS, or console navigation while the user is just deciding whether to claim — that front-loads complexity onto someone who only wanted a live URL. The claim page owns the follow-up flow. Answer such topics only when the user asks.
 
 ---
 
@@ -86,10 +98,10 @@ Run these checks first, then follow the decision table:
 # Check 0: Set environment variable (required before any edgeone command)
 export PAGES_SOURCE=skills
 
-# Check 1: CLI installed and correct version? (must be >= 1.6.0)
+# Check 1: CLI installed and correct version? (must be >= 1.6.0; anonymous deploy needs >= 1.6.21)
 edgeone -v
 
-# Check 2: Already logged in? (CLI >= 1.6.0 whoami fails fast, won't hang)
+# Check 2: Already logged in? (whoami fails fast, won't hang)
 edgeone whoami
 # If exit 0 → logged in, no -t needed
 # If exit 1 → not logged in, need token or browser login
@@ -112,7 +124,9 @@ cat edgeone.json 2>/dev/null
 | Not installed or < 1.6.0 | — | → Go to **Install CLI** |
 | `≥ 1.6.0` ✓ | Logged in (or token present) | → Go to **Deploy** |
 | `≥ 1.6.0` ✓ | Not logged in, has saved token | → Go to **Deploy with Token** (use saved token) |
-| `≥ 1.6.0` ✓ | Not logged in, no saved token | → **Try Browser Login first** (see Login section). If the browser doesn't open or nothing happens within ~60 seconds, **fall back to Token Login**. Do NOT preemptively skip browser login by guessing "this looks like an Agent/CI environment" — that guess is often wrong. In particular, **WorkBuddy is a desktop IDE sandbox and fully supports browser login** (host browser + OAuth callback are bridged into the sandbox). |
+| `≥ 1.6.21` ✓ | Not logged in, no saved token, **interactive** | → Go to **Anonymous Deploy** — ask the user to choose anonymous deploy or login |
+| `≥ 1.6.21` ✓ | Not logged in, no saved token, **non-interactive (Agent/CI/headless)** | → Go to **Anonymous Deploy**; when the user cannot be asked, deploy with `--anonymous --json` and surface the claim link and the 60-minute claim window in the result |
+| `1.6.0`–`1.6.20` | Not logged in, no saved token | Anonymous deploy is unavailable on this version → **Try Browser Login first** (see Login section). If the browser doesn't open or nothing happens within ~60 seconds, fall back to **Token Login**. Do NOT preemptively skip browser login by guessing "this looks like an Agent/CI environment" — that guess is often wrong; in particular, **WorkBuddy is a desktop IDE sandbox and fully supports browser login** |
 | `≥ 1.6.0` ✓ | User explicitly provides a token or requests token login | → Go to **Deploy with Token** / **Token Login** |
 
 ---
@@ -123,7 +137,7 @@ cat edgeone.json 2>/dev/null
 npm install -g edgeone@latest
 ```
 
-Verify: `edgeone -v` — confirm output is `1.6.0` or higher. Retry installation if not. (Versions < 1.6.0 hang on `whoami`/login in non-interactive environments and lack `--json`.)
+Verify: `edgeone -v` — confirm output is `1.6.0` or higher. Retry installation if not. (Versions < 1.6.0 hang on `whoami`/login in non-interactive environments and lack `--json`.) Anonymous deploy and `claim` need `1.6.21`; if `latest` is still below that, those two features are simply unavailable — normal authenticated deploy works fine.
 
 ---
 
@@ -154,7 +168,7 @@ Use the IDE's selection control (`ask_followup_question`) before running any log
 ⚠️ **CRITICAL**: After the user chooses, you MUST invoke login with an explicit
 `--site <china|global>` flag (e.g. `edgeone login --site china`).
 **NEVER run a bare `edgeone login` (without `--site`) when driven by an Agent / skill.**
-On CLI ≥ 1.6.0, a bare `login` in a non-interactive context fails fast asking for
+A bare `login` in a non-interactive context fails fast asking for
 `--site` (it no longer pops an interactive site-picker that would hang). The site choice
 is meant to happen here in the conversation, not inside the CLI.
 
@@ -307,9 +321,137 @@ The CLI auto-detects the framework, runs the build, and uploads the output direc
 
 ---
 
+## Anonymous Deploy (no login required)
+
+When the user is not logged in and has no token, they can deploy anonymously and claim the project later. Requires CLI `>= 1.6.21`. On `1.6.0`–`1.6.20` this feature does not exist — use **Login** or a token instead.
+
+### Step 1: Exclusion check — run this FIRST
+
+Anonymous deploy builds with an empty environment: it skips remote env-var pull and AI-gateway credential injection, because both need authentication. Projects depending on either will deploy successfully but break at runtime.
+
+```bash
+# Is this an Agent project?
+ls agents/ 2>/dev/null && echo "AGENT_PROJECT"
+
+# Does it use Blob storage? (checks source files and the dependency declaration)
+grep -rEl "@edgeone/pages-blob" \
+  --include="*.ts" --include="*.js" --include="*.mjs" --include="*.cjs" \
+  --include="*.tsx" --include="*.jsx" --include="*.vue" --include="*.svelte" \
+  . 2>/dev/null | head -1
+grep -l '"@edgeone/pages-blob"' package.json 2>/dev/null
+```
+
+Non-empty output from either grep means the project uses Blob.
+
+**KV cannot be detected this way — you must ask.** A KV namespace is bound in the console and exposed as a *global variable* whose name the user chose (e.g. `my_kv`), so there is no package import to grep for. There is no `@edgeone/pages-kv` package. Ask the user directly:
+
+> Does this project use KV storage?
+
+If either check hits, or the user says the project uses KV, **do not deploy anonymously.** Go to **Login** and tell the user why:
+
+> This project needs environment variables / AI gateway credentials or a storage binding, which anonymous deploy cannot provide. The site would load but those features would fail. Let's log in so it works properly.
+
+Plain static sites and frontend-framework projects with no such dependency may proceed.
+
+If the user acknowledges the limitation and still wants an anonymous deploy, you may proceed — but state prominently in your result that AI and storage features will not work until the project is claimed and configured.
+
+### Step 2: Ask the user — do not deploy anonymously without asking
+
+In an interactive environment, present the choice (use the IDE's selection control, e.g. `ask_followup_question`). The option labels deliberately avoid the word "anonymous" — it is jargon and confuses non-technical users. Present these two options **exactly**, in the user's language. Do not paraphrase the labels, do not add caveats to the options themselves, and do not mention "anonymous" to the user at all.
+The option text must be placed in the `label` exactly as is; it must not be split into the `description`.
+
+**English-speaking user — present exactly these two options:**
+
+> - **Publish now, log in later** — No login needed. Get a preview link right away; you can log in and claim the site whenever you're ready.
+> - **Log in, then publish** — Log in to your EdgeOne Makers account first; the site is saved straight to your account.
+
+**Chinese-speaking user — present exactly these two options:**
+
+> - **直接发布，稍后再登录(无需登录即可发布，先获得网站预览链接，之后可登录并认领网站)**
+> - **登录后发布(登录 EdgeOne Makers 账户后发布，网站将直接保存到您的账户)**
+
+Map their pick to the flow:
+
+- **Publish now, log in later** → this is the anonymous deploy path — continue to **Step 3**.
+- **Log in, then publish** → go to **Login** (browser flow), then continue with the normal deploy.
+
+⛔ **Do not over-promise what claiming gives them.** Say the project is *kept* / *saved to their account*, and nothing more. Specifically, do **not** say "no access restrictions", "permanently yours", or anything implying the URL is then unconditionally public and final — a claimed project can still need a custom domain and, for mainland-China access, ICP filing. Do **not** raise custom domains, ICP filing, or DNS at this point either: the user is deciding whether to log in, and those concepts are noise here. The claim page walks them through next steps.
+
+Only skip this question when the environment genuinely cannot ask (CI, headless, no TTY). In that case deploy anonymously and make the claim link and the 60-minute window unmissable in your result — the user had no chance to be warned in advance.
+
+### Step 3: Deploy
+
+```bash
+export PAGES_SOURCE=skills
+edgeone makers deploy --anonymous --json
+```
+
+Add `--site china` or `--site global` only when the site must be pinned (the user told you which, or CI needs determinism). Otherwise omit it — **the CLI detects the site itself** from its own egress IP. Do not probe for the site yourself and do not synthesise `--site` from your own check.
+
+Do **not** pass `-n`, `-e`, or `--area` — they are ignored under `--anonymous`. The project name is generated automatically.
+
+### Step 4: Start the claim listener, then present the result
+
+Parse the **last line** of the deploy stdout as JSON (human-readable output precedes it). Fields are **camelCase**: `url`, `projectId`, `deploymentId`, `anonymousToken`, `claimUrl`, `claimCommand`, `expiresAt`, `site`.
+
+**Immediately start the claim listener in the background** — it must be listening before the user clicks the claim link, or the login state never reaches the CLI and the next deploy would create a second anonymous project:
+
+```bash
+edgeone login --claim --local --json
+```
+
+Run it with `run_in_background`. It prints a `{"status":"waiting","claimLoginUrl":...}` JSON line right away, then keeps listening (up to 60 minutes). Grab `claimLoginUrl` from that line. ⛔ **This URL — not the `claimUrl` field from the deploy JSON — is the claim link you show the user.** Only this link chains login → claim page → callback to the CLI. The bare `claimUrl` from deploy output would claim the project without telling the CLI, and the user's next deploy would go to a new anonymous project instead of the claimed one.
+
+⛔ **Send the template as its own message, after the deploy command has fully returned.** Do not emit it in the same message in which you ran the deploy, do not attach it to the command's output, and do not print it while the command is still running. In WorkBuddy, content emitted alongside a running/finished command can be folded into a collapsible process message — if that happens, the user never sees the URL or the claim link. Wait for the Bash call to end, then send the template alone as your next reply.
+
+⛔ **This is a fixed template, not a suggestion.** Reproduce it exactly: same four lines, same order, same emoji, same separator. Substitute **only** `<url>` (from the deploy JSON) and `<claimLoginUrl>` (from the `login --claim` output). Do not reword, merge, split, or reorder lines. Do not add a sentence before or after it. Do not append project ID, deployment ID, console URL, `expiresAt`, next steps, or commentary of any kind.
+
+**English-speaking user — emit exactly this:**
+
+> 🌐 **Live URL**: `<url>`
+>
+> ---
+>
+> ⏳ **This link expires in 60 minutes**.
+>
+> 👉 [Claim this project](<claimLoginUrl>) — please claim it within 60 minutes.
+
+**Chinese-speaking user — emit exactly this:**
+
+> 🎉 部署成功
+> 🌐 **访问地址**：`<url>`
+>
+> ---
+>
+> ⏳ **该链接 60 分钟后失效**。
+>
+> 👉 [认领这个项目](<claimLoginUrl>) —— 请在 60 分钟内完成认领。
+
+For any other language, translate **this** template and nothing more — keep the four lines, the emoji, the separator, and the exact same content. Do not take the freedom to add or explain.
+
+Afterwards, stop. Anything you feel like adding here — what claiming unlocks, custom domains, ICP filing, DNS, console navigation, an offer to claim on their behalf — is prohibited by critical rules 13 and 14. Answer those topics only if the user asks.
+
+### After the user claims
+
+The background `login --claim` process exits on its own when the console relays the result. When it exits 0 with `{"status":"success",...,"linked":true}`:
+
+- the CLI is logged in (credentials saved, plus `.edgeone/auth.json` from `--local`),
+- the project is linked (`.edgeone/project.json`),
+- `.edgeone/anonymous.json` is removed.
+
+Tell the user plainly, in their language: the project is now in their account, and any further deploys will update that same project. Then use the normal deploy flow (`edgeone makers deploy --json`) for all later deploys.
+
+If the process exits non-zero (the user never completed the link within 60 minutes), the anonymous project is still unclaimed: re-run `edgeone login --claim --local --json` for a fresh link and present it again in the same template.
+
+If the user asks you to "帮我认领" / "claim it for me": point them to the same link again while the listener is still running; if it already exited, re-run the command for a fresh link. Never print the CLI claim command — `edgeone makers claim --sid` remains only for headless/CI environments with no browser (see critical rule 13).
+
+For the full JSON schema, rate limits, error codes, state-file fields, and site-resolution rules, see [references/anonymous-deploy.md](references/anonymous-deploy.md).
+
+---
+
 ## ⚠️ Parse Deploy Output (Critical)
 
-### Preferred: `--json` (CLI ≥ 1.6.0)
+### Preferred: `--json`
 
 When deploy is run with `--json`, the **last line** of stdout is a single JSON object —
 parse that directly, no regex / ANSI cleanup needed:
@@ -370,10 +512,11 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 |-------|----------|
 | `command not found: edgeone` | Run `npm install -g edgeone@latest` |
 | CLI version < 1.6.0 | Reinstall: `npm install -g edgeone@latest`. Older versions hang on whoami/login in non-interactive contexts |
+| `--anonymous` / `claim` reported as an unknown option | The installed CLI is below `1.6.21`. Run `npm install -g edgeone@latest`; if that is still below `1.6.21`, anonymous deploy is not released yet — use login or a token instead |
 | Browser does not open during login | Switch to token login |
-| "not authenticated" / exit 1 from `whoami` (CLI ≥ 1.6.0) | Expected when not logged in — whoami now fails fast instead of hanging. Run `edgeone login` (desktop) or provide a token |
+| "not authenticated" / exit 1 from `whoami` | Expected when not logged in — whoami fails fast instead of hanging. Offer anonymous deploy (see Anonymous Deploy), run `edgeone login`, or provide a token |
 | Non-interactive deploy says "browser login is unavailable" + exits 1 | Expected fail-fast in Agent/CI/headless with no token. Provide a token via `-t <token>` or set `EDGEONE_PAGES_API_TOKEN` |
-| Deploy seems to hang at `[DeployStatus] Deploying...` | On CLI ≥ 1.6.0 non-TTY emits heartbeat lines; it is NOT stuck. If a wrapper still mis-detects, use `--json` or run in background and poll. Do not kill it |
+| Deploy seems to hang at `[DeployStatus] Deploying...` | Non-TTY emits heartbeat lines; it is NOT stuck. If a wrapper still mis-detects, use `--json` or run in background and poll. Do not kill it |
 | Auth error with token | Token may be expired — regenerate at the console |
 | Login appears successful but `deploy` reports auth error | Browser reused a session from the wrong site, binding the wrong account. Click "Sign in with a different account" on the login page, or log out from all Tencent Cloud consoles first |
 | `edgeone whoami` shows an unexpected account | Browser session reuse. Click "Sign in with a different account" or log out from all consoles and re-login |

@@ -1,5 +1,17 @@
 # Command Reference
 
+## Contents
+
+- [Edge/Node Functions Initialization](#edgenode-functions-initialization)
+- [Local Development](#local-development)
+- [Environment Variables](#environment-variables)
+- [Project Linking](#project-linking)
+- [Token Management](#token-management)
+- [Full Command Reference (Makers)](#full-command-reference-makers)
+- [Makers Commands (Agent Projects)](#makers-commands-agent-projects)
+- [Non-Interactive Flags](#non-interactive-flags)
+- [Anonymous Deploy](#anonymous-deploy)
+
 ## Edge/Node Functions Initialization
 
 For projects needing server-side functions, run before first deploy:
@@ -45,10 +57,11 @@ edgeone makers link --name <project> -t <token>   # Non-interactive
 | Action | Command |
 |--------|---------|
 | Install CLI | `npm install -g edgeone@latest` |
-| Check version | `edgeone -v` (require ≥ 1.6.0) |
+| Check version | `edgeone -v` (require ≥ 1.6.0; anonymous deploy and `claim` need ≥ 1.6.21) |
 | Login (China, browser) | `edgeone login --site china` |
 | Login (Global, browser) | `edgeone login --site global` |
 | Login (token, auto-site) | `edgeone login --token <token>` |
+| Login + claim anonymous project | `edgeone login --claim --local --json` (run in background after an anonymous deploy; prints `claimLoginUrl`, then waits) |
 | View login info | `edgeone whoami` |
 | Logout | `edgeone logout` |
 | Switch account | `edgeone switch` |
@@ -61,6 +74,9 @@ edgeone makers link --name <project> -t <token>   # Non-interactive
 | Deploy preview | `edgeone makers deploy -e preview` |
 | Deploy with token | `edgeone makers deploy -t <token>` |
 | Deploy (JSON, Agent/CI) | `edgeone makers deploy -n <name> -t <token> --json` |
+| Deploy anonymously (no login) | `edgeone makers deploy --anonymous --json` |
+| Deploy anonymously to a site | `edgeone makers deploy --anonymous --site china\|global --json` |
+| Claim an anonymous project | `edgeone makers claim --sid <anonymous-token> --json` |
 
 ## Makers Commands (Agent Projects)
 
@@ -88,9 +104,16 @@ For projects with `agents/` directory (AI Agent endpoints). `edgeone makers` com
 | `--json` | deploy | Machine-readable JSON output (single line) |
 | `--port <number>` | dev | Custom frontend port |
 | `-e preview\|production` | deploy | Target environment |
+| `--anonymous` | deploy | Deploy without login; ignored when already authenticated. No `-a` short form (taken by `--area`) |
+| `--site china\|global` | deploy (with `--anonymous`), login | Target API site; auto-detected by IP when omitted |
+| `--sid <token>` | claim | Anonymous identity token; optional when `.edgeone/anonymous.json` exists. **Not** the same as `-t` |
 
 **Token precedence** (highest to lowest):
 1. `-t <token>` flag on the command
 2. `EDGEONE_PAGES_API_TOKEN` environment variable
 3. `.edgeone/.token` file (saved token)
 4. Browser login state
+
+## Anonymous Deploy
+
+For login-free deployment and the claim flow, see [anonymous-deploy.md](anonymous-deploy.md).
