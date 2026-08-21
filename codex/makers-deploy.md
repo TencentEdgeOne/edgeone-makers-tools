@@ -24,7 +24,7 @@ validate:
     message: "edgeone whoami does not accept -t. Check the exit code instead: 0 = logged in, 1 = not."
 metadata:
   author: edgeone
-  version: "2.10.1"
+  version: "2.10.4"
 ---
 
 # EdgeOne Makers Deployment Skill
