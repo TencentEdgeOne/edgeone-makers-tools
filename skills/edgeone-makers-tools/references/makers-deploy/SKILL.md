@@ -367,8 +367,8 @@ The option text must be placed in the `label` exactly as is; it must not be spli
 
 **Chinese-speaking user — present exactly these two options:**
 
-> - **直接发布，稍后再登录(无需登录即可发布，先获得网站预览链接，之后可登录并认领网站)**
-> - **登录后发布(登录 EdgeOne Makers 账户后发布，网站将直接保存到您的账户)**
+> - **直接发布，无需登录**
+> - **登录后发布**
 
 Map their pick to the flow:
 
