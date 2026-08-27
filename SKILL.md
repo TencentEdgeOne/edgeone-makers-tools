@@ -24,6 +24,7 @@ When you need EdgeOne Makers platform development guidance, read the matching Sk
 | Deploy project to EdgeOne | skills/makers-deploy/SKILL.md |
 | Edge Functions (V8 lightweight functions) | skills/makers-edge-functions/SKILL.md |
 | Cloud Functions (Node.js / Go / Python APIs) | skills/makers-cloud-functions/SKILL.md |
+| TypeScript types (@edgeone/types) — typed handlers & config | skills/makers-types/SKILL.md |
 | KV + Blob Storage | skills/makers-storage/SKILL.md |
 | Middleware (auth, rewrites, routing) | skills/makers-middleware/SKILL.md |
 | CLI command reference | skills/makers-cli/SKILL.md |

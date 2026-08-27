@@ -69,3 +69,23 @@ edgeone makers deploy
 edgeone makers env set WSA_API_KEY "your-key"
 edgeone makers env set SUPABASE_URL "https://xxx.supabase.co"
 ```
+
+## Typed config (`edgeone.config.ts`)
+
+For type-checked project config, use `defineConfig` from `@edgeone/types/config`
+(see the `makers-types` skill):
+
+```ts
+// edgeone.config.ts
+import { defineConfig } from '@edgeone/types/config';
+
+export default defineConfig({
+  outputDirectory: 'dist',
+  buildCommand: 'npm run build',
+  nodeVersion: '20',
+});
+```
+
+`edgeone compile` transpiles `edgeone.config.ts` → `edgeone.json`; `edgeone schema`
+writes `edgeone.schema.json` locally for IDE validation. The CLI is self-contained —
+no need to install `@edgeone/types` just to run these commands.
