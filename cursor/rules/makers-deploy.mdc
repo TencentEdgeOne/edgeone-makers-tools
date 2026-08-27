@@ -24,7 +24,7 @@ validate:
     message: "edgeone whoami does not accept -t. Check the exit code instead: 0 = logged in, 1 = not."
 metadata:
   author: edgeone
-  version: "2.11.0"
+  version: "2.12.0"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -124,8 +124,7 @@ cat edgeone.json 2>/dev/null
 | Not installed or < 1.6.0 | — | → Go to **Install CLI** |
 | `≥ 1.6.0` ✓ | Logged in (or token present) | → Go to **Deploy** |
 | `≥ 1.6.0` ✓ | Not logged in, has saved token | → Go to **Deploy with Token** (use saved token) |
-| `≥ 1.6.21` ✓ | Not logged in, no saved token, **interactive** | → Go to **Anonymous Deploy** — default to anonymous when the task fits it (unattended / disposable); otherwise ask the user to choose anonymous deploy or login (see Step 2) |
-| `≥ 1.6.21` ✓ | Not logged in, no saved token, **non-interactive (Agent/CI/headless)** | → Go to **Anonymous Deploy**; when the user cannot be asked, deploy with `--anonymous --json` and surface the claim link and the 60-minute claim window in the result |
+| `≥ 1.6.21` ✓ | Not logged in, no saved token | → Go to **Anonymous Deploy** — default to anonymous only when the task is anonymous-native (scheduled / disposable / user asked for it); otherwise ask the user to choose anonymous deploy or login. If there is no way to ask, deploy with `--anonymous --json` and surface the claim link and the 60-minute window in the result (see Step 2) |
 | `1.6.0`–`1.6.20` | Not logged in, no saved token | Anonymous deploy is unavailable on this version → **Try Browser Login first** (see Login section). If the browser doesn't open or nothing happens within ~60 seconds, fall back to **Token Login**. Do NOT preemptively skip browser login by guessing "this looks like an Agent/CI environment" — that guess is often wrong; in particular, **WorkBuddy is a desktop IDE sandbox and fully supports browser login** |
 | `≥ 1.6.0` ✓ | User explicitly provides a token or requests token login | → Go to **Deploy with Token** / **Token Login** |
 
@@ -355,21 +354,19 @@ Plain static sites and frontend-framework projects with no such dependency may p
 
 If the user acknowledges the limitation and still wants an anonymous deploy, you may proceed — but state prominently in your result that AI and storage features will not work until the project is claimed and configured.
 
-### Step 2: Decide the path — default to anonymous when it fits, otherwise ask
+### Step 2: Decide the path — default to anonymous only when the task fits, otherwise ask
 
-**Go anonymous directly, without asking, in either of these two cases:**
-
-**A. The environment cannot ask** — CI, headless, no TTY, or any unattended/background session. Deploy with `--anonymous --json` and make the claim link and the 60-minute window unmissable in your result — the user had no chance to be warned in advance.
-
-**B. The task itself is anonymous-native** — even when a human is present, skip the question and default to anonymous when the request is *disposable or unattended by nature*. Clear signals:
+**Go anonymous directly, without asking, only when the task itself is anonymous-native** — disposable or unattended by nature. Clear signals:
 
 - **Scheduled / automated jobs** — e.g. "每日定时生成一个页面并部署", cron pipelines, any task that must run with nobody watching
 - **Disposable one-offs** — a throwaway preview, a quick demo, "先看看效果", anything the user frames as temporary or just-for-now
 - **Explicit anonymous intent** — the user says "免登录", "不用登录", "anonymous", or "don't make me sign up"
 
-In case B the 60-minute expiry + claim-later model *is* the right answer, so asking is pure friction. Go straight to Step 3, and present the result with the fixed template in Step 4 (claim link + 60-minute window) — the template already tells the user how to keep it if they change their mind.
+In these cases the 60-minute expiry + claim-later model *is* the right answer, so asking is pure friction. Go straight to Step 3, and present the result with the fixed template in Step 4 (claim link + 60-minute window) — the template already tells the user how to keep it if they change their mind.
 
-**When in doubt, ask.** Defaulting by judgment is only for the clear cases above. If a human is present and the task isn't obviously disposable — anything they might want to keep, share widely, or build on — ask instead.
+**Everything else — ask.** If the task isn't obviously disposable — anything the user might want to keep, share widely, or build on — present the choice. Do NOT try to judge the *environment* to skip the question: sandbox/TTY signals are unreliable and guessing wrong either needlessly interrupts a human or silently deploys something they wanted to keep.
+
+If the environment genuinely gives you no way to ask at all (no TTY, no question tool), asking is impossible — that's a constraint, not a judgment call. Deploy with `--anonymous --json` and make the claim link and the 60-minute window unmissable in your result.
 
 **How to ask (when asking):** present the choice with the IDE's selection control (e.g. `ask_followup_question`). The option labels deliberately avoid the word "anonymous" — it is jargon and confuses non-technical users. Present these two options **exactly**, in the user's language. Do not paraphrase the labels, do not add caveats to the options themselves, and do not mention "anonymous" to the user at all.
 The option text must be placed in the `label` exactly as is; it must not be split into the `description`.
