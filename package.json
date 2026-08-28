@@ -1,6 +1,6 @@
 {
   "name": "edgeone-makers-tools",
-  "version": "1.2.0",
+  "version": "1.2.1",
   "private": true,
   "type": "module",
   "description": "EdgeOne Makers platform development skills.",
