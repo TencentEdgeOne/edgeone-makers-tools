@@ -20,9 +20,6 @@ Lightweight request interception running at the edge (V8 runtime). Use for redir
 
 > ⚠️ **Framework projects (Next.js, Nuxt, etc.)**: Do NOT use this platform middleware format. Use the framework's built-in middleware instead (e.g. Next.js `middleware.ts` with `NextRequest`/`NextResponse`). The patterns below are for non-framework or pure static projects only.
 
-> 💡 **TypeScript**: typed middleware via `@edgeone/types` — see `makers-types` skill
-> (`EdgeMiddlewareHandler` + `EdgeMiddlewareConfig`).
-
 ## Basic middleware
 
 File: `middleware.js` (project root)

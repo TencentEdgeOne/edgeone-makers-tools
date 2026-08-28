@@ -28,9 +28,6 @@ V8-based lightweight functions running at the edge. Ideal for simple APIs, KV st
 >
 > ⚠️ `Response.json()` is **NOT available** in this V8 runtime. Always use `new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } })` instead.
 
-> 💡 **TypeScript**: typed handlers via `@edgeone/types` — see `makers-types` skill
-> (`EdgeFunctionHandler` for functions, `EdgeMiddlewareHandler`/`EdgeMiddlewareConfig` for middleware).
-
 ## Basic function
 
 File: `edge-functions/api/hello.js`

@@ -72,8 +72,7 @@ edgeone makers env set SUPABASE_URL "https://xxx.supabase.co"
 
 ## Typed config (`edgeone.config.ts`)
 
-For type-checked project config, use `defineConfig` from `@edgeone/types/config`
-(see the `makers-types` skill):
+Write `edgeone.config.ts` with `defineConfig` from `@edgeone/types/config`:
 
 ```ts
 // edgeone.config.ts

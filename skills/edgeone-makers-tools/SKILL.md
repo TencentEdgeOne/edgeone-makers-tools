@@ -25,7 +25,6 @@ When you need EdgeOne Makers platform development guidance, read the matching Sk
 | Deploy project to EdgeOne | references/makers-deploy/SKILL.md |
 | Edge Functions (V8 lightweight functions) | references/makers-edge-functions/SKILL.md |
 | Cloud Functions (Node.js / Go / Python APIs) | references/makers-cloud-functions/SKILL.md |
-| TypeScript types (@edgeone/types) — typed handlers & config | references/makers-types/SKILL.md |
 | KV + Blob Storage | references/makers-storage/SKILL.md |
 | Persist dynamic data for a site (messages, uploads, votes, save-state) — **no database; use Blob** | references/makers-storage/SKILL.md |
 | Middleware (auth, rewrites, routing) | references/makers-middleware/SKILL.md |

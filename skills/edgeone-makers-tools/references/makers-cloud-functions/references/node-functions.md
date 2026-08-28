@@ -19,9 +19,6 @@ Node.js v20.x runtime functions under `cloud-functions/`. Full npm ecosystem sup
 
 > **Runtime:** Node.js v20.x — supports ES modules, full npm ecosystem, and WebSocket.
 
-> 💡 **TypeScript**: typed handlers via `@edgeone/types` — see `makers-types` skill
-> (`npm install -D @edgeone/types`, then `export const onRequest: CloudFunctionHandler = ...`).
-
 ## Basic function
 
 File: `cloud-functions/api/data.js`

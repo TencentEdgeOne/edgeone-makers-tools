@@ -66,7 +66,7 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 ## ⛔ Critical Rules (never skip)
 
 1. **File-based routing is automatic.** `agents/<name>/index.ts` or `agents/<name>.ts` becomes `POST /<name>`. Never hand-edit `.edgeone/agent-node/config.json`.
-2. **Entry signature is fixed.** TS: `export async function onRequest(context: any)` — for type safety use `AgentHandler` from `@edgeone/types` (see `makers-types` skill). Python: `async def handler(ctx):`. Method-specific variants (`onRequestPost`, `onRequestGet`, etc.) also work for TS.
+2. **Entry signature is fixed.** TS: `export async function onRequest(context: any)`. Python: `async def handler(ctx):`. Method-specific variants (`onRequestPost`, `onRequestGet`, etc.) also work for TS.
 3. **Read env via `context.env`, never `process.env` / `os.environ`.** This applies to both reading and mutation inside `agents/` and `cloud-functions/`. Frontend code (`app/`, `src/`) is unaffected.
 4. **Headers are plain objects, not the Web `Headers` API.** Use `context.request.headers['x-custom-header']`, never `.get('x')`.
 5. **Conversation ID contract.** AI endpoints (`/chat`, `/outline`, etc.) MUST receive the `makers-conversation-id` HTTP header from the frontend. The `/stop` endpoint takes a `conversation_id` in the request body to identify which running conversation to cancel.
