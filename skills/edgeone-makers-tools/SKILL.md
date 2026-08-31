@@ -1,5 +1,8 @@
 ---
+slug: edgeone-makers-tools
 name: edgeone-makers-tools
+displayName: EdgeOne Makers
+license: MIT
 description: >-
   EdgeOne Makers platform development router — the single entry point for building,
   storing data, and deploying on Tencent EdgeOne Makers. Trigger whenever the user
