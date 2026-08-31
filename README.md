@@ -4,7 +4,7 @@ Official AI Agent Skills for developing and deploying projects on [EdgeOne Maker
 
 ## Installation
 
-### Option A — `npx skills` (Claude Code / Cursor / Codex / CodeBuddy CLI 等)
+### Option A — `npx skills` (Claude Code / Cursor / Codex / CodeBuddy CLI etc.)
 
 ```bash
 npx skills add TencentEdgeOne/edgeone-makers-tools

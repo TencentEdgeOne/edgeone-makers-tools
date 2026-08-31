@@ -17,7 +17,7 @@ validate:
     message: "Use 127.0.0.1, not localhost — in the sandbox localhost resolves to ::1 and yields false 404s."
 metadata:
   author: edgeone
-  version: "1.1.1"
+  version: "1.4.2"
 ---
 
 # Runtime Environment Adaptation Guide
@@ -295,6 +295,7 @@ If the project named by `--name` does not exist remotely, the `link` command cre
 | Framework/package | Minimum version | Reason |
 |---------|---------|------|
 | EdgeOne CLI | >= 1.6.7 | Non-interactive fixes, whoami fail-fast, --json support |
+| EdgeOne CLI (anonymous deploy / `claim` only) | >= 1.6.29 | `--anonymous` and `claim` do not exist below this |
 | Next.js | 16.x | The framework adapter tracks new versions |
 | @edgeone/pages-blob | >= 0.0.14 | Older versions have known bugs |
 
@@ -307,3 +308,24 @@ Use `create-next-app@latest` rather than manually pinning an older version.
 WorkBuddy's right-side preview panel does NOT render `window.alert()` / `window.confirm()` / `window.prompt()`. The call returns immediately without user interaction, so any handler gated on `if (confirm("Delete?"))` silently no-ops (a delete button appears to do nothing). The same page works fine in the user's real Chrome / Safari.
 
 **Rule**: for any confirmation, prompt, or notification in the page, use an **in-page custom modal** (a `<div>` overlay with buttons wired via JS). Do NOT rely on the browser's built-in `alert` / `confirm` / `prompt` — the code looks correct in code review, works when the user opens the deployed URL in their own browser, and is silently broken in the WorkBuddy preview during dev/verification.
+
+### 14. Never hand the user a command to run
+
+The user has **no terminal** in the WorkBuddy sandbox. Any command you print as an instruction is dead text — they cannot execute it, and a non-technical user cannot read it either.
+
+| Situation | Do this | Not this |
+|---|---|---|
+| Anonymous project needs claiming | Run `edgeone login --claim --local --json` in the background and present its `claimLoginUrl` as a clickable link; the listener auto-links the project when the user finishes claiming | ❌ Printing `edgeone makers claim --sid <token>`, or presenting the bare `claimUrl` from the deploy JSON (the CLI never learns the login state) |
+| The user needs to log in | Explain, then run `edgeone login --site <china\|global> --local` yourself | ❌ "Run `edgeone login` in your terminal" |
+| Something needs installing | Run it yourself in Bash | ❌ "Please run `npm install -g edgeone`" |
+
+You are the one with shell access — use it. Only ask the user to type something when it genuinely cannot be automated (e.g. completing a login in the browser window you opened), and say plainly what you need from them.
+
+### 14.1 Never let the key result get folded into a process message
+
+WorkBuddy can collapse content emitted in the same message as a running or just-finished Bash command into a collapsible process entry. When the user asks to deploy, the deploy URL and claim link must never land there — if they do, the user sees nothing.
+
+| Situation | Do this | Not this |
+|---|---|---|
+| A deploy just finished | Wait for the Bash call to fully return, then send the result (URL + claim link) **as its own message** | ❌ Emitting the result in the same message where the deploy ran, or attaching it to the command's stdout |
+| Running a long command | Report progress only in later messages, after the tool call returns | ❌ Writing "here is your URL" inside the same turn as the command output |
