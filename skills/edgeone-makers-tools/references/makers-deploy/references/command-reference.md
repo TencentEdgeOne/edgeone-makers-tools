@@ -57,7 +57,7 @@ edgeone makers link --name <project> -t <token>   # Non-interactive
 | Action | Command |
 |--------|---------|
 | Install CLI | `npm install -g edgeone@latest` |
-| Check version | `edgeone -v` (require ≥ 1.6.0; anonymous deploy and `claim` need ≥ 1.6.21) |
+| Check version | `edgeone -v` (require ≥ 1.6.0; anonymous deploy and `claim` need ≥ 1.6.29) |
 | Login (China, browser) | `edgeone login --site china` |
 | Login (Global, browser) | `edgeone login --site global` |
 | Login (token, auto-site) | `edgeone login --token <token>` |

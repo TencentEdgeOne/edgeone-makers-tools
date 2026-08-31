@@ -2,7 +2,7 @@
 
 Detail reference for login-free deployment. For the decision flow and the commands to run, see [SKILL.md](../SKILL.md) — read that first.
 
-Requires CLI `>= 1.6.21`.
+Requires CLI `>= 1.6.29`.
 
 ## Contents
 

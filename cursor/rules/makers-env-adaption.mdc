@@ -17,7 +17,7 @@ validate:
     message: "Use 127.0.0.1, not localhost — in the sandbox localhost resolves to ::1 and yields false 404s."
 metadata:
   author: edgeone
-  version: "1.4.1"
+  version: "1.4.2"
 ---
 
 # Runtime Environment Adaptation Guide
@@ -295,7 +295,7 @@ If the project named by `--name` does not exist remotely, the `link` command cre
 | Framework/package | Minimum version | Reason |
 |---------|---------|------|
 | EdgeOne CLI | >= 1.6.7 | Non-interactive fixes, whoami fail-fast, --json support |
-| EdgeOne CLI (anonymous deploy / `claim` only) | >= 1.6.21 | `--anonymous` and `claim` do not exist below this |
+| EdgeOne CLI (anonymous deploy / `claim` only) | >= 1.6.29 | `--anonymous` and `claim` do not exist below this |
 | Next.js | 16.x | The framework adapter tracks new versions |
 | @edgeone/pages-blob | >= 0.0.14 | Older versions have known bugs |
 

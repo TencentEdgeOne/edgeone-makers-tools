@@ -24,7 +24,7 @@ validate:
     message: "edgeone whoami does not accept -t. Check the exit code instead: 0 = logged in, 1 = not."
 metadata:
   author: edgeone
-  version: "2.12.0"
+  version: "2.12.1"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -33,7 +33,7 @@ Deploy any project to **EdgeOne Makers**.
 
 ## ⛔ Critical Rules (never skip)
 
-1. **CLI version ≥ `1.6.0`** — reinstall if lower. Versions below `1.6.0` lack the non-interactive fixes (whoami fail-fast, `--json` output) and hang in Agent/CI environments. Never proceed with an outdated version. **Anonymous deploy and `claim` additionally require `1.6.21`** — that is a higher, feature-specific floor; see **Anonymous Deploy**. Do not block a normal authenticated deploy because the CLI is below `1.6.21`.
+1. **CLI version ≥ `1.6.0`** — reinstall if lower. Versions below `1.6.0` lack the non-interactive fixes (whoami fail-fast, `--json` output) and hang in Agent/CI environments. Never proceed with an outdated version. **Anonymous deploy and `claim` additionally require `1.6.29`** — that is a higher, feature-specific floor; see **Anonymous Deploy**. Do not block a normal authenticated deploy because the CLI is below `1.6.29`.
 2. **Never truncate the deploy URL — this applies to EVERY mention** — `EDGEONE_DEPLOY_URL` includes query parameters (`?eo_token=...&eo_time=...`) required for access. Without them the page returns 401. Always output the **complete** URL with full query string. This rule applies to: the primary display, summary tables, footnotes, comparisons, code blocks, `present_files` calls — **every single occurrence** of the URL in your reply. Truncation is any removal of the `?` and everything after it.
 
    ❌ WRONG (truncated — will 401):
@@ -98,7 +98,7 @@ Run these checks first, then follow the decision table:
 # Check 0: Set environment variable (required before any edgeone command)
 export PAGES_SOURCE=skills
 
-# Check 1: CLI installed and correct version? (must be >= 1.6.0; anonymous deploy needs >= 1.6.21)
+# Check 1: CLI installed and correct version? (must be >= 1.6.0; anonymous deploy needs >= 1.6.29)
 edgeone -v
 
 # Check 2: Already logged in? (whoami fails fast, won't hang)
@@ -124,8 +124,8 @@ cat edgeone.json 2>/dev/null
 | Not installed or < 1.6.0 | — | → Go to **Install CLI** |
 | `≥ 1.6.0` ✓ | Logged in (or token present) | → Go to **Deploy** |
 | `≥ 1.6.0` ✓ | Not logged in, has saved token | → Go to **Deploy with Token** (use saved token) |
-| `≥ 1.6.21` ✓ | Not logged in, no saved token | → Go to **Anonymous Deploy** — default to anonymous only when the task is anonymous-native (scheduled / disposable / user asked for it); otherwise ask the user to choose anonymous deploy or login. If there is no way to ask, deploy with `--anonymous --json` and surface the claim link and the 60-minute window in the result (see Step 2) |
-| `1.6.0`–`1.6.20` | Not logged in, no saved token | Anonymous deploy is unavailable on this version → **Try Browser Login first** (see Login section). If the browser doesn't open or nothing happens within ~60 seconds, fall back to **Token Login**. Do NOT preemptively skip browser login by guessing "this looks like an Agent/CI environment" — that guess is often wrong; in particular, **WorkBuddy is a desktop IDE sandbox and fully supports browser login** |
+| `≥ 1.6.29` ✓ | Not logged in, no saved token | → Go to **Anonymous Deploy** — default to anonymous only when the task is anonymous-native (scheduled / disposable / user asked for it); otherwise ask the user to choose anonymous deploy or login. If there is no way to ask, deploy with `--anonymous --json` and surface the claim link and the 60-minute window in the result (see Step 2) |
+| `1.6.0`–`1.6.28` | Not logged in, no saved token | Anonymous deploy is unavailable on this version → **Try Browser Login first** (see Login section). If the browser doesn't open or nothing happens within ~60 seconds, fall back to **Token Login**. Do NOT preemptively skip browser login by guessing "this looks like an Agent/CI environment" — that guess is often wrong; in particular, **WorkBuddy is a desktop IDE sandbox and fully supports browser login** |
 | `≥ 1.6.0` ✓ | User explicitly provides a token or requests token login | → Go to **Deploy with Token** / **Token Login** |
 
 ---
@@ -136,7 +136,7 @@ cat edgeone.json 2>/dev/null
 npm install -g edgeone@latest
 ```
 
-Verify: `edgeone -v` — confirm output is `1.6.0` or higher. Retry installation if not. (Versions < 1.6.0 hang on `whoami`/login in non-interactive environments and lack `--json`.) Anonymous deploy and `claim` need `1.6.21`; if `latest` is still below that, those two features are simply unavailable — normal authenticated deploy works fine.
+Verify: `edgeone -v` — confirm output is `1.6.0` or higher. Retry installation if not. (Versions < 1.6.0 hang on `whoami`/login in non-interactive environments and lack `--json`.) Anonymous deploy and `claim` need `1.6.29`; if `latest` is still below that, those two features are simply unavailable — normal authenticated deploy works fine.
 
 ---
 
@@ -322,7 +322,7 @@ The CLI auto-detects the framework, runs the build, and uploads the output direc
 
 ## Anonymous Deploy (no login required)
 
-When the user is not logged in and has no token, they can deploy anonymously and claim the project later. Requires CLI `>= 1.6.21`. On `1.6.0`–`1.6.20` this feature does not exist — use **Login** or a token instead.
+When the user is not logged in and has no token, they can deploy anonymously and claim the project later. Requires CLI `>= 1.6.29`. On `1.6.0`–`1.6.28` this feature does not exist — use **Login** or a token instead.
 
 ### Step 1: Exclusion check — run this FIRST
 
@@ -523,7 +523,7 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 |-------|----------|
 | `command not found: edgeone` | Run `npm install -g edgeone@latest` |
 | CLI version < 1.6.0 | Reinstall: `npm install -g edgeone@latest`. Older versions hang on whoami/login in non-interactive contexts |
-| `--anonymous` / `claim` reported as an unknown option | The installed CLI is below `1.6.21`. Run `npm install -g edgeone@latest`; if that is still below `1.6.21`, anonymous deploy is not released yet — use login or a token instead |
+| `--anonymous` / `claim` reported as an unknown option | The installed CLI is below `1.6.29`. Run `npm install -g edgeone@latest`; if that is still below `1.6.29`, anonymous deploy is not released yet — use login or a token instead |
 | Browser does not open during login | Switch to token login |
 | "not authenticated" / exit 1 from `whoami` | Expected when not logged in — whoami fails fast instead of hanging. Offer anonymous deploy (see Anonymous Deploy), run `edgeone login`, or provide a token |
 | Non-interactive deploy says "browser login is unavailable" + exits 1 | Expected fail-fast in Agent/CI/headless with no token. Provide a token via `-t <token>` or set `EDGEONE_PAGES_API_TOKEN` |
