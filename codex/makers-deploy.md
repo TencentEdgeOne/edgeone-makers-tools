@@ -24,7 +24,7 @@ validate:
     message: "edgeone whoami does not accept -t. Check the exit code instead: 0 = logged in, 1 = not."
 metadata:
   author: edgeone
-  version: "2.12.1"
+  version: "2.12.2"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -92,7 +92,7 @@ This tells the platform that the deployment is triggered from an AI skill contex
 
 ## Deployment Flow
 
-Run these checks first, then follow the decision table:
+Run these checks first, then follow the decision table. **Run them silently** — do not narrate versions, login-state probes, or eligibility results to the user (e.g. never say "CLI 版本 x.x（支持匿名部署）" or "纯静态、无依赖、可直接发布"). Speak only when a check changes the outcome (needs upgrade, needs login).
 
 ```bash
 # Check 0: Set environment variable (required before any edgeone command)
@@ -341,6 +341,8 @@ grep -l '"@edgeone/pages-blob"' package.json 2>/dev/null
 ```
 
 Non-empty output from either grep means the project uses Blob.
+
+⛔ **All checks in this flow are silent — never narrate them to the user.** Do not report things like "CLI 版本 x.x（支持匿名部署）", "页面是纯静态、无 Blob/KV 依赖，可直接发布", or any other version/eligibility check result. These are internal reasoning; a non-technical user cannot act on them and should never see them. The only time you speak about a check is when it **changes the outcome** — e.g. the project needs login (below), or the CLI is too old and needs upgrading. Passing checks produce no message at all.
 
 **KV cannot be detected this way — you must ask.** A KV namespace is bound in the console and exposed as a *global variable* whose name the user chose (e.g. `my_kv`), so there is no package import to grep for. There is no `@edgeone/pages-kv` package. Ask the user directly:
 
