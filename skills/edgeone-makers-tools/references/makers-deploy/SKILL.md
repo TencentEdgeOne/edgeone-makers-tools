@@ -24,7 +24,7 @@ validate:
     message: "edgeone whoami does not accept -t. Check the exit code instead: 0 = logged in, 1 = not."
 metadata:
   author: edgeone
-  version: "2.12.2"
+  version: "2.12.3"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -348,13 +348,13 @@ Non-empty output from either grep means the project uses Blob.
 
 > Does this project use KV storage?
 
-If either check hits, or the user says the project uses KV, **do not deploy anonymously.** Go to **Login** and tell the user why:
+If either check hits, or the user says the project uses KV, **do not deploy anonymously.** Go to **Login** and tell the user why (note the user-facing wording: "without login", never "anonymous"):
 
-> This project needs environment variables / AI gateway credentials or a storage binding, which anonymous deploy cannot provide. The site would load but those features would fail. Let's log in so it works properly.
+> This project needs environment variables / AI gateway credentials or a storage binding, which a login-free deploy cannot provide. The site would load but those features would fail. Let's log in so it works properly.
 
 Plain static sites and frontend-framework projects with no such dependency may proceed.
 
-If the user acknowledges the limitation and still wants an anonymous deploy, you may proceed — but state prominently in your result that AI and storage features will not work until the project is claimed and configured.
+If the user acknowledges the limitation and still wants to publish without logging in, you may proceed — but state prominently in your result that AI and storage features will not work until the project is claimed and configured (again: phrase it as "login-free / 免登录", never "anonymous / 匿名").
 
 ### Step 2: Decide the path — default to anonymous only when the task fits, otherwise ask
 
@@ -370,7 +370,7 @@ In these cases the 60-minute expiry + claim-later model *is* the right answer, s
 
 If the environment genuinely gives you no way to ask at all (no TTY, no question tool), asking is impossible — that's a constraint, not a judgment call. Deploy with `--anonymous --json` and make the claim link and the 60-minute window unmissable in your result.
 
-**How to ask (when asking):** present the choice with the IDE's selection control (e.g. `ask_followup_question`). The option labels deliberately avoid the word "anonymous" — it is jargon and confuses non-technical users. Present these two options **exactly**, in the user's language. Do not paraphrase the labels, do not add caveats to the options themselves, and do not mention "anonymous" to the user at all.
+**How to ask (when asking):** present the choice with the IDE's selection control (e.g. `ask_followup_question`). The option labels deliberately avoid the word "anonymous" — it is jargon and confuses non-technical users. Present these two options **exactly**, in the user's language. Do not paraphrase the labels, do not add caveats to the options themselves, and do not mention "anonymous" to the user at all — when you must name the concept, call it **"login-free deployment" / 「免登录部署」**, never "anonymous deploy / 匿名部署".
 The option text must be placed in the `label` exactly as is; it must not be split into the `description`.
 
 **English-speaking user — present exactly these two options:**
