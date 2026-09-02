@@ -24,7 +24,7 @@ validate:
     message: "edgeone whoami does not accept -t. Check the exit code instead: 0 = logged in, 1 = not."
 metadata:
   author: edgeone
-  version: "2.12.1"
+  version: "2.12.3"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -92,7 +92,7 @@ This tells the platform that the deployment is triggered from an AI skill contex
 
 ## Deployment Flow
 
-Run these checks first, then follow the decision table:
+Run these checks first, then follow the decision table. **Run them silently** — do not narrate versions, login-state probes, or eligibility results to the user (e.g. never say "CLI 版本 x.x（支持匿名部署）" or "纯静态、无依赖、可直接发布"). Speak only when a check changes the outcome (needs upgrade, needs login).
 
 ```bash
 # Check 0: Set environment variable (required before any edgeone command)
@@ -342,17 +342,19 @@ grep -l '"@edgeone/pages-blob"' package.json 2>/dev/null
 
 Non-empty output from either grep means the project uses Blob.
 
+⛔ **All checks in this flow are silent — never narrate them to the user.** Do not report things like "CLI 版本 x.x（支持匿名部署）", "页面是纯静态、无 Blob/KV 依赖，可直接发布", or any other version/eligibility check result. These are internal reasoning; a non-technical user cannot act on them and should never see them. The only time you speak about a check is when it **changes the outcome** — e.g. the project needs login (below), or the CLI is too old and needs upgrading. Passing checks produce no message at all.
+
 **KV cannot be detected this way — you must ask.** A KV namespace is bound in the console and exposed as a *global variable* whose name the user chose (e.g. `my_kv`), so there is no package import to grep for. There is no `@edgeone/pages-kv` package. Ask the user directly:
 
 > Does this project use KV storage?
 
-If either check hits, or the user says the project uses KV, **do not deploy anonymously.** Go to **Login** and tell the user why:
+If either check hits, or the user says the project uses KV, **do not deploy anonymously.** Go to **Login** and tell the user why (note the user-facing wording: "without login", never "anonymous"):
 
-> This project needs environment variables / AI gateway credentials or a storage binding, which anonymous deploy cannot provide. The site would load but those features would fail. Let's log in so it works properly.
+> This project needs environment variables / AI gateway credentials or a storage binding, which a login-free deploy cannot provide. The site would load but those features would fail. Let's log in so it works properly.
 
 Plain static sites and frontend-framework projects with no such dependency may proceed.
 
-If the user acknowledges the limitation and still wants an anonymous deploy, you may proceed — but state prominently in your result that AI and storage features will not work until the project is claimed and configured.
+If the user acknowledges the limitation and still wants to publish without logging in, you may proceed — but state prominently in your result that AI and storage features will not work until the project is claimed and configured (again: phrase it as "login-free / 免登录", never "anonymous / 匿名").
 
 ### Step 2: Decide the path — default to anonymous only when the task fits, otherwise ask
 
@@ -368,7 +370,7 @@ In these cases the 60-minute expiry + claim-later model *is* the right answer, s
 
 If the environment genuinely gives you no way to ask at all (no TTY, no question tool), asking is impossible — that's a constraint, not a judgment call. Deploy with `--anonymous --json` and make the claim link and the 60-minute window unmissable in your result.
 
-**How to ask (when asking):** present the choice with the IDE's selection control (e.g. `ask_followup_question`). The option labels deliberately avoid the word "anonymous" — it is jargon and confuses non-technical users. Present these two options **exactly**, in the user's language. Do not paraphrase the labels, do not add caveats to the options themselves, and do not mention "anonymous" to the user at all.
+**How to ask (when asking):** present the choice with the IDE's selection control (e.g. `ask_followup_question`). The option labels deliberately avoid the word "anonymous" — it is jargon and confuses non-technical users. Present these two options **exactly**, in the user's language. Do not paraphrase the labels, do not add caveats to the options themselves, and do not mention "anonymous" to the user at all — when you must name the concept, call it **"login-free deployment" / 「免登录部署」**, never "anonymous deploy / 匿名部署".
 The option text must be placed in the `label` exactly as is; it must not be split into the `description`.
 
 **English-speaking user — present exactly these two options:**
