@@ -20,6 +20,7 @@ When you need EdgeOne Makers platform development guidance, read the matching Sk
 
 | Task | Read |
 |------|------|
+| Web framework support — which adapter, build output, 404, and unsupported features (Next.js, Nuxt, Astro, SvelteKit, React Router, TanStack Start, Vike, Vite, Hugo) | skills/makers-frameworks/SKILL.md |
 | AI Agent development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI) | skills/makers-agents/SKILL.md |
 | Deploy project to EdgeOne | skills/makers-deploy/SKILL.md |
 | Edge Functions (V8 lightweight functions) | skills/makers-edge-functions/SKILL.md |

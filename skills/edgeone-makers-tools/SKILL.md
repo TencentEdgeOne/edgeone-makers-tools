@@ -24,6 +24,7 @@ When you need EdgeOne Makers platform development guidance, read the matching Sk
 
 | Task | Read |
 |------|------|
+| Web framework support — which adapter, build output, 404, and unsupported features (Next.js, Nuxt, Astro, SvelteKit, React Router, TanStack Start, Vike, Vite, Hugo) | references/makers-frameworks/SKILL.md |
 | AI Agent development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI) | references/makers-agents/SKILL.md |
 | Deploy project to EdgeOne | references/makers-deploy/SKILL.md |
 | Edge Functions (V8 lightweight functions) | references/makers-edge-functions/SKILL.md |
@@ -36,3 +37,7 @@ When you need EdgeOne Makers platform development guidance, read the matching Sk
 | Environment adaptation (WorkBuddy / sandbox / CI) | references/makers-env-adaption/SKILL.md |
 
 ⚠️ Only read the Skill relevant to the current task. Do not load all skills at once.
+
+A full-stack framework that needs a platform adapter previews correctly and deploys
+broken without one, and no gate catches it — so when a request names a framework, read
+`makers-frameworks` before writing the config.
