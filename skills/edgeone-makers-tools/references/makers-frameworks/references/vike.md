@@ -46,8 +46,14 @@ config was written against the old major and the option should be deleted.
 ## Scaffold
 
 ```bash
-npm create vike@latest . -- --react --typescript
+npm create vike@latest . -- --react --edgeone --skip-git
 ```
+
+`--edgeone` is the scaffolder's own EdgeOne Pages integration: it declares `@edgeone/vite`
+and registers the plugin, so a project scaffolded this way already has everything under
+"The adapter" above and only needs the asset prefix added. There is no `--typescript` —
+this scaffolder writes TypeScript either way, and passing it stops the run with
+"Unknown option typescript".
 
 ## Preview asset prefix
 

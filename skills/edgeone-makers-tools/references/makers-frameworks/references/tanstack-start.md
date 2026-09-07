@@ -43,8 +43,18 @@ rather than trying to configure both.
 ## Scaffold
 
 ```bash
-npx create-tsrouter-app@latest . --template file-router --framework react --tailwind --no-git
+npx @tanstack/cli@latest create . --framework react --non-interactive --no-git --no-intent
 ```
+
+This replaces `create-tsrouter-app`, which is deprecated and now prints a notice saying so.
+The rename is the smaller half of the change: that package defaults to router-only
+compatibility mode — file-based routing with none of Start — so it scaffolded a project
+this document does not describe, with no `@tanstack/react-start` to attach an adapter to.
+The command above scaffolds Start itself.
+
+Tailwind needs no flag; a standard scaffold always enables it, and `--tailwind` survives
+only as a deprecated no-op. `--no-intent` skips TanStack Intent, which reaches the network
+to write agent config and fails the scaffold when it cannot.
 
 ## Preview asset prefix
 
