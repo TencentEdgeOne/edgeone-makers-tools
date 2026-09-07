@@ -17,8 +17,13 @@ install.** Nitro's own preset detection does the work.
 ## Scaffold
 
 ```bash
-npx nuxi@latest init . --packageManager npm --no-gitInit --force
+npx nuxi@latest init . --template minimal --packageManager npm --no-gitInit --force
 ```
+
+`--template` is required. Without it `nuxi` stops with "Non-interactive terminal detected.
+Missing required argument: --template" and prints its usage instead of scaffolding, which
+in a sandbox reads as a scaffolder that produced nothing. `minimal` is the Nuxt 4 starter;
+`content`, `module`, and `ui` are the other choices it offers.
 
 ## Preview asset prefix
 
