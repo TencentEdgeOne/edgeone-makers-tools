@@ -26,15 +26,33 @@ npm install @edgeone/tanstack-start
 // vite.config.ts
 import { defineConfig } from "vite";
 import { tanstackStart } from "@tanstack/react-start/plugin/vite";
-import { edgeoneAdapter } from "@edgeone/tanstack-start";
+import { edgeoneTanStackStartAdapter } from "@edgeone/tanstack-start";
 
 export default defineConfig({
   plugins: [
     tanstackStart(),
-    edgeoneAdapter(),
+    edgeoneTanStackStartAdapter(),
   ],
 });
 ```
+
+The export is named `edgeoneTanStackStartAdapter`, and it is also the default export, so
+`import edgeoneAdapter from "@edgeone/tanstack-start"` works too. There is no export named
+`edgeoneAdapter`; importing that name is a build error, not a lint warning.
+
+### Vite 7 is the ceiling
+
+`@edgeone/tanstack-start` peers on `vite@^5 || ^6 || ^7`. Vite 8 is not in range, and the
+scaffolder's own `package.json` asks for it — so a fresh scaffold has to be corrected
+before the first install, not after:
+
+| Package | Scaffolder writes | Use instead | Why |
+| --- | --- | --- | --- |
+| `vite` | `^8.0.0` | `^7.0.0` | the adapter does not accept 8 |
+| `@vitejs/plugin-react` | `^6.0.1` | `^5.2.0` | 6 requires Vite 8; 5.2 spans 4 through 8 |
+
+Change both together. Downgrading Vite alone leaves `@vitejs/plugin-react` demanding the
+version just removed, and each attempt costs a full reinstall.
 
 The adapter and a Nitro plugin cannot coexist — an official Nitro preset is not published,
 so remove `@tanstack/start-plugin-nitro` and any `nitroPlugin` / `nitroV2Plugin` call
