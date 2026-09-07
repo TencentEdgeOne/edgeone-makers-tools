@@ -16,6 +16,8 @@ metadata:
 
 > 📝 **Write `index.html` last, always**: writing an `index.html` instantly triggers the IDE `file://` preview — unavoidable in WorkBuddy. Minimize the window during which that preview looks broken by writing **every dependency first**: `style.css`, `script.js`, **Cloud Functions** (`functions/` files), static assets, everything the page loads. Then write `index.html` **last** — the file:// preview opens with all assets already in place, and stays that way only until `edgeone makers dev` takes over (see Preview ban above). Also write each `index.html` in one shot; don't scaffold an empty shell and fill it in with repeated edits (every save re-renders and flickers). For a tiny single-page tool, just inline the CSS and JS into one `index.html`.
 
+> 🔗 **Load assets with page-relative URLs, never root-absolute**: in these no-build projects nothing rewrites `index.html`, so write `<link rel="stylesheet" href="style.css">` and `<script src="script.js"></script>` — **not** `href="/style.css"` or `src="/script.js"`. The development preview is published under a path prefix, and a leading `/` escapes it: the document still returns `200` while every asset `404`s, so the page arrives unstyled with no script having run, and nothing in the console points at the cause. Relative URLs are correct there *and* at `/` after deploy. Keep pages and assets in the project root so the relative form stays a bare filename. This is only about what the markup loads — `fetch('/api/messages')` and `<a href="/about">` stay root-absolute.
+
 > ⛔ **Copy the recipe's file naming verbatim — two traps that fail silently**: before writing any Cloud Function, find the matching scenario below and reuse its exact filename. Getting the name wrong usually does NOT throw a clear error — it falls back silently:
 > 1. **Every function file MUST carry its language extension** — `.js` (Node), `.py` (Python), `.go` (Go). A file with no extension (e.g. `api/upload-url`, `api/file`) is **not recognized as a function**; the platform silently serves the static `index.html` fallback, so `/api/*` "mysteriously" returns HTML instead of JSON. Name them `api/upload-url.js`, `api/file.js`.
 > 2. **`[[default]].js` is the catch-all for its own directory (`api/[[default]].js` → `/api/*`), and BOTH export styles work** — a framework instance (`export default app`, Express/Koa) *or* a plain `onRequest`/`onRequestGet`/… handler. Verified locally with `edgeone makers dev`: a bare `onRequest` in `[[default]].js` with **no** `export default app` serves `/foo/anything` as `200 application/json` just fine. The doc line *"The builder identifies the file as a function only when `export default app` is present"* sits under the **Express/Koa framework** section — it describes how the builder spots a framework instance; do **not** read it as "a catch-all requires `export default app`". ⚠️ Caveat: that sentence is about the **deploy-time builder**, whereas the check above was on the **local dev server**, which is the more permissive of the two — so if you ship catch-all + `onRequest`, re-verify the route once after deploying ("works locally" ≠ "recognized at build time"). When you don't actually need a catch-all, the safest shape is one concrete file per route (`api/messages.js`, `api/artworks/[id]/like.js`), params via `[id]` folders/files, extra args as query strings (`/api/file?key=...`).
@@ -79,7 +81,12 @@ export async function onRequest({ request }) {
 }
 ```
 
-**index.html** frontend calls it like any API:
+**index.html** loads its assets relative to itself, and calls the API root-absolute:
+```html
+<link rel="stylesheet" href="style.css" />
+<script src="script.js"></script>
+```
+
 ```javascript
 await fetch('/api/messages', {                     // post
   method: 'POST',
