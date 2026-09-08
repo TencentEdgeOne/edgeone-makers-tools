@@ -1,5 +1,16 @@
 # Next.js
 
+## Contents
+
+- [Scaffold](#scaffold)
+- [Preview asset prefix](#preview-asset-prefix)
+- [In-app navigation](#in-app-navigation)
+- [Build settings](#build-settings)
+- [Rendering modes](#rendering-modes)
+- [404 page](#404-page)
+- [Not supported](#not-supported)
+- [Feature support](#feature-support)
+
 Next.js 13 through 16 are supported, App Router and Pages Router both, and 15 is the
 recommended version. The builder handles Next.js directly — **no platform adapter, no
 plugin, nothing to install.**
@@ -33,6 +44,32 @@ export default nextConfig;
 
 Reading it from the environment matters: a deployment never sets the variable, so the
 value collapses to undefined and assets resolve from the root.
+
+## In-app navigation
+
+Use a plain anchor for cross-page navigation — `<a href="/posts">` — rather than
+`next/link`. The preview proxy serves the app under a path prefix that it strips before
+forwarding, so the framework only ever sees the stripped path. `next/link` intercepts the
+click and routes on the client against that path, which lands outside the prefix with
+nothing left to correct it from. A plain anchor asks for a fresh document, which the proxy
+does see and does rewrite.
+
+**That collides with the lint config the scaffold ships.** `next/core-web-vitals` sets
+`@next/next/no-html-link-for-pages` to `error`, and `next build` runs ESLint, so the one
+navigation form that survives the proxy is the one the build rejects. Turn that single rule
+off and leave the rest gating the build:
+
+```javascript
+// eslint.config.mjs
+{
+  rules: { "@next/next/no-html-link-for-pages": "off" },
+}
+```
+
+`next dev` does not lint, which is what makes this expensive to find: a multi-page app with
+links previews perfectly green, then fails its first deploy with one error per link, minutes
+into a build. Do not answer that failure by rewriting the anchors into `next/link` — that
+trades a failed deploy for a preview whose navigation goes nowhere.
 
 ## Build settings
 
