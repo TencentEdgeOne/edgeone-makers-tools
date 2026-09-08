@@ -16,7 +16,7 @@ description: >-
   current task, never all of them at once.
 metadata:
   author: edgeone
-  version: "2.1.0"
+  version: "2.1.1"
 ---
 
 # EdgeOne Makers Skills
@@ -42,7 +42,7 @@ Do **not** ask:
 
 - China vs Global when `whoami` already bound a site, a token is in use, or the CLI can detect the site (anonymous deploy)
 - Whether the project uses KV / Blob / AI Gateway when the workspace is readable — grep it
-- Whether to save a token the user just provided — persist with `edgeone login --token` or `--local`, and keep `.edgeone/` gitignored
+- Whether to save a token the user just provided — persist it and keep `.edgeone/` gitignored; `makers-deploy` has the command
 - Whether to preview, or whether to deploy when they already said deploy
 
 ### Approval
@@ -54,6 +54,15 @@ Require an explicit user decision only for:
 - Account-destructive actions
 
 Do **not** require approval for: installing the CLI, `makers dev`, linking a new project named from the directory, login-free deploy when they asked to publish and are not logged in, saving credentials locally.
+
+### Managed hosts
+
+Some hosts run you inside a sandbox they own: the CLI is already there and a
+short-lived credential is injected for you. On one of those, none of the credential
+work above is yours. Do not sign in, do not install or upgrade the CLI, do not read or
+write credential files, and do not pass a token on a command line. Such a host says so
+in its own instructions and its tool layer refuses those commands anyway, so trying
+them spends turns and returns nothing.
 
 ### Done
 
