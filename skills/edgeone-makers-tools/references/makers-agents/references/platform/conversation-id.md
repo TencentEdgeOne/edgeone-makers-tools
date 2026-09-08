@@ -87,6 +87,11 @@ array decides the branch and is then thrown away, and the content is taken from
 a `message` that no client sent. It compiles, it type-checks, `npm run build`
 is clean, and every request is answered 400.
 
+**The array ends with exactly one `user` message and never holds two in a row.**
+A turn that produced no assistant reply must not leave its `user` message behind
+in what gets posted next — see [sse-protocol.md](sse-protocol.md#a-failed-turn-must-not-leave-its-user-message-in-the-posted-history)
+for why one dropped turn otherwise reads as a broken conversation.
+
 Where the history lives is the choice this shape settles:
 
 | History held by | How | Use when |

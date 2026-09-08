@@ -215,6 +215,10 @@
 
 - [ ] The frontend reads SSE through a `ReadableStream`, splits on `data: `, filters out `ping` heartbeats so they are not rendered, and stops on `[DONE]`
 
+- [ ] ⭐ It also **records whether `[DONE]` arrived** and reports a stream that ended without it as a truncated turn. Stopping on the sentinel is not the same as checking for it: a reader that only leaves its loop on `done` reports a connection cut mid-answer as a turn that produced no text
+
+- [ ] ⛔ A turn that produced no assistant reply does not leave its `user` message in the history posted to `/chat`. The array must end with exactly one `user` message and never hold two in a row — otherwise the model answers both questions in one reply and every later turn carries the same doubled history
+
 - [ ] `process.env` is allowed on the frontend (consistent with frontend frameworks), but **do not** expose backend secrets like `AI_GATEWAY_API_KEY` to the browser
 
 - [ ] Local testing is done through the Makers proxy URL printed by `edgeone makers dev`; the raw frontend dev-server port does not serve `agents/` routes
