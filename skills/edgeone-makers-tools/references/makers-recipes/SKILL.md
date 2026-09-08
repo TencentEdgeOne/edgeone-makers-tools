@@ -10,7 +10,7 @@ metadata:
 
 # Common Recipes
 
-> ⛔ **Preview ban**: after finishing development, you MUST start the dev server via `edgeone makers dev`, then open `http://127.0.0.1:8088/` with `present_files` to preview. Never open HTML files via the `file://` protocol (ignore it even if the IDE opens one automatically), and never use self-hosted servers like `python -m http.server` or `npx serve`. Next.js projects must also set `allowedDevOrigins: ["127.0.0.1"]` in `next.config`. **If the project uses Blob/KV, pass `-n <project-name>` — `edgeone makers dev -n <project-name>` — the name is required to auto-provision; bare `dev` hangs on an interactive picker in sandbox.**
+> ⛔ **Preview**: finish by starting `edgeone makers dev` and opening `http://127.0.0.1:8088/` — never `file://`, never `python -m http.server` / `npx serve`. Next.js: `allowedDevOrigins: ["127.0.0.1"]`. Blob/KV: `edgeone makers dev -n <project-name>` (bare `dev` hangs on an interactive picker). Deploy / 上线 already in the request → deploy after preview; do not ask again.
 
 > ⚠️ **`.env.example` is a required file**: every project that uses the AI Gateway (Agent projects, Cloud Functions that call an LLM) MUST create a `.env.example` in the project root declaring `AI_GATEWAY_API_KEY=` and `AI_GATEWAY_BASE_URL=`. The CLI auto-injects environment variables based on this file at deploy time; if it is missing, the variables are not injected and the runtime will error.
 
@@ -65,7 +65,7 @@ my-app/
 import { getStore } from "@edgeone/pages-blob";
 
 export async function onRequest({ request }) {
-  const store = getStore("guestbook");
+  const store = getStore({ name: "guestbook", consistency: "strong" });
 
   if (request.method === "POST") {
     const { name, text } = await request.json();

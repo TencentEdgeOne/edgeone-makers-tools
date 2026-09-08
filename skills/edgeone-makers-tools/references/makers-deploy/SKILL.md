@@ -12,19 +12,18 @@ description: >-
   "deploy without login", "no account yet", "anonymous deploy",
   "claim project", "claim my deployment",
   "免登录部署", "匿名部署", "还没有账号", "认领项目".
-  ⚠️ Also trigger when any agent is about to execute `edgeone makers deploy` or `edgeone makers deploy`
-  commands — the skill contains critical rules for parsing deploy output and presenting access URLs.
-  Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy —
-  use edgeone-makers-dev for troubleshooting).
+  ⚠️ Also trigger when any agent is about to execute `edgeone makers deploy`.
+  Do NOT trigger for post-deployment runtime errors (CORS, 500 after deploy) —
+  use makers-env-adaption / makers-recipes for local troubleshooting.
 pathPatterns:
   - "*.sh"
   - .github/workflows/**
 validate:
   - pattern: "whoami[^\\n]*\\s-t\\s"
     message: "edgeone whoami does not accept -t. Check the exit code instead: 0 = logged in, 1 = not."
-metadata:
+  metadata:
   author: edgeone
-  version: "2.12.3"
+  version: "2.13.0"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -56,12 +55,12 @@ Deploy any project to **EdgeOne Makers**.
    Then append any other notes (console URL, caveats, etc.).
 
    **Self-check before ending the turn (MANDATORY)** — read back what the user will actually SEE (NOT your thinking / reasoning content). Two questions: (a) Is the complete `.edgeone.cool` URL present at the top of the visible reply, in a code block or heading? (b) Was `present_files` called with that URL? If either answer is no, send an **additional short message** containing ONLY the `🌐 Live URL: <full URL>` block and call `present_files`. Do not end the turn until both channels carry the URL. "I already mentioned it in my reasoning" is NOT a substitute for placing it in the visible body.
-5. **Ask the user to choose China or Global site** before browser login. Never assume. (Token login via `edgeone login --token` auto-detects site, no need to ask.)
-6. **Prefer Browser Login; fall back to Token only after browser login is confirmed to fail** (see Login section for the ~60s fallback threshold and the Agent-in-IDE clarification — WorkBuddy is NOT headless). Token-first only when the user explicitly requests it.
-7. **After token login, ask if the user wants to save the token locally** for future use.
-8. **Before triggering any browser popup (login / registration), explain the reason and the benefits to the user first** — never silently launch a browser window.
+5. **Browser login needs `--site`.** Infer china/global from `whoami`, an existing credential, or the user's context. Ask only when you must run `edgeone login` and the site is still unknown. Token login and anonymous deploy detect the site themselves — do not ask.
+6. **Prefer Browser Login; fall back to Token only after browser login is confirmed to fail** (see Login section for the ~60s fallback threshold — WorkBuddy is NOT headless). Token-first only when the user explicitly requests it or provides a token.
+7. **If the user provides a token, persist it** with `edgeone login --token` (or `--local` in a sandbox). Do not ask whether to save it. Never commit credentials. Do not treat `.edgeone/.token` as the CLI source of truth — credentials live in `~/.edgeone/<hash>` or `.edgeone/auth.json`.
+8. **Before a browser popup, one sentence of why**, then run the command. Do not write a registration essay.
 9. **On any CLI failure, surface the actual error text to the user before retrying, switching commands, or proposing a workaround.** Do NOT paraphrase (e.g. don't rewrite `Makers project exceeds 40 limit` into "maybe a name conflict or permission"). Do NOT silently pivot from `makers dev` to `makers deploy` (or vice versa) hoping to bypass — a systemic failure (auth / quota / permission) hits both with the same cause. Quote the raw error, name the root cause, then propose the fix or ask the user.
-10. **Write every user-facing message in the user's own language** — **all** prose, blockquotes, and prompts in this skill are written in English purely to specify *meaning*; none of it is a string to paste. If the user writes to you in Chinese, speak Chinese — the login explanation, the site choice, the token question, the deploy result, all of it. Likewise for any other language. Emitting this skill's English strings into a non-English conversation is a bug. Only literal CLI commands, flags, env var names, and JSON field names stay verbatim. ⚠️ Where this skill gives a **fixed template** (Steps 2 and 4 of Anonymous Deploy), translating it is required but rewriting or extending it is not allowed — match it line for line.
+10. **Write every user-facing message in the user's own language** — **all** prose, blockquotes, and prompts in this skill are written in English purely to specify *meaning*; none of it is a string to paste. If the user writes to you in Chinese, speak Chinese — the login explanation, any site choice, the deploy result, all of it. Likewise for any other language. Emitting this skill's English strings into a non-English conversation is a bug. Only literal CLI commands, flags, env var names, and JSON field names stay verbatim. ⚠️ Where this skill gives a **fixed template** (Steps 2 and 4 of Anonymous Deploy), translating it is required but rewriting or extending it is not allowed — match it line for line.
 
 **Rules 11-14 apply to the anonymous deploy / claim flow only:**
 
@@ -124,7 +123,7 @@ cat edgeone.json 2>/dev/null
 | Not installed or < 1.6.0 | — | → Go to **Install CLI** |
 | `≥ 1.6.0` ✓ | Logged in (or token present) | → Go to **Deploy** |
 | `≥ 1.6.0` ✓ | Not logged in, has saved token | → Go to **Deploy with Token** (use saved token) |
-| `≥ 1.6.29` ✓ | Not logged in, no saved token | → Go to **Anonymous Deploy** — default to anonymous only when the task is anonymous-native (scheduled / disposable / user asked for it); otherwise ask the user to choose anonymous deploy or login. If there is no way to ask, deploy with `--anonymous --json` and surface the claim link and the 60-minute window in the result (see Step 2) |
+| `≥ 1.6.29` ✓ | Not logged in, no saved token | → Go to **Anonymous Deploy**. If the repo needs login (Agent / Blob / KV / AI Gateway), go to **Login** instead and say why. Ask the two-option choice only when publish intent is genuinely ambiguous. |
 | `1.6.0`–`1.6.28` | Not logged in, no saved token | Anonymous deploy is unavailable on this version → **Try Browser Login first** (see Login section). If the browser doesn't open or nothing happens within ~60 seconds, fall back to **Token Login**. Do NOT preemptively skip browser login by guessing "this looks like an Agent/CI environment" — that guess is often wrong; in particular, **WorkBuddy is a desktop IDE sandbox and fully supports browser login** |
 | `≥ 1.6.0` ✓ | User explicitly provides a token or requests token login | → Go to **Deploy with Token** / **Token Login** |
 
@@ -142,34 +141,20 @@ Verify: `edgeone -v` — confirm output is `1.6.0` or higher. Retry installation
 
 ## Login
 
-### 0. Explain the registration/login step
+### 0. One sentence, then login
 
-Before triggering any login flow, explain to the user **why** this step is needed and **what** to expect. Do not silently launch a browser window.
+Before a browser login, say one sentence: you need an EdgeOne Makers account so the site lands on their account with a live URL. Then run the command. Do not silently launch a browser, and do not write a four-bullet registration pitch.
 
-Tell the user:
+If nothing happens within ~60 seconds (no popup, no CLI progress), switch to Token login. Do not wait indefinitely, and do not poll the user every turn.
 
-> You need to log in or register an EdgeOne Makers account. Here's what to expect:
-> - **Why login is required**: Deployment uploads your build output to your own account, generating a unique access URL and project record.
-> - **What you get for free**: EdgeOne Makers offers a free tier with global CDN acceleration, automatic HTTPS, and custom domain binding — typically more than enough for personal projects.
-> - **What happens next**: I'll run `edgeone login`, and your default browser will open the Tencent Cloud login page. Please complete the login/registration and authorize access, then come back here.
-> - **If you get stuck**: If the browser doesn't open, or the CLI keeps waiting after you've logged in, let me know — I'll switch to Token login instead.
+### 1. Pass `--site` — infer first, ask only if unknown
 
-If the user does not respond within ~60 seconds (no browser popup or no progress reported), **proactively ask** about their status (whether the browser opened, any errors, or if they want to switch to Token login). Do not wait indefinitely.
+`edgeone login` in a non-interactive context **requires** `--site <china|global>`. Never run a bare `edgeone login`.
 
-### 1. Ask the user to choose a site, then ALWAYS pass `--site`
+Infer the site from `whoami`, an existing credential, or the user's context (language + console links they already used). Ask with a two-option control only when the site is still unknown:
 
-Use the IDE's selection control (`ask_followup_question`) before running any login command:
-
-> Choose your EdgeOne Makers site:
-> - **China** — For users in mainland China (console.cloud.tencent.com)
-> - **Global** — For users outside China (console.intl.cloud.tencent.com)
-
-⚠️ **CRITICAL**: After the user chooses, you MUST invoke login with an explicit
-`--site <china|global>` flag (e.g. `edgeone login --site china`).
-**NEVER run a bare `edgeone login` (without `--site`) when driven by an Agent / skill.**
-A bare `login` in a non-interactive context fails fast asking for
-`--site` (it no longer pops an interactive site-picker that would hang). The site choice
-is meant to happen here in the conversation, not inside the CLI.
+> - **China** — console.cloud.tencent.com
+> - **Global** — console.intl.cloud.tencent.com
 
 ### 2. Login methods reference
 
@@ -230,23 +215,9 @@ Guide the user to obtain a token:
 
 ⚠️ Remind the user: the token has account-level permissions. Never commit it to a repository.
 
-### 3. Offer to save the token locally
+### 3. Persist a user-provided token
 
-After the user provides a token, ask:
-
-> Save this token locally for future deployments?
-> - **Yes** — Save to `.edgeone/.token` (auto-used next time)
-> - **No** — Use for this deployment only
-
-**If Yes:**
-
-```bash
-mkdir -p .edgeone
-echo "<token>" > .edgeone/.token
-grep -q '.edgeone/.token' .gitignore 2>/dev/null || echo '.edgeone/.token' >> .gitignore
-```
-
-Confirm to the user: "✅ Token saved to `.edgeone/.token` and added to `.gitignore`."
+If the user hands you a token, run `edgeone login --token <token>` (or `--local` in a sandbox that cannot write `~/.edgeone/`). Ensure `.edgeone/` is gitignored. Do not ask whether to save it, and do not invent a `.edgeone/.token` file — that is not the CLI credential store.
 
 ---
 
@@ -266,26 +237,17 @@ edgeone makers deploy -n <project-name>
 
 ### Token-based deploy (Makers projects)
 
-First check for a saved token:
-
-```bash
-cat .edgeone/.token 2>/dev/null
-```
-
-- Saved token found → use it, tell the user: "Using saved token from `.edgeone/.token`"
-- No saved token → ask the user to provide one (see Token Login above)
+Use a token already in the environment (`EDGEONE_PAGES_API_TOKEN`), one the user just provided, or the CLI store from `edgeone login --token` / `--local`. Do not `cat .edgeone/.token`.
 
 ```bash
 # Project already linked
-edgeone makers deploy -t <token>
+edgeone makers deploy -t <token> --json
 
 # New project
-edgeone makers deploy -n <project-name> -t <token>
+edgeone makers deploy -n <project-name> -t <token> --json
 ```
 
-The token already contains site info — no `--site` flag needed.
-
-After a successful deploy with a manually-entered token, ask if the user wants to save it (see "Offer to save the token locally" above).
+The token already contains site info — no `--site` flag needed. If they typed the token in chat, persist it (see Login §3) and then deploy.
 
 ### Deploy to preview environment
 
@@ -344,11 +306,9 @@ Non-empty output from either grep means the project uses Blob.
 
 ⛔ **All checks in this flow are silent — never narrate them to the user.** Do not report things like "CLI 版本 x.x（支持匿名部署）", "页面是纯静态、无 Blob/KV 依赖，可直接发布", or any other version/eligibility check result. These are internal reasoning; a non-technical user cannot act on them and should never see them. The only time you speak about a check is when it **changes the outcome** — e.g. the project needs login (below), or the CLI is too old and needs upgrading. Passing checks produce no message at all.
 
-**KV cannot be detected this way — you must ask.** A KV namespace is bound in the console and exposed as a *global variable* whose name the user chose (e.g. `my_kv`), so there is no package import to grep for. There is no `@edgeone/pages-kv` package. Ask the user directly:
+**KV has no npm package.** Infer it from the workspace: a console-bound global (e.g. `my_kv.get` / `my_kv.put`) in `edge-functions/`, or a KV mention in `edgeone.json` / docs. Ask "does this project use KV?" only when there is no source to read.
 
-> Does this project use KV storage?
-
-If either check hits, or the user says the project uses KV, **do not deploy anonymously.** Go to **Login** and tell the user why (note the user-facing wording: "without login", never "anonymous"):
+If Blob, Agent, AI Gateway, or KV is present, **do not deploy anonymously.** Go to **Login** and tell the user why (user-facing wording: "without login", never "anonymous"):
 
 > This project needs environment variables / AI gateway credentials or a storage binding, which a login-free deploy cannot provide. The site would load but those features would fail. Let's log in so it works properly.
 
@@ -356,19 +316,16 @@ Plain static sites and frontend-framework projects with no such dependency may p
 
 If the user acknowledges the limitation and still wants to publish without logging in, you may proceed — but state prominently in your result that AI and storage features will not work until the project is claimed and configured (again: phrase it as "login-free / 免登录", never "anonymous / 匿名").
 
-### Step 2: Decide the path — default to anonymous only when the task fits, otherwise ask
+### Step 2: Decide the path — publish means publish
 
-**Go anonymous directly, without asking, only when the task itself is anonymous-native** — disposable or unattended by nature. Clear signals:
+If the user asked to deploy / 上线 / 发布 and they are not logged in:
 
-- **Scheduled / automated jobs** — e.g. "每日定时生成一个页面并部署", cron pipelines, any task that must run with nobody watching
-- **Disposable one-offs** — a throwaway preview, a quick demo, "先看看效果", anything the user frames as temporary or just-for-now
-- **Explicit anonymous intent** — the user says "免登录", "不用登录", "anonymous", or "don't make me sign up"
+- Repo needs credentials (Agent / Blob / KV / AI Gateway) → **Login**, say why, then deploy
+- Otherwise → **Anonymous deploy** (Step 3). Do not ask first. The Step 4 template already tells them how to keep the project.
 
-In these cases the 60-minute expiry + claim-later model *is* the right answer, so asking is pure friction. Go straight to Step 3, and present the result with the fixed template in Step 4 (claim link + 60-minute window) — the template already tells the user how to keep it if they change their mind.
+Ask the two-option choice only when intent is genuinely ambiguous (they have not said deploy, or they mixed "save it to my account" with "don't make me sign up"). Do not judge the *environment* to invent a question.
 
-**Everything else — ask.** If the task isn't obviously disposable — anything the user might want to keep, share widely, or build on — present the choice. Do NOT try to judge the *environment* to skip the question: sandbox/TTY signals are unreliable and guessing wrong either needlessly interrupts a human or silently deploys something they wanted to keep.
-
-If the environment genuinely gives you no way to ask at all (no TTY, no question tool), asking is impossible — that's a constraint, not a judgment call. Deploy with `--anonymous --json` and make the claim link and the 60-minute window unmissable in your result.
+If there is no way to ask at all, deploy with `--anonymous --json` and make the claim link and the 60-minute window unmissable.
 
 **How to ask (when asking):** present the choice with the IDE's selection control (e.g. `ask_followup_question`). The option labels deliberately avoid the word "anonymous" — it is jargon and confuses non-technical users. Present these two options **exactly**, in the user's language. Do not paraphrase the labels, do not add caveats to the options themselves, and do not mention "anonymous" to the user at all — when you must name the concept, call it **"login-free deployment" / 「免登录部署」**, never "anonymous deploy / 匿名部署".
 The option text must be placed in the `label` exactly as is; it must not be split into the `description`.
@@ -498,24 +455,9 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 | **Project ID** | Value after `EDGEONE_PROJECT_ID=` | — |
 | **Console URL** | Line after "You can view your deployment..." | — |
 
-**Show the user — the deploy URL MUST be at the very top of the visible reply AND pinned via `present_files` to the side panel (see Rule 4 for why both channels are required):**
-
-⚠️ **URL Integrity Rules (read before composing your reply):**
-
-| Rule | Detail |
-|------|--------|
-| **Every mention must be complete** | If you write the URL in a table, a list, a footnote, a comparison, or any secondary location — it MUST still include the full query string. No exceptions. |
-| **No visual "cleanup"** | Do not shorten the URL to make a table look nicer. A truncated URL is broken, not clean. |
-| **Concrete, not abstract** | Use the actual URL from deploy output. Do not replace query params with `...` or `(params omitted)` or any placeholder in user-facing text. |
-| **Self-check before sending** | Search your draft for `.edgeone.cool` — every hit must have `?eo_token=`. |
+**Show the user — complete URL at the top of the visible reply AND via `present_files` (Rule 4). Every `.edgeone.cool` mention must keep `?eo_token=`.**
 
 > 🌐 **Live URL**: `https://my-project-abc123.edgeone.cool?eo_token=abc123&eo_time=1234567890`
->
-> ---
->
-> - **Console URL**: `https://console.cloud.tencent.com/edgeone/pages/project/...`
->
-> ℹ️ Note: This preview URL is for quick deployment verification. When accessed from mainland China, the link may become restricted (e.g., 401) after some time or when shared, due to domain ICP filing status or CDN acceleration policies. For long-term stable public access, bind a custom domain with proper ICP filing.
 
 ---
 

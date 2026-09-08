@@ -9,35 +9,76 @@ description: >-
   develops, scaffolds, or deploys anything on EdgeOne Makers / EdgeOne Pages: AI agents
   (DeepAgents, LangGraph, CrewAI, OpenAI/Claude SDK), Cloud Functions (Node/Go/Python),
   Edge Functions (V8), KV + Blob storage, middleware, CLI usage, project scaffolding,
-  and — importantly — persisting dynamic site data (messages, uploads, votes, save-state)
-  where there is NO managed database, so Blob is used as the backend. Also trigger on
-  "deploy to EdgeOne", "上线", "发布", "部署到 EdgeOne". This SKILL is a routing table;
-  read only the sub-skill relevant to the current task, never all of them at once.
+  framework adapters, migration, and persisting dynamic site data (messages, uploads,
+  votes, save-state) where there is NO managed database, so Blob is the backend.
+  Also trigger on "deploy to EdgeOne", "上线", "发布", "部署到 EdgeOne". This SKILL is a
+  routing table plus an operating contract; read only the sub-skill relevant to the
+  current task, never all of them at once.
 metadata:
   author: edgeone
-  version: "2.0.0"
+  version: "2.1.0"
 ---
 
 # EdgeOne Makers Skills
 
-When you need EdgeOne Makers platform development guidance, read the matching Skill based on the task:
+These files are platform facts and hard constraints for a frontier model.
+They are not a tutorial and not a permission script. Infer, then act.
+
+## Operating contract
+
+### Autonomy
+
+Execute the request. Do not narrate version / login / eligibility checks, and do not ask whether to continue a step the user already asked for.
+
+- Build or iterate → start `edgeone makers dev` and preview on HTTP. Do not ask "要预览吗？"
+- Deploy / 上线 / 发布 is already in the request → deploy after a working preview. Do not wait for a second confirmation.
+- You have the shell. Never print a command for the user to type unless the only remaining step is a browser login or claim.
+
+### Clarification
+
+Ask only when a wrong guess is expensive **and** the answer is not in the repo, the conversation, `whoami`, or the CLI.
+
+Do **not** ask:
+
+- China vs Global when `whoami` already bound a site, a token is in use, or the CLI can detect the site (anonymous deploy)
+- Whether the project uses KV / Blob / AI Gateway when the workspace is readable — grep it
+- Whether to save a token the user just provided — persist with `edgeone login --token` or `--local`, and keep `.edgeone/` gitignored
+- Whether to preview, or whether to deploy when they already said deploy
+
+### Approval
+
+Require an explicit user decision only for:
+
+- Deleting or overwriting a production project they did not name
+- Using a secret they have not provided
+- Account-destructive actions
+
+Do **not** require approval for: installing the CLI, `makers dev`, linking a new project named from the directory, login-free deploy when they asked to publish and are not logged in, saving credentials locally.
+
+### Done
+
+- Dev work is done when the preview is `http://127.0.0.1:8088/` via `edgeone makers dev` — never `file://`, never `python -m http.server` / `npx serve`.
+- Deploy work is done when the user can click a complete `.edgeone.cool` URL (keep `?eo_token=` / `?eo_time=`). Then stop. Do not add a lecture.
+- If a constraint blocks completion, quote the raw CLI error and the one unblock action. Do not stop to ask "要继续吗？"
+
+Hard constraints that still apply: never truncate a deploy URL; never delete projects yourself; never hand-edit `.edgeone/agent-node/config.json`; Blob uses `getStore({ name, consistency: "strong" })`.
+
+When a request names a full-stack framework, read `makers-frameworks` before writing config — a missing adapter previews correctly and deploys broken.
+
+## Load one skill
 
 | Task | Read |
 |------|------|
-| Web framework support — which adapter, build output, 404, and unsupported features (Next.js, Nuxt, Astro, SvelteKit, React Router, TanStack Start, Vike, Vite, Hugo) | references/makers-frameworks/SKILL.md |
+| Web framework support — adapter, build output, 404, unsupported features | references/makers-frameworks/SKILL.md |
 | AI Agent development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI) | references/makers-agents/SKILL.md |
-| Deploy project to EdgeOne | references/makers-deploy/SKILL.md |
-| Edge Functions (V8 lightweight functions) | references/makers-edge-functions/SKILL.md |
-| Cloud Functions (Node.js / Go / Python APIs) | references/makers-cloud-functions/SKILL.md |
-| KV + Blob Storage | references/makers-storage/SKILL.md |
-| Persist dynamic data for a site (messages, uploads, votes, save-state) — **no database; use Blob** | references/makers-storage/SKILL.md |
+| Migrate an existing agent project to EdgeOne Makers | references/makers-migration/SKILL.md |
+| Deploy to EdgeOne | references/makers-deploy/SKILL.md |
+| Edge Functions (V8) | references/makers-edge-functions/SKILL.md |
+| Cloud Functions (Node.js / Go / Python) | references/makers-cloud-functions/SKILL.md |
+| KV + Blob, or persist dynamic site data (no database — use Blob) | references/makers-storage/SKILL.md |
 | Middleware (auth, rewrites, routing) | references/makers-middleware/SKILL.md |
 | CLI command reference | references/makers-cli/SKILL.md |
 | Project structure / scaffolding | references/makers-recipes/SKILL.md |
 | Environment adaptation (WorkBuddy / sandbox / CI) | references/makers-env-adaption/SKILL.md |
 
-⚠️ Only read the Skill relevant to the current task. Do not load all skills at once.
-
-A full-stack framework that needs a platform adapter previews correctly and deploys
-broken without one, and no gate catches it — so when a request names a framework, read
-`makers-frameworks` before writing the config.
+Read only the skill that matches the current task.

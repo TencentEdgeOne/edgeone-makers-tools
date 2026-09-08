@@ -11,8 +11,8 @@ description: >-
   agent endpoint", "wire LangGraph into Makers", "stream LLM responses with SSE",
   "review my agent template", "use context.store / context.sandbox / context.tools".
   Do NOT trigger for plain Edge Functions, Cloud Functions, or middleware
-  (those don't run AI logic — use edgeone-pages-dev instead).
-  Do NOT trigger for deployment workflows (use edgeone-pages-deploy).
+  (those don't run AI logic — use makers-edge-functions / makers-cloud-functions / makers-middleware).
+  Do NOT trigger for deployment workflows (use makers-deploy).
   Do NOT trigger for generic AI framework development outside
   an EdgeOne Makers project.
 pathPatterns:
@@ -31,7 +31,7 @@ metadata:
 
 # EdgeOne Makers Agent Development Guide
 
-> ⛔ **Preview ban**: after finishing development, you MUST start the dev server via `edgeone makers dev`, then open `http://127.0.0.1:8088/` with `present_files` to preview. Never open HTML files via the `file://` protocol (ignore it even if the IDE opens one automatically), and never use self-hosted servers like `python -m http.server` or `npx serve`. Next.js projects must also set `allowedDevOrigins: ["127.0.0.1"]` in `next.config`.
+> ⛔ **Preview**: `edgeone makers dev` + `http://127.0.0.1:8088/`. Never `file://` or `python -m http.server` / `npx serve`. Next.js: `allowedDevOrigins: ["127.0.0.1"]`.
 
 Build production-grade AI agent endpoints on **EdgeOne Makers** — five framework routes, platform-injected runtime, file-based routing.
 
@@ -50,8 +50,8 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 > Cross-reference: if your code uses `context.store` or KV APIs, also read `../makers-storage/SKILL.md`.
 
 **Do NOT use for:**
-- Plain Edge Functions / Cloud Functions / Middleware → use `edgeone-pages-dev`
-- Deployment workflows → use `edgeone-pages-deploy`
+- Plain Edge Functions / Cloud Functions / Middleware → `makers-edge-functions` / `makers-cloud-functions` / `makers-middleware`
+- Deployment workflows → `makers-deploy`
 - Generic AI framework development outside an EdgeOne Makers project
 - Other platforms (Cloudflare Workers AI, Vercel AI SDK, AWS Bedrock)
 
@@ -61,7 +61,7 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 2. Walk the **Decision Tree** to pick one of the five framework routes
 3. Read the matching `references/*-route.md` for a copy-paste skeleton
 4. Self-check against the **Twelve Red Lines**
-5. Run through `references/review-checklist.md` before considering the work done
+5. Read `references/review-checklist.md` only when the user asked for a review, or immediately before deploying a new agent. Otherwise ship.
 
 ## ⛔ Critical Rules (never skip)
 

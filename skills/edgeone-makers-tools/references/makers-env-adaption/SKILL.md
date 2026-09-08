@@ -17,7 +17,7 @@ validate:
     message: "Use 127.0.0.1, not localhost — in the sandbox localhost resolves to ::1 and yields false 404s."
 metadata:
   author: edgeone
-  version: "1.4.2"
+  version: "1.5.0"
 ---
 
 # Runtime Environment Adaptation Guide
@@ -105,9 +105,9 @@ edgeone makers dev
 
 **Recommended approach**: browser login + the `--local` flag:
 ```bash
-edgeone login --site china --local
+edgeone login --site <china|global> --local
 ```
-`--local` writes credentials to the project directory at `<cwd>/.edgeone/auth.json`, bypassing home-directory write restrictions.
+Infer `--site` from `whoami` or user context; ask only if unknown. `--local` writes credentials to `<cwd>/.edgeone/auth.json`, bypassing home-directory write restrictions.
 
 **Login status detection**:
 ```bash
@@ -116,7 +116,7 @@ edgeone whoami  # exit 0 = logged in, exit 1 = not logged in (does not hang)
 
 **When is login actually required?** Login is only needed when the project uses **Blob** or other credentialed backends — and strictly because of the dependency chain: **Blob requires the project to be linked, and linking requires a logged-in account first.** So `edgeone makers dev` for a **pure-static** site runs fine without login — **do NOT force a login prompt for static-only previews**. Login (or `-t <token>`) becomes mandatory the moment dev/deploy must touch Blob storage. (The trigger condition and the link chain live in makers-storage.)
 
-**CLI version requirement**: >= 1.6.7 (older versions lack the non-interactive fixes; whoami will hang)
+**CLI version requirement**: >= 1.6.0 (anonymous deploy / `claim`: >= 1.6.29)
 
 ---
 
@@ -209,9 +209,8 @@ After finishing development, **start the dev server and preview directly** — d
 1. Start `edgeone makers dev --name <project> --skip-env-sync` (**background async**, see §7)
 2. Wait 2-3 seconds for the dev server to be ready
 3. **Pass `http://127.0.0.1:8088/` to `present_files`** (note it is `127.0.0.1`, **not** `localhost` — see §4)
-4. Tell the user: "The project's local preview is running, please check it out. If everything looks good, I can deploy it live for you directly."
-
-Only after the user confirms, run `edgeone makers deploy -n <project> --json` (**background async**, see §7 and §7.2 — it exceeds the foreground wall-clock budget).
+4. If the user already asked to deploy / 上线 / 发布, deploy next (`edgeone makers deploy -n <project> --json`, background — see §7). Do not ask again.
+5. If they only asked to build, stop at preview. Mention deploy is available; do not block on a confirmation to call the work done.
 
 #### ⛔ file:// preview is strictly forbidden
 
@@ -294,7 +293,7 @@ If the project named by `--name` does not exist remotely, the `link` command cre
 
 | Framework/package | Minimum version | Reason |
 |---------|---------|------|
-| EdgeOne CLI | >= 1.6.7 | Non-interactive fixes, whoami fail-fast, --json support |
+| EdgeOne CLI | >= 1.6.0 | Non-interactive fixes, whoami fail-fast, --json support |
 | EdgeOne CLI (anonymous deploy / `claim` only) | >= 1.6.29 | `--anonymous` and `claim` do not exist below this |
 | Next.js | 16.x | The framework adapter tracks new versions |
 | @edgeone/pages-blob | >= 0.0.14 | Older versions have known bugs |
