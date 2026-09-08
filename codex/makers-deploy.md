@@ -15,7 +15,7 @@ description: >-
   ⚠️ Also trigger when any agent is about to execute `edgeone makers deploy` or `edgeone makers deploy`
   commands — the skill contains critical rules for parsing deploy output and presenting access URLs.
   Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy —
-  use edgeone-makers-dev for troubleshooting).
+  use makers-env-adaption / makers-recipes for troubleshooting).
 pathPatterns:
   - "*.sh"
   - .github/workflows/**
@@ -24,7 +24,7 @@ validate:
     message: "edgeone whoami does not accept -t. Check the exit code instead: 0 = logged in, 1 = not."
 metadata:
   author: edgeone
-  version: "2.12.3"
+  version: "2.12.4"
 ---
 
 # EdgeOne Makers Deployment Skill

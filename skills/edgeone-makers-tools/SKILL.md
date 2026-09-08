@@ -15,7 +15,7 @@ description: >-
   read only the sub-skill relevant to the current task, never all of them at once.
 metadata:
   author: edgeone
-  version: "2.0.0"
+  version: "2.0.1"
 ---
 
 # EdgeOne Makers Skills
@@ -26,6 +26,7 @@ When you need EdgeOne Makers platform development guidance, read the matching Sk
 |------|------|
 | Web framework support — which adapter, build output, 404, and unsupported features (Next.js, Nuxt, Astro, SvelteKit, React Router, TanStack Start, Vike, Vite, Hugo) | references/makers-frameworks/SKILL.md |
 | AI Agent development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI) | references/makers-agents/SKILL.md |
+| Migrate an existing agent project to EdgeOne Makers | references/makers-migration/SKILL.md |
 | Deploy project to EdgeOne | references/makers-deploy/SKILL.md |
 | Edge Functions (V8 lightweight functions) | references/makers-edge-functions/SKILL.md |
 | Cloud Functions (Node.js / Go / Python APIs) | references/makers-cloud-functions/SKILL.md |

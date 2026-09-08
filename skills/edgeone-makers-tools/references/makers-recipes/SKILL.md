@@ -5,7 +5,7 @@ description: >-
   applications — full-stack apps, static sites, API services, and AI agent projects.
 metadata:
   author: edgeone
-  version: "1.0.0"
+  version: "1.0.1"
 ---
 
 # Common Recipes
@@ -65,7 +65,7 @@ my-app/
 import { getStore } from "@edgeone/pages-blob";
 
 export async function onRequest({ request }) {
-  const store = getStore("guestbook");
+  const store = getStore({ name: "guestbook", consistency: "strong" });
 
   if (request.method === "POST") {
     const { name, text } = await request.json();
