@@ -380,7 +380,15 @@ edgeone makers env pull
    edgeone makers env ls
    ```
 
-5. **Deploy**:
+5. **Check that every peer dependency is declared in `package.json`**:
+   ```bash
+   npm ls --depth=0 2>&1 | grep -i "peer dep"
+   ```
+   The deployed runtime resolves auto-externalized packages (`deepagents`, `@anthropic-ai/claude-agent-sdk`, every `@langchain/*`) from what `package.json` **declares**. npm 7+ installs peers automatically without declaring them, so a package that is missing here still resolves locally and in preview, and is simply absent in production — `import` fails at module load and every route on that endpoint hangs until the gateway returns an HTML 500.
+
+   This is not the same failure as a missing API key, and the difference is diagnostic: a missing key fails only after input validation passes, so a request with a deliberately invalid body still gets its fast `400`. A module that failed to load answers nothing at all, on every route, including that one.
+
+6. **Deploy**:
    ```bash
    edgeone makers deploy
    ```

@@ -16,8 +16,14 @@
 ## Dependencies
 
 ```bash
-npm install deepagents@^1.9.0 @langchain/openai @langchain/core zod
+npm install deepagents@^1.10.6 @langchain/openai @langchain/core zod \
+  langchain langsmith \
+  @langchain/langgraph @langchain/langgraph-sdk @langchain/langgraph-checkpoint
 ```
+
+> ⛔ **Declare the langchain/langgraph packages explicitly — do not rely on npm installing them for you.** `deepagents` 1.10.6 moved `langchain`, `langsmith`, `@langchain/langgraph`, `@langchain/langgraph-sdk` and `@langchain/langgraph-checkpoint` out of `dependencies` and into `peerDependencies`. npm 7+ installs peers automatically, so a project that declares only `deepagents` still imports fine locally and in preview. It fails in production: the runtime resolves auto-externalized packages from what `package.json` declares, so an undeclared peer is simply not there, and `import 'deepagents'` dies with `Cannot find package 'langchain'` before `onRequest` is ever called. Every route then hangs until the gateway times out and returns an HTML 500 — including routes that only validate input, which is what distinguishes this from a missing API key.
+
+> The floor above is where that peer contract begins, and the caret keeps resolution inside the major it describes. The list is a convenience, not the source of truth: if a resolved `deepagents` ever moves another package between `dependencies` and `peerDependencies`, read `node_modules/deepagents/package.json` and declare what it asks for. A pinned range paired with a hand-written list is exactly what shipped a broken deploy once already — the range said `^1.9.0` while the list described what 1.9 needed, and npm resolved 1.13.
 
 > **Note**: `deepagents` is a platform-provided package bundled with the EdgeOne Makers agent runtime. It is automatically available in the deployed environment.
 `edgeone.json`:
@@ -178,6 +184,7 @@ const lgStore = context.store.langgraphStore;              // direct property
 ## Review Checklist
 
 - [ ] `edgeone.json` has `agents.framework: "deepagents"`
+- [ ] `package.json` declares every `deepagents` peer, not just `deepagents` itself — an undeclared peer passes preview and breaks the deployed route
 - [ ] Model/agent instances cached as module-level singletons
 - [ ] env from `context.env` — never `process.env`
 - [ ] `maxTurns` is set to cap agent loops
