@@ -1,12 +1,18 @@
 # Next.js
 
-Next.js 13, 14, and 15 are supported, App Router and Pages Router both. The builder
-handles Next.js directly — **no platform adapter, no plugin, nothing to install.**
+Next.js 13 through 16 are supported, App Router and Pages Router both, and 15 is the
+recommended version. The builder handles Next.js directly — **no platform adapter, no
+plugin, nothing to install.**
+
+The scaffold command below pins that recommendation rather than taking `@latest`, which
+now produces 16. Unlike `create-react-router`, the pin holds the framework and not just
+the generator: `create-next-app` ships its templates inside the published package instead
+of fetching the newest from a branch.
 
 ## Scaffold
 
 ```bash
-npx create-next-app@latest . --typescript --tailwind --app --eslint --use-npm --yes
+npx create-next-app@15 . --typescript --tailwind --app --eslint --use-npm --yes
 ```
 
 ## Preview asset prefix

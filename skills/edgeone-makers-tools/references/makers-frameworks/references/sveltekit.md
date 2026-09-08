@@ -24,21 +24,36 @@ platform output is `@edgeone/sveltekit`.
 npm install @edgeone/sveltekit
 ```
 
-```javascript
-// svelte.config.js
+### Where the config lives
+
+`sv create` no longer writes a `svelte.config.js`. It puts the SvelteKit config inside the
+`sveltekit()` call in `vite.config.ts`, and that is where the adapter goes:
+
+```typescript
+// vite.config.ts
 import adapter from '@edgeone/sveltekit';
-import { vitePreprocess } from '@sveltejs/vite-plugin-svelte';
+import { sveltekit } from '@sveltejs/kit/vite';
+import { defineConfig } from 'vite';
 
-/** @type {import('@sveltejs/kit').Config} */
-const config = {
-  preprocess: vitePreprocess(),
-  kit: {
-    adapter: adapter(),
-  },
-};
-
-export default config;
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      adapter: adapter(),
+    }),
+  ],
+});
 ```
+
+A `svelte.config.js` still works, but **only in a project whose `sveltekit()` takes no
+arguments at all.** The two are not merged. `@sveltejs/load-config` resolves the Vite
+config first and returns as soon as the plugin hands back any options, so one option in
+`vite.config.ts` discards the whole of `svelte.config.js` — adapter included, leaving the
+build with no adapter and no error naming the file it ignored.
+
+The trap that follows is specific: the preview asset prefix below is also an option on
+`sveltekit()`. Adding the adapter to a new `svelte.config.js` while leaving that prefix
+where it is means the adapter never loads. If a project already has options in
+`vite.config.ts`, add the adapter there rather than starting a second config file.
 
 `@sveltejs/adapter-auto` cannot detect this platform, and `@sveltejs/adapter-vercel`,
 `-netlify`, `-cloudflare`, `-node` all emit output the builder does not understand. The
@@ -53,18 +68,24 @@ npx sv create . --template minimal --types ts --no-add-ons --install npm
 
 ## Preview asset prefix
 
-SvelteKit's option is `kit.paths.base`:
+SvelteKit's option is `paths.base`, alongside the adapter in the same `sveltekit()` call:
 
-```javascript
-const config = {
-  kit: {
-    adapter: adapter(),
-    ...(process.env.EDGEONE_PREVIEW_ASSET_PREFIX
-      ? { paths: { base: process.env.EDGEONE_PREVIEW_ASSET_PREFIX } }
-      : {}),
-  },
-};
+```typescript
+// vite.config.ts
+export default defineConfig({
+  plugins: [
+    sveltekit({
+      adapter: adapter(),
+      ...(process.env.EDGEONE_PREVIEW_ASSET_PREFIX
+        ? { paths: { base: process.env.EDGEONE_PREVIEW_ASSET_PREFIX } }
+        : {}),
+    }),
+  ],
+});
 ```
+
+In a project that still keeps its config in `svelte.config.js`, both go under `kit`
+instead — and `sveltekit()` must then be called with no arguments, or neither is read.
 
 Note that `paths.base` moves served routes as well as asset URLs — the preview proxy
 detects that from the redirect the dev server issues and stops stripping the prefix, so

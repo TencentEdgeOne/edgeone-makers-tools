@@ -165,7 +165,18 @@ Keep it in sync with the per-framework documents.
     "adapter": {
       "package": "@edgeone/sveltekit",
       "version": "^1.1.1",
-      "configFiles": ["svelte.config.js", "svelte.config.ts"],
+      "configFiles": [
+        "svelte.config.js",
+        "svelte.config.ts",
+        "vite.config.ts",
+        "vite.config.js",
+        "vite.config.mjs"
+      ],
+      "configOverride": {
+        "files": ["vite.config.ts", "vite.config.js", "vite.config.mjs"],
+        "pattern": "sveltekit\\(\\s*[^)\\s]",
+        "reason": "SvelteKit reads one config and prefers the Vite one: because sveltekit() is called with options here, a svelte.config.js beside it is ignored whole, adapter and all. Wire the adapter into this call, or empty the call and keep everything in svelte.config.js."
+      },
       "required": "always"
     },
     "outputDirectory": "",

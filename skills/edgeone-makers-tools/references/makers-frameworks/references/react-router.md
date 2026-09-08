@@ -11,8 +11,36 @@
 - [404 page](#404-page)
 - [Feature support](#feature-support)
 
-React Router 7+ is supported with full-stack deployment. EdgeOne CLI must be 1.2.0 or
+React Router 7 is supported with full-stack deployment. EdgeOne CLI must be 1.2.0 or
 newer. Version 7 is a Vite-based framework, not just the routing library.
+
+Not 8. `@edgeone/react-router` peers on `react-router@^7` and `@react-router/dev@^7`, and
+on Vite 5, 6, or 7 — so the current default scaffold, which is version 8 on Vite 8, falls
+outside both. The adapter is a deploy-time contract rather than a preview-time one, so a
+project like that previews perfectly and deploys broken with every gate green.
+
+Pinning the CLI does not pin the framework. `create-react-router` downloads its default
+template from the `main` branch of `remix-run/react-router-templates`, which tracks the
+newest major, so `create-react-router@7` still writes a version 8 manifest. Either pass
+`--template` with a ref of your own, or correct the versions after scaffolding.
+
+Correcting the versions is not the whole correction. The scaffolded `vite.config.ts` sets
+`resolve.tsconfigPaths`, which is Vite 8's built-in alias resolution and absent in 7 —
+where it is not rejected either, because Vite does not validate `resolve`. So `~/*` stays
+in tsconfig.json, tsc stays happy, and the first import through the alias fails the build
+naming only the import. Going back to Vite 7 means going back to the plugin the template
+used before 8:
+
+```typescript
+// vite.config.ts
+import { reactRouter } from "@react-router/dev/vite";
+import { defineConfig } from "vite";
+import tsconfigPaths from "vite-tsconfig-paths";
+
+export default defineConfig({
+  plugins: [reactRouter(), tsconfigPaths(), edgeoneAdapter()],
+});
+```
 
 ## The adapter
 
@@ -47,16 +75,37 @@ npx create-react-router@latest . --yes --no-git-init --install
 
 ## Preview asset prefix
 
-This is a Vite project, so the option is `base`:
+Two options in two files, and the Vite one alone does nothing.
+
+`base` moves the asset URLs:
 
 ```typescript
+// vite.config.ts
 export default defineConfig({
   base: process.env.EDGEONE_PREVIEW_ASSET_PREFIX,
   plugins: [reactRouter(), edgeoneAdapter()],
 });
 ```
 
-Omit it when the variable is unset so the deployed site stays at `/`.
+`basename` is what matches the requests:
+
+```typescript
+// react-router.config.ts
+export default {
+  ssr: true,
+  basename: process.env.EDGEONE_PREVIEW_ASSET_PREFIX ?? "/",
+} satisfies Config;
+```
+
+Vite strips the prefix off the request before the framework sees it, and React
+Router's dev adapter puts it straight back — on purpose, so the router is given
+the full path. Against a basename still defaulting to `/` that path matches
+nothing, so the assets load and every navigation answers `No route matches URL
+"/preview"`. React Router additionally refuses to start in dev unless the
+basename begins with the base, which is why both read the same variable.
+
+Both fall back to `/` when the variable is unset, so the deployed site stays at
+the root.
 
 ## Build settings
 

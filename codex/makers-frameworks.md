@@ -106,6 +106,10 @@ lint and the install warmup do not each carry their own copy.
 Keep it in sync with the per-framework documents.
 
 - `detect` names the dependencies that prove the framework is in use.
+- `adapter.version` is the range to declare when a host adds the adapter to `package.json`
+  on the project's behalf. It is here so that declaring it does not mean `latest`: a
+  floating tag re-resolves against the registry on every install and dates any lockfile
+  next to it, which costs a full dependency re-resolution before the project is touched.
 - `adapter.configFiles` is where the adapter gets wired in.
 - `adapter.required` is `always` when the framework cannot build without an adapter, or
   `server-output` when a fully static build needs none.
@@ -124,6 +128,7 @@ Keep it in sync with the per-framework documents.
     "detect": ["astro"],
     "adapter": {
       "package": "@edgeone/astro",
+      "version": "^1.1.5",
       "configFiles": ["astro.config.mjs", "astro.config.js", "astro.config.ts"],
       "required": "server-output"
     },
@@ -141,6 +146,7 @@ Keep it in sync with the per-framework documents.
     "detect": ["@react-router/dev"],
     "adapter": {
       "package": "@edgeone/react-router",
+      "version": "^1.1.10",
       "configFiles": ["vite.config.ts", "vite.config.js", "vite.config.mjs"],
       "required": "server-output"
     },
@@ -158,7 +164,19 @@ Keep it in sync with the per-framework documents.
     "detect": ["@sveltejs/kit"],
     "adapter": {
       "package": "@edgeone/sveltekit",
-      "configFiles": ["svelte.config.js", "svelte.config.ts"],
+      "version": "^1.1.1",
+      "configFiles": [
+        "svelte.config.js",
+        "svelte.config.ts",
+        "vite.config.ts",
+        "vite.config.js",
+        "vite.config.mjs"
+      ],
+      "configOverride": {
+        "files": ["vite.config.ts", "vite.config.js", "vite.config.mjs"],
+        "pattern": "sveltekit\\(\\s*[^)\\s]",
+        "reason": "SvelteKit reads one config and prefers the Vite one: because sveltekit() is called with options here, a svelte.config.js beside it is ignored whole, adapter and all. Wire the adapter into this call, or empty the call and keep everything in svelte.config.js."
+      },
       "required": "always"
     },
     "outputDirectory": "",
@@ -170,6 +188,7 @@ Keep it in sync with the per-framework documents.
     "detect": ["@tanstack/react-start", "@tanstack/solid-start"],
     "adapter": {
       "package": "@edgeone/tanstack-start",
+      "version": "^1.1.0",
       "configFiles": ["vite.config.ts", "vite.config.js", "vite.config.mjs"],
       "required": "always"
     },
@@ -182,6 +201,7 @@ Keep it in sync with the per-framework documents.
     "detect": ["vike"],
     "adapter": {
       "package": "@edgeone/vite",
+      "version": "^2.0.1",
       "configFiles": ["vite.config.ts", "vite.config.js", "vite.config.mjs"],
       "required": "server-output"
     },
