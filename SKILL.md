@@ -16,19 +16,24 @@ metadata:
 
 # EdgeOne Makers Skills
 
-When you need EdgeOne Makers platform development guidance, read the matching Skill based on the task:
+Follow the operating contract and router in
+`skills/edgeone-makers-tools/SKILL.md`.
+That file is the source of truth after install.
+
+When working from this repository root, read only the matching capability:
 
 | Task | Read |
 |------|------|
-| Web framework support — which adapter, build output, 404, and unsupported features (Next.js, Nuxt, Astro, SvelteKit, React Router, TanStack Start, Vike, Vite, Hugo) | skills/makers-frameworks/SKILL.md |
-| AI Agent development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI) | skills/makers-agents/SKILL.md |
-| Deploy project to EdgeOne | skills/makers-deploy/SKILL.md |
-| Edge Functions (V8 lightweight functions) | skills/makers-edge-functions/SKILL.md |
-| Cloud Functions (Node.js / Go / Python APIs) | skills/makers-cloud-functions/SKILL.md |
-| KV + Blob Storage | skills/makers-storage/SKILL.md |
-| Middleware (auth, rewrites, routing) | skills/makers-middleware/SKILL.md |
-| CLI command reference | skills/makers-cli/SKILL.md |
-| Project structure / scaffolding | skills/makers-recipes/SKILL.md |
-| Environment adaptation (WorkBuddy / sandbox / CI) | skills/makers-env-adaption/SKILL.md |
+| Web framework support — adapter, build output, 404, unsupported features | skills/edgeone-makers-tools/references/makers-frameworks/SKILL.md |
+| AI Agent development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI) | skills/edgeone-makers-tools/references/makers-agents/SKILL.md |
+| Migrate an existing agent project to EdgeOne Makers | skills/edgeone-makers-tools/references/makers-migration/SKILL.md |
+| Deploy to EdgeOne | skills/edgeone-makers-tools/references/makers-deploy/SKILL.md |
+| Edge Functions (V8) | skills/edgeone-makers-tools/references/makers-edge-functions/SKILL.md |
+| Cloud Functions (Node.js / Go / Python) | skills/edgeone-makers-tools/references/makers-cloud-functions/SKILL.md |
+| KV + Blob, or persist dynamic site data (no database — use Blob) | skills/edgeone-makers-tools/references/makers-storage/SKILL.md |
+| Middleware (auth, rewrites, routing) | skills/edgeone-makers-tools/references/makers-middleware/SKILL.md |
+| CLI command reference | skills/edgeone-makers-tools/references/makers-cli/SKILL.md |
+| Project structure / scaffolding | skills/edgeone-makers-tools/references/makers-recipes/SKILL.md |
+| Environment adaptation (WorkBuddy / sandbox / CI) | skills/edgeone-makers-tools/references/makers-env-adaption/SKILL.md |
 
-⚠️ Only read the Skill relevant to the current task. Do not load all skills at once.
+Read only the skill that matches the current task.
