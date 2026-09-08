@@ -21,7 +21,7 @@ pathPatterns:
 validate:
   - pattern: "whoami[^\\n]*\\s-t\\s"
     message: "edgeone whoami does not accept -t. Check the exit code instead: 0 = logged in, 1 = not."
-  metadata:
+metadata:
   author: edgeone
   version: "2.13.0"
 ---
