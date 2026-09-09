@@ -36,6 +36,7 @@ The single `edgeone-makers-tools` skill routes to these capabilities (each lives
 
 | Capability | Description |
 |-------|-------------|
+| `makers-frameworks` | Web framework support matrix — platform adapters, build output, 404 conventions |
 | `makers-agents` | AI Agent development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI) |
 | `makers-deploy` | Deploy projects to EdgeOne |
 | `makers-edge-functions` | Edge Functions (V8 lightweight runtime) |
@@ -100,6 +101,9 @@ skills/
 └── edgeone-makers-tools/
     ├── SKILL.md                     # Router — matches the task, loads a capability below
     └── references/
+        ├── makers-frameworks/       # Web framework support matrix
+        │   ├── SKILL.md             # Adapter table + machine-readable profiles
+        │   └── references/          # One document per framework
         ├── makers-agents/           # AI Agent development
         │   ├── SKILL.md             # Decision tree, red lines, framework routing
         │   └── references/
