@@ -26,7 +26,7 @@ validate:
     message: "Never write `store?.langgraphStore ?? store` — in cloud-function context it falls back to a store with no .get and crashes (Critical Rule 12)."
 metadata:
   author: edgeone
-  version: "1.0.1"
+  version: "1.1.1"
 ---
 
 # EdgeOne Makers Agent Development Guide

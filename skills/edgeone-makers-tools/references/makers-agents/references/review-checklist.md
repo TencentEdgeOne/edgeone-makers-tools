@@ -51,6 +51,10 @@
 
 - [ ] Request body comes from `context.request.body` (⚠️ not `await req.json()`)
 
+- [ ] ⛔ `/chat` reads `messages` and has no singular `message` branch. The array is the only body a chat UI sends and the only one the preview probe exercises, so a second branch is code no request reaches until a user types — a measured project took the array's presence as its condition and the content from `message`, passed the probe with a clean 200 stream, and answered every real message 400. Single-shot routes that carry no conversation (`/outline`, `/create`, HITL approval) keep the singular shape; see [platform/conversation-id.md](platform/conversation-id.md)
+
+- [ ] Where a session or checkpointer holds the history — `openaiSession`, `claudeSessionStore`, `langgraphCheckpointer` — only the newest `user` turn is forwarded. Replaying the whole array appends what is already stored, and the prompt grows by a copy of itself every turn
+
 - [ ] ⚠️ Request headers are read by index: `context.request.headers['x-foo']` (plain object, **not** `.get('x-foo')`)
 
 - [ ] Failed input validation returns `400 + JSON`
