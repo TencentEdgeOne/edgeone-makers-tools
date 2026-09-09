@@ -324,3 +324,11 @@ test('plugin-skill-injection-optimization.VALIDATE_RED_LINES.9 yields no output 
 
   assert.equal(output, null);
 });
+
+test('plugin-skill-injection-optimization.WORKBUDDY_FLAT_LAYOUT.1 loads validation rules from flat reference files', () => {
+  const rules = loadSkillValidateRules('skills/edgeone-makers-tools/references');
+  const edgeFunctions = rules.find((rule) => rule.skill === 'edgeone-makers-edge-functions');
+
+  assert.ok(edgeFunctions, 'flat edge-functions reference should declare validation rules');
+  assert.deepEqual(edgeFunctions.pathPatterns, ['edge-functions/**', 'functions/**']);
+});

@@ -12,6 +12,8 @@ import {
   findDeepReferenceLinks,
   findMissingTocs,
   findOversizedFiles,
+  findOverdeepFiles,
+  listFiles,
   listMarkdownFiles,
 } from './skill-graph.mjs';
 
@@ -260,7 +262,7 @@ test('skill-graph.findDanglingSkillNames survives an unreadable or non-file SKIL
     // SKILL.md 是个目录:原来会抛 EISDIR。
     await mkdir(join(root, 'makers-c/SKILL.md'), { recursive: true });
 
-    // 不抛——doctor 的六项检查不该被一个权限异常的文件换成裸栈。
+    // 不抛——doctor不该被一个权限异常的文件换成裸栈。
     const dangling = findDanglingSkillNames(root);
 
     // 其余文件照常检查,没有被前面的权限错误带走整轮扫描。
@@ -342,7 +344,7 @@ test('skill-graph.findMissingTocs and findOversizedFiles survive an unreadable f
     await chmod(locked, 0o000);
 
     // 不抛——doctor 调 collect() 没有 try/catch,一个权限异常的文件
-    // 不该把整份六项报告换成裸栈。
+    // 不该把整份 doctor 报告换成裸栈。
     const missing = findMissingTocs(root);
     const over = findOversizedFiles(root);
 
@@ -528,6 +530,39 @@ test('skill-graph.findMissingTocs only exempts a real SKILL.md, not a lookalike 
   }
 });
 
+test('skill-graph.listMarkdownFiles supports a flat single-router layout', async () => {
+  const root = await makeSkills({
+    'tools/SKILL.md': '---\nname: edgeone-makers-tools\n---\n',
+    'tools/references/makers-agents.md': '---\nname: edgeone-makers-a\n---\n',
+    'tools/references/makers-storage-blob.md': '# Blob\n',
+  });
+  try {
+    assert.deepEqual(listMarkdownFiles(root), [
+      'tools/SKILL.md',
+      'tools/references/makers-agents.md',
+      'tools/references/makers-storage-blob.md',
+    ]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.listDeclaredSkillNames collects flat frontmatter entry files', async () => {
+  const root = await makeSkills({
+    'tools/SKILL.md': '---\nname: edgeone-makers-tools\n---\n',
+    'tools/references/makers-agents.md': '---\nname: edgeone-makers-agents\n---\n',
+    'tools/references/makers-agents-platform-node-entry.md': '# Node\n',
+  });
+  try {
+    assert.deepEqual(
+      [...listDeclaredSkillNames(root)].sort(),
+      ['edgeone-makers-agents', 'edgeone-makers-tools'],
+    );
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
 test('skill-graph.listDeclaredSkillNames collects names from nested SKILL.md files', async () => {
   // 单 skill 路由布局：路由页在顶层，各能力的 SKILL.md 藏在 references/ 下。
   const root = await makeSkills({
@@ -554,6 +589,38 @@ test('skill-graph.findDanglingSkillNames accepts nested declarations in a single
     const dangling = findDanglingSkillNames(root);
     assert.equal(dangling.length, 1);
     assert.equal(dangling[0].name, 'edgeone-pages-ghost');
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.findOverdeepFiles flags files below WorkBuddy package depth', async () => {
+  const root = await makeSkills({
+    'tools/SKILL.md': '# Router\n',
+    'tools/references/flat.md': '# Flat\n',
+    'tools/references/nested/deep.md': '# Deep\n',
+  });
+  try {
+    assert.deepEqual(findOverdeepFiles(root), [
+      { file: 'tools/references/nested/deep.md', maxDirectoryDepth: 2 },
+    ]);
+  } finally {
+    await rm(root, { recursive: true, force: true });
+  }
+});
+
+test('skill-graph.listFiles includes non-markdown files for layout validation', async () => {
+  const root = await makeSkills({
+    'tools/SKILL.md': '# Router\n',
+    'tools/references/flat.json': '{}\n',
+    'tools/references/nested/deep.json': '{}\n',
+  });
+  try {
+    assert.deepEqual(listFiles(root), [
+      'tools/SKILL.md',
+      'tools/references/flat.json',
+      'tools/references/nested/deep.json',
+    ]);
   } finally {
     await rm(root, { recursive: true, force: true });
   }

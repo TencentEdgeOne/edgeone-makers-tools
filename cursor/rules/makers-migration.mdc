@@ -154,8 +154,8 @@ openai>=1.50.0
 6. Replace custom tools with `ctx.tools.to_crewai_tools(BaseTool)`
 7. Return SSE via `ctx.utils.stream_sse(gen())`
 
-> See [makers-agents/references/python-frameworks/crewai.md](../makers-agents/references/python-frameworks/crewai.md) for the complete pattern.
-> Detailed before/after: [references/crewai-to-makers.md](references/crewai-to-makers.md)
+> See [makers-agents-python-frameworks-crewai.md](makers-agents-python-frameworks-crewai.md) for the complete pattern.
+> Detailed before/after: [makers-migration-crewai-to-makers.md](makers-migration-crewai-to-makers.md)
 
 ---
 
@@ -203,10 +203,10 @@ openai>=1.50.0
 6. Set `thread_id`: `{ configurable: { thread_id: context.conversation_id } }`
 7. Replace response with SSE streaming pattern
 
-> Node: [makers-agents/references/node-frameworks/langgraph.md](../makers-agents/references/node-frameworks/langgraph.md)
-> Python: [makers-agents/references/python-frameworks/langgraph.md](../makers-agents/references/python-frameworks/langgraph.md)
-> DeepAgents: [makers-agents/references/node-frameworks/deepagents.md](../makers-agents/references/node-frameworks/deepagents.md)
-> Detailed before/after: [references/langgraph-to-makers.md](references/langgraph-to-makers.md), [references/deepagents-to-makers.md](references/deepagents-to-makers.md)
+> Node: [makers-agents-node-frameworks-langgraph.md](makers-agents-node-frameworks-langgraph.md)
+> Python: [makers-agents-python-frameworks-langgraph.md](makers-agents-python-frameworks-langgraph.md)
+> DeepAgents: [makers-agents-node-frameworks-deepagents.md](makers-agents-node-frameworks-deepagents.md)
+> Detailed before/after: [makers-migration-langgraph-to-makers.md](makers-migration-langgraph-to-makers.md), [makers-migration-deepagents-to-makers.md](makers-migration-deepagents-to-makers.md)
 
 ---
 
@@ -252,9 +252,9 @@ openai>=1.50.0
 4. Use `context.store.openaiSession(conversationId)` for session (Node)
 5. Map stream events to SSE: `output_text_delta` → `ai_response`, `tool_called` → `tool_call`
 
-> Node: [makers-agents/references/node-frameworks/openai-agents.md](../makers-agents/references/node-frameworks/openai-agents.md)
-> Python: [makers-agents/references/python-frameworks/openai-agents.md](../makers-agents/references/python-frameworks/openai-agents.md)
-> Detailed before/after: [references/openai-agents-to-makers.md](references/openai-agents-to-makers.md)
+> Node: [makers-agents-node-frameworks-openai-agents.md](makers-agents-node-frameworks-openai-agents.md)
+> Python: [makers-agents-python-frameworks-openai-agents.md](makers-agents-python-frameworks-openai-agents.md)
+> Detailed before/after: [makers-migration-openai-agents-to-makers.md](makers-migration-openai-agents-to-makers.md)
 
 ---
 
@@ -302,9 +302,9 @@ openai>=1.50.0
 5. Node only: swallow `EPIPE` on `process.stdout`
 6. Set writable config dirs: `CLAUDE_CONFIG_DIR=/tmp/claude-agent-sdk`, `CLAUDE_CODE_TMPDIR=/tmp`
 
-> Node: [makers-agents/references/node-frameworks/claude-sdk.md](../makers-agents/references/node-frameworks/claude-sdk.md)
-> Python: [makers-agents/references/python-frameworks/claude-sdk.md](../makers-agents/references/python-frameworks/claude-sdk.md)
-> Detailed before/after: [references/claude-agent-sdk-to-makers.md](references/claude-agent-sdk-to-makers.md)
+> Node: [makers-agents-node-frameworks-claude-sdk.md](makers-agents-node-frameworks-claude-sdk.md)
+> Python: [makers-agents-python-frameworks-claude-sdk.md](makers-agents-python-frameworks-claude-sdk.md)
+> Detailed before/after: [makers-migration-claude-agent-sdk-to-makers.md](makers-migration-claude-agent-sdk-to-makers.md)
 
 ---
 
@@ -457,15 +457,15 @@ After migration, verify these items before deploying:
 
 ## See Also
 
-- Agent development guide: [makers-agents/SKILL.md](../makers-agents/SKILL.md)
-- Platform conventions: [makers-agents/references/platform/](../makers-agents/references/platform/)
-- CLI commands: [makers-cli/SKILL.md](../makers-cli/SKILL.md)
-- Deploy guide: [makers-deploy/SKILL.md](../makers-deploy/SKILL.md)
+- Agent development guide: [makers-agents.md](makers-agents.md)
+- Platform conventions: [makers-agents-platform-node-entry.md](makers-agents-platform-node-entry.md)
+- CLI commands: [makers-cli.md](makers-cli.md)
+- Deploy guide: [makers-deploy.md](makers-deploy.md)
 
 ### Detailed before/after reference files
 
-- [references/api-route-to-makers.md](references/api-route-to-makers.md) — generic API route → Makers handler (no-framework fallback; Makers supports framework-less `onRequest`/`handler`)
-- [references/langgraph-to-makers.md](references/langgraph-to-makers.md) — LangGraph (Node + Python)
-- [references/deepagents-to-makers.md](references/deepagents-to-makers.md) — DeepAgents (Node + Python)
-- [references/openai-agents-to-makers.md](references/openai-agents-to-makers.md) — OpenAI Agents SDK (Node + Python)
-- [references/claude-agent-sdk-to-makers.md](references/claude-agent-sdk-to-makers.md) — Claude Agent SDK (Node + Python)
+- [makers-migration-api-route-to-makers.md](makers-migration-api-route-to-makers.md) — generic API route → Makers handler (no-framework fallback; Makers supports framework-less `onRequest`/`handler`)
+- [makers-migration-langgraph-to-makers.md](makers-migration-langgraph-to-makers.md) — LangGraph (Node + Python)
+- [makers-migration-deepagents-to-makers.md](makers-migration-deepagents-to-makers.md) — DeepAgents (Node + Python)
+- [makers-migration-openai-agents-to-makers.md](makers-migration-openai-agents-to-makers.md) — OpenAI Agents SDK (Node + Python)
+- [makers-migration-claude-agent-sdk-to-makers.md](makers-migration-claude-agent-sdk-to-makers.md) — Claude Agent SDK (Node + Python)

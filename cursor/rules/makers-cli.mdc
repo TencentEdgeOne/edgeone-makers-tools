@@ -42,7 +42,7 @@ Verify: `edgeone -v`
 | `edgeone login --claim --local --json` | Background listener: prints the login+claim link for an anonymous deploy, then auto-links the claimed project |
 | `edgeone whoami` | Check current login status |
 
-> Anonymous deploy and `claim` require CLI `>= 1.6.29` (the general CLI floor is `1.6.0`). The claim parameter is `--sid` (the anonymous token); `-t` is the account API token — they are different credentials. Tell the user the link expires in 60 minutes; never show the raw `expiresAt`. The claim link you present comes from `edgeone login --claim` (`claimLoginUrl`), not the bare `claimUrl` in the deploy JSON. Details: [makers-deploy/references/anonymous-deploy.md](../makers-deploy/references/anonymous-deploy.md).
+> Anonymous deploy and `claim` require CLI `>= 1.6.29` (the general CLI floor is `1.6.0`). The claim parameter is `--sid` (the anonymous token); `-t` is the account API token — they are different credentials. Tell the user the link expires in 60 minutes; never show the raw `expiresAt`. The claim link you present comes from `edgeone login --claim` (`claimLoginUrl`), not the bare `claimUrl` in the deploy JSON. Details: [makers-deploy-anonymous-deploy.md](makers-deploy-anonymous-deploy.md).
 
 ## Environment Variable
 

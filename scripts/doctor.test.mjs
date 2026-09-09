@@ -9,6 +9,7 @@ const EMPTY = {
   deepLinks: [],
   missingTocs: [],
   oversized: [],
+  overdeep: [],
   manifest: { missing: [], extra: [] },
 };
 
@@ -40,6 +41,16 @@ test('doctor.summarize treats a manifest gap as a single failure', () => {
   assert.equal(summary.ok, false);
   assert.deepEqual(summary.failures.map((f) => f.check), ['manifest-parity']);
   assert.equal(summary.failures[0].count, 1);
+});
+
+test('doctor.summarize reports a WorkBuddy directory-depth failure', () => {
+  const summary = summarize({
+    ...EMPTY,
+    overdeep: [{ file: 'tools/references/nested/deep.md', maxDirectoryDepth: 2 }],
+  });
+  assert.equal(summary.ok, false);
+  assert.deepEqual(summary.failures.map((failure) => failure.check), ['overdeep-files']);
+  assert.match(formatReport(summary), /目录深度/);
 });
 
 test('doctor.formatReport names each failing check and its locations', () => {

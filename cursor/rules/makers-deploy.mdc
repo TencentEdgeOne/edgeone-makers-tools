@@ -15,7 +15,7 @@ description: >-
   ⚠️ Also trigger when any agent is about to execute `edgeone makers deploy` or `edgeone makers deploy`
   commands — the skill contains critical rules for parsing deploy output and presenting access URLs.
   Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy —
-  use edgeone-makers-dev for troubleshooting).
+  use the relevant EdgeOne Makers runtime troubleshooting guidance).
 pathPatterns:
   - "*.sh"
   - .github/workflows/**
@@ -458,7 +458,7 @@ If the process exits non-zero (the user never completed the link within 60 minut
 
 If the user asks you to "帮我认领" / "claim it for me": point them to the same link again while the listener is still running; if it already exited, re-run the command for a fresh link. Never print the CLI claim command — `edgeone makers claim --sid` remains only for headless/CI environments with no browser (see critical rule 13).
 
-For the full JSON schema, rate limits, error codes, state-file fields, and site-resolution rules, see [references/anonymous-deploy.md](references/anonymous-deploy.md).
+For the full JSON schema, rate limits, error codes, state-file fields, and site-resolution rules, see [makers-deploy-anonymous-deploy.md](makers-deploy-anonymous-deploy.md).
 
 ---
 
@@ -542,4 +542,4 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 
 ---
 
-For CLI command reference, environment variables, local dev setup, and token management details, see [references/command-reference.md](references/command-reference.md).
+For CLI command reference, environment variables, local dev setup, and token management details, see [makers-deploy-command-reference.md](makers-deploy-command-reference.md).

@@ -40,6 +40,21 @@ export function listMarkdownFiles(root) {
   return out.sort();
 }
 
+/** 递归列出所有普通文件（包括非 Markdown 文件），返回相对路径。 */
+export function listFiles(root) {
+  assertDirectory(root);
+  const out = [];
+  function walk(dir) {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const full = join(dir, entry.name);
+      if (entry.isDirectory()) walk(full);
+      else if (entry.isFile()) out.push(relative(root, full).split('\\').join('/'));
+    }
+  }
+  walk(root);
+  return out.sort();
+}
+
 /** skills/ 的直接子目录名，已排序。 */
 export function listSkillDirs(root) {
   assertDirectory(root);
@@ -82,7 +97,7 @@ export function forEachMarkdownLine(root, visit) {
  * try/catch 另外挡掉 EACCES 这类权限错。
  *
  * 调用方把 null 当成“跳过这个文件”而不是抛——doctor 调 collect() 时没有
- * try/catch，一个权限异常的文件不该把整份六项报告换成裸栈。
+ * try/catch，一个权限异常的文件不该把整份 doctor 报告换成裸栈。
  *
  * forEachMarkdownLine 故意不走这里：它要把错误信息本身交给 findBrokenLinks
  * 记成 unreadable 条目，而这里的契约是静默跳过，两种契约不该合并。
@@ -171,30 +186,26 @@ const NON_SKILL_SLUGS = new Set(['edgeone-makers-tools']);
 /** markdown 链接里的锚点目标 `](#…)`，扫描 skill 名前先剥掉。 */
 const ANCHOR_LINK_TARGET = /\]\(#[^)]*\)/g;
 
+function readFrontmatterName(text) {
+  const frontmatter = /^---\r?\n([\s\S]*?)\r?\n---/.exec(text);
+  if (!frontmatter) return null;
+  const name = /^name:\s*(.+)$/m.exec(frontmatter[1]);
+  return name ? name[1].trim().replace(/^["']|["']$/g, '') : null;
+}
+
 /**
- * 各 SKILL.md frontmatter 声明的 name 集合。
+ * 收集所有 Skill 入口文件 frontmatter 声明的 name。
  *
- * 读不到就跳过而不是抛：这函数是 doctor 六项检查之一的输入，
- * 一个权限异常的文件不该把整份报告换成裸栈。漏读的文件由
- * findBrokenLinks 那条 unreadable 记录负责报出来。
- */
-/**
- * 收集所有 SKILL.md frontmatter 声明的 name。
- *
- * 不能只看 root 的直接子目录：单 skill 路由结构下，
- * skills/edgeone-makers-tools/SKILL.md 是路由页，
- * 各能力的 SKILL.md 藏在 references/<capability>/ 里，
- * 只扫一层会把 10 个真实存在的名字全判成悬空。
- * 改为遍历任意深度的 SKILL.md，兼容扁平与嵌套两种布局。
+ * 兼容历史嵌套布局中的 `SKILL.md` 与 WorkBuddy 扁平布局中的
+ * `references/*.md` 能力入口文件。
  */
 export function listDeclaredSkillNames(root) {
   const names = new Set();
   for (const file of listMarkdownFiles(root)) {
-    if (file !== 'SKILL.md' && !file.endsWith('/SKILL.md')) continue;
     const text = readMarkdownText(root, file);
     if (text === null) continue;
-    const match = /^name:\s*(.+)$/m.exec(text);
-    if (match) names.add(match[1].trim().replace(/^["']|["']$/g, ''));
+    const name = readFrontmatterName(text);
+    if (name) names.add(name);
   }
   return names;
 }
@@ -257,18 +268,17 @@ const ANCHOR_LIST_ITEM = /^\s*(?:[-*]|\d+\.)\s*\[[^\]]+\]\(#/;
  * 超 100 行、且开头 25 行内没有锚点目录的 reference。
  * 依据：Claude 可能只 head -100 部分读取，没有目录就拿不到全貌。
  *
- * SKILL.md 不在此列：它是入口，模型总是整份读，且有 frontmatter 而非目录。
- * 用 `=== 'SKILL.md' || endsWith('/SKILL.md')` 而不是 endsWith('SKILL.md')：
- * 后者会把 references/MY-SKILL.md 这种也一并豁免，从此永远拿不到目录且无人报错。
+ * 有 Skill frontmatter 的入口文件不在此列：模型总是整份读，且入口
+ * 使用 frontmatter 而非目录。
  *
  * lines 的计法见 findOversizedFiles 的说明（是 split 段数，非 wc -l）。
  */
 export function findMissingTocs(root) {
   const missing = [];
   for (const file of listMarkdownFiles(root)) {
-    if (file === 'SKILL.md' || file.endsWith('/SKILL.md')) continue;
-    const lines = readMarkdownLines(root, file);
-    if (lines === null) continue;
+    const text = readMarkdownText(root, file);
+    if (text === null || readFrontmatterName(text)) continue;
+    const lines = text.split(LINE_BREAK);
     if (lines.length <= TOC_LINE_THRESHOLD) continue;
     if (lines.slice(0, TOC_SCAN_LINES).some((line) => ANCHOR_LIST_ITEM.test(line))) continue;
     missing.push({ file, lines: lines.length });
@@ -305,6 +315,18 @@ export function findOversizedFiles(root) {
  * files 由调用方传入而不是在这里读 _meta.json：本模块的契约是
  * “给一个 root，返回纯数据”，不认识仓库根在哪。读文件是 doctor 那层的事。
  */
+/**
+ * WorkBuddy Skill packages may contain the skill package directory and one
+ * direct child directory (package/references/file). When scanning the
+ * repository's skills/ directory, that is two directory segments before the
+ * file. Return paths that exceed that depth.
+ */
+export function findOverdeepFiles(root, maxDirectoryDepth = 2) {
+  return listFiles(root)
+    .filter((file) => file.split('/').length - 1 > maxDirectoryDepth)
+    .map((file) => ({ file, maxDirectoryDepth }));
+}
+
 export function checkFileManifest(root, files) {
   const disk = new Set(listMarkdownFiles(root).map((file) => `skills/${file}`));
   const declared = new Set((files || []).filter((file) => String(file).startsWith('skills/')));

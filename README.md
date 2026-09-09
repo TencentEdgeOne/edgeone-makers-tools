@@ -13,7 +13,7 @@ npx skills add TencentEdgeOne/edgeone-makers-tools
 This installs **one skill — `edgeone-makers-tools`** into your agent's skills
 directory (`.codebuddy/skills/edgeone-makers-tools/`, `.claude/skills/edgeone-makers-tools/`,
 `.cursor/skills/edgeone-makers-tools/`, …). Its `SKILL.md` is a router that loads the
-matching capability under `references/` on demand — one skill in your list, full
+matching capability file under `references/` on demand — one skill in your list, full
 coverage inside.
 
 ### Option B — CodeBuddy plugin marketplace / SkillHub
@@ -32,7 +32,7 @@ After installation, your AI coding agent will automatically detect relevant task
 
 ## Capabilities
 
-The single `edgeone-makers-tools` skill routes to these capabilities (each lives under `skills/edgeone-makers-tools/references/<name>/`):
+The single `edgeone-makers-tools` skill routes to these capabilities (each is a file under `skills/edgeone-makers-tools/references/`):
 
 | Capability | Description |
 |-------|-------------|
@@ -93,34 +93,27 @@ Create a Claude Agent SDK endpoint with sandbox code execution
 
 ## Skill Structure
 
-One skill, capabilities bundled as reference docs it routes to on demand:
+One skill, with all routed capability files kept directly under `references/` so
+WorkBuddy can parse the package without nested subdirectories:
 
 ```
 skills/
 └── edgeone-makers-tools/
-    ├── SKILL.md                     # Router — matches the task, loads a capability below
+    ├── SKILL.md                     # Router — matches the task
     └── references/
-        ├── makers-agents/           # AI Agent development
-        │   ├── SKILL.md             # Decision tree, red lines, framework routing
-        │   └── references/
-        │       ├── platform/        # Entry conventions, env, SSE protocol
-        │       ├── capabilities/    # Store, sandbox, tools
-        │       ├── node-frameworks/     # Claude SDK, LangGraph, OpenAI Agents, DeepAgents
-        │       └── python-frameworks/   # Claude SDK, LangGraph, OpenAI Agents, DeepAgents, CrewAI
-        ├── makers-deploy/           # Deployment workflow
-        ├── makers-edge-functions/   # V8 edge runtime
-        ├── makers-cloud-functions/  # Node.js / Go / Python
-        ├── makers-storage/          # KV + Blob storage
-        ├── makers-middleware/       # Request interception
-        ├── makers-cli/              # CLI commands
-        ├── makers-recipes/          # Project templates
-        ├── makers-migration/        # Migrate existing agent projects
-        └── makers-env-adaption/     # Sandbox / WorkBuddy / CI adaptation
+        ├── makers-agents.md         # AI Agent development router
+        ├── makers-agents-*.md       # Agent platform/framework references
+        ├── makers-deploy.md         # Deployment workflow
+        ├── makers-cloud-functions.md
+        ├── makers-migration.md
+        ├── makers-recipes.md
+        ├── makers-storage.md
+        └── ...                      # Other capability files
 ```
 
 The skill follows the [skill-creator](https://github.com/anthropics/skills) standard:
 - `SKILL.md` — YAML frontmatter (name + description) + core instructions
-- `references/` — detailed docs loaded on demand, routed from `SKILL.md`
+- `references/*.md` — detailed docs loaded on demand, routed from `SKILL.md`
 
 ## Multi-Platform Support
 

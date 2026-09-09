@@ -6,8 +6,8 @@ import { fileURLToPath, pathToFileURL } from 'node:url';
 import { shouldWriteSignalLog, writeSignalLog } from './signal-log.mjs';
 
 const HOOKS_DIR = dirname(fileURLToPath(import.meta.url));
-// Single-skill layout: capabilities (each carrying its own validate rules in
-// frontmatter) live under the one skill's references/ directory.
+// WorkBuddy-compatible layout: each capability is a flat markdown file under
+// the one skill's references/ directory.
 const DEFAULT_SKILLS_DIR = join(HOOKS_DIR, '..', 'skills', 'edgeone-makers-tools', 'references');
 const WRITE_TOOL_NAMES = new Set(['Edit', 'Write', 'replace_in_file', 'write_to_file']);
 const WRITE_CONTENT_KEYS = ['content', 'new_string', 'new_str', 'newString', 'text'];
@@ -131,8 +131,8 @@ export function loadSkillValidateRules(skillsDir = DEFAULT_SKILLS_DIR) {
     return [];
   }
   const rules = entries
-    .filter((entry) => entry.isDirectory())
-    .map((entry) => join(skillsDir, entry.name, 'SKILL.md'))
+    .filter((entry) => entry.isFile() && entry.name.endsWith('.md'))
+    .map((entry) => join(skillsDir, entry.name))
     .map((skillPath) => {
       try {
         return parseSkillValidateRule(skillPath);

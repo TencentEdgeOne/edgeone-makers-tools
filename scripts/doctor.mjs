@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 /**
- * Skills 自检入口。六项检查：
- *   断链 / 悬空 skill 名 / 二级引用 / reference 目录 / 行数上限 / 发布清单一致性
+ * Skills 自检入口。七项检查：
+ *   断链 / 悬空 skill 名 / 二级引用 / 缺目录 / 行数上限 /
+ *   目录层级 / 发布清单一致性
  * 退出码 0 = 全绿，1 = 有失败项。
  *
  * 分层：skill-graph.mjs 只认「给一个 root，返回纯数据」，不知道仓库根在哪；
@@ -18,6 +19,7 @@ import {
   findDeepReferenceLinks,
   findMissingTocs,
   findOversizedFiles,
+  findOverdeepFiles,
 } from './lib/skill-graph.mjs';
 
 const REPO_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '..');
@@ -28,6 +30,7 @@ const CHECKS = [
   { key: 'deepLinks', check: 'deep-reference-links', label: '二级引用' },
   { key: 'missingTocs', check: 'missing-toc', label: '缺目录的长 reference' },
   { key: 'oversized', check: 'oversized-file', label: '超行数上限' },
+  { key: 'overdeep', check: 'overdeep-files', label: '目录层级超限' },
 ];
 
 export function collect(skillsDir, metaPath = join(REPO_ROOT, '_meta.json')) {
@@ -38,6 +41,7 @@ export function collect(skillsDir, metaPath = join(REPO_ROOT, '_meta.json')) {
     deepLinks: findDeepReferenceLinks(skillsDir),
     missingTocs: findMissingTocs(skillsDir),
     oversized: findOversizedFiles(skillsDir),
+    overdeep: findOverdeepFiles(skillsDir),
     manifest: checkFileManifest(skillsDir, meta.files),
   };
 }
@@ -73,11 +77,12 @@ function describeItem(item) {
   }
   if (item.line) return `${item.file}:${item.line} → ${item.target || item.name}`;
   if (item.lines) return `${item.file}（${item.lines} 行）`;
+  if (item.maxDirectoryDepth !== undefined) return `${item.file}（目录深度 > ${item.maxDirectoryDepth}）`;
   return JSON.stringify(item);
 }
 
 export function formatReport(summary) {
-  if (summary.ok) return '✅ doctor：六项检查全部通过';
+  if (summary.ok) return '✅ doctor：七项检查全部通过';
   const lines = ['❌ doctor：发现问题'];
   for (const failure of summary.failures) {
     lines.push(`\n[${failure.check}] ${failure.label} — ${failure.count} 处`);
@@ -89,7 +94,8 @@ export function formatReport(summary) {
 /**
  * 扫描根固定为 skills/，而不是单个 skill 的 references/ 目录。
  * 这样 checkFileManifest 拼出的 `skills/...` 前缀与 _meta.json 的 files 一致，
- * findMissingTocs 的 SKILL.md 豁免也能同时覆盖路由页与各 capability 的 SKILL.md。
+ * findMissingTocs 的 SKILL.md 豁免也能覆盖路由页；目录层级检查则允许
+ * `skills/<skill>/references/<file>` 这一 WorkBuddy 支持的形状。
  */
 export function main(skillsDir = join(REPO_ROOT, 'skills')) {
   const summary = summarize(collect(skillsDir));
