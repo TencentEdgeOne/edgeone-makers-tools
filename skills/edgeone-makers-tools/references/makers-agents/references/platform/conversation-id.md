@@ -1,5 +1,13 @@
 # Conversation ID + Frontend Convention
 
+## Contents
+
+- [Principle](#principle)
+- [⭐ Conversation ID and the `makers-conversation-id` Header (Iron Rule)](#conversation-id-and-the-makers-conversation-id-header-iron-rule)
+- [⭐ Request body for `/chat` (the shape the preview probe sends)](#request-body-for-chat-the-shape-the-preview-probe-sends)
+- [Endpoint → Frontend Call Style Cheat Sheet](#endpoint-frontend-call-style-cheat-sheet)
+- [i18n](#i18n)
+
 > Covers: makers-conversation-id dual-channel contract, /stop inverted rule, frontend call patterns, endpoint cheat sheet.
 
 ---
@@ -49,9 +57,50 @@ const resp = await fetch('/chat', {
     'Content-Type': 'application/json',
     'makers-conversation-id': conversationId,   // ⭐ required
   },
-  body: JSON.stringify({ message, files }),
+  body: JSON.stringify({ messages, files }),
 });
 ```
+
+### ⭐ Request body for `/chat` (the shape the preview probe sends)
+
+`messages` is `{ role: 'user' | 'assistant', content: string }[]`, oldest first,
+and it is the **only** body a chat UI sends — a one-element array on the first
+turn, not a bare string.
+
+```typescript
+body: JSON.stringify({
+  messages: [
+    { role: 'user', content: '你好' },
+    { role: 'assistant', content: '你好，有什么可以帮你的？' },
+    { role: 'user', content: '介绍一下 EdgeOne' },
+  ],
+})
+```
+
+**Read `messages` and nothing else.** Accepting a singular `message` as well
+gives the handler two shapes to keep straight, and the preview probe sends only
+this one — a mistake in the other branch reaches production unseen.
+
+**Never write `body.messages ?? body.message ? [...] : []`.** `??` binds tighter
+than `?:`, so it reads as `(body.messages ?? body.message) ? ... : ...`: the
+array decides the branch and is then thrown away, and the content is taken from
+a `message` that no client sent. It compiles, it type-checks, `npm run build`
+is clean, and every request is answered 400.
+
+**The array ends with exactly one `user` message and never holds two in a row.**
+A turn that produced no assistant reply must not leave its `user` message behind
+in what gets posted next — see [sse-protocol.md](sse-protocol.md#a-failed-turn-must-not-leave-its-user-message-in-the-posted-history)
+for why one dropped turn otherwise reads as a broken conversation.
+
+Where the history lives is the choice this shape settles:
+
+| History held by | How | Use when |
+|---|---|---|
+| The client | the `messages` array above | a plain chat UI — nothing else to configure |
+| The platform | `context.store.openaiSession()` / `claudeSessionStore`, keyed by `makers-conversation-id` | an SDK route resumes the conversation and the frontend sends only the new turn |
+
+Single-shot endpoints that take one prompt and are finished (`/outline`,
+`/create`) keep the singular `{ message, files }` — they carry no conversation.
 
 **Calling `/stop` (⚠️ inverted: never carry the header)**:
 ```typescript
