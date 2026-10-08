@@ -18,8 +18,12 @@
 ## Dependencies
 
 ```bash
-npm install @langchain/langgraph @langchain/openai @langchain/core zod
+npm install @langchain/langgraph@^1.4.14 @langchain/openai@1.5.8 @langchain/core@^1.2.9 zod@^4.3.6
 ```
+
+> `@langchain/openai` is held at 1.5.8 rather than the registry's latest, and the exact pin is deliberate: 1.5.9 raised its engine floor to Node 22 while the sandbox runs Node 20. npm reports that as a warning and installs anyway, so nothing fails until the package does. Holding it there also keeps the transitive `openai` on the 6 line — a bare `@langchain/openai` resolves to 1.5.11, which pulls `openai` 7 and brings the same Node 22 claim in through the back door.
+
+> Unlike the `deepagents` line, `langsmith` does not belong here. It is an ordinary dependency of `@langchain/core`, not a peer, so npm installs it and the runtime resolves it without the app declaring it.
 
 `edgeone.json`:
 ```json
@@ -140,8 +144,26 @@ async function* eventStream(graph: any, message: string, conversationId: string,
 ```typescript
 export async function onRequest(context: any) {
   const { request, env, conversation_id: conversationId, store } = context;
-  const { message } = request?.body ?? {};
-  if (!message) return new Response('Missing message', { status: 400 });
+
+  // `messages` and nothing else — the one body a chat UI sends, and the one the
+  // preview probe exercises. See platform/conversation-id.md: a handler that
+  // also accepts a singular `message` has a second branch no client reaches,
+  // and a mistake in it ships answering every real request 400.
+  //
+  // Only the newest turn is forwarded, because the checkpointer below already
+  // holds this thread's history — replaying the whole array would append what
+  // is already stored and grow the prompt by a copy of itself every turn.
+  const messages = Array.isArray(request?.body?.messages) ? request.body.messages : [];
+  const latest = [...messages].reverse().find(
+    (m: any) => m?.role === 'user' && typeof m?.content === 'string' && m.content.trim(),
+  );
+  if (!latest) {
+    return new Response(JSON.stringify({ error: "'messages' is required" }), {
+      status: 400,
+      headers: { 'Content-Type': 'application/json' },
+    });
+  }
+  const message = latest.content;
 
   const signal = request?.signal as AbortSignal | undefined;
   const model = await getModel(env);

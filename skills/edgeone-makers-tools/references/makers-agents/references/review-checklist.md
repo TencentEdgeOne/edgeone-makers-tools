@@ -51,6 +51,10 @@
 
 - [ ] Request body comes from `context.request.body` (⚠️ not `await req.json()`)
 
+- [ ] ⛔ `/chat` reads `messages` and has no singular `message` branch. The array is the only body a chat UI sends and the only one the preview probe exercises, so a second branch is code no request reaches until a user types — a measured project took the array's presence as its condition and the content from `message`, passed the probe with a clean 200 stream, and answered every real message 400. Single-shot routes that carry no conversation (`/outline`, `/create`, HITL approval) keep the singular shape; see [platform/conversation-id.md](platform/conversation-id.md)
+
+- [ ] Where a session or checkpointer holds the history — `openaiSession`, `claudeSessionStore`, `langgraphCheckpointer` — only the newest `user` turn is forwarded. Replaying the whole array appends what is already stored, and the prompt grows by a copy of itself every turn
+
 - [ ] ⚠️ Request headers are read by index: `context.request.headers['x-foo']` (plain object, **not** `.get('x-foo')`)
 
 - [ ] Failed input validation returns `400 + JSON`
@@ -214,6 +218,10 @@
 - [ ] cloud-function endpoints (`/history`, etc.): header or body, either works
 
 - [ ] The frontend reads SSE through a `ReadableStream`, splits on `data: `, filters out `ping` heartbeats so they are not rendered, and stops on `[DONE]`
+
+- [ ] ⭐ It also **records whether `[DONE]` arrived** and reports a stream that ended without it as a truncated turn. Stopping on the sentinel is not the same as checking for it: a reader that only leaves its loop on `done` reports a connection cut mid-answer as a turn that produced no text
+
+- [ ] ⛔ A turn that produced no assistant reply does not leave its `user` message in the history posted to `/chat`. The array must end with exactly one `user` message and never hold two in a row — otherwise the model answers both questions in one reply and every later turn carries the same doubled history
 
 - [ ] `process.env` is allowed on the frontend (consistent with frontend frameworks), but **do not** expose backend secrets like `AI_GATEWAY_API_KEY` to the browser
 

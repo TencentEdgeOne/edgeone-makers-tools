@@ -17,8 +17,10 @@
 ## Dependencies
 
 ```bash
-npm install @openai/agents openai zod
+npm install @openai/agents@^0.17.2 openai@^7.12.1 zod@^4.3.6
 ```
+
+> `npm install` prints an `EBADENGINE` warning here and that is expected, not a failed install. `@openai/agents` 0.15 moved its direct `openai` dependency to `^7.2.0`, and `openai` 7 declares Node >=22 while the sandbox runs Node 20; the only way to silence the warning is to hold the SDK back three minors to 0.14.3, which is not worth it. Streaming chat completions were verified working on Node 20.20.2 — do not spend a turn "fixing" the warning.
 
 `edgeone.json`:
 ```json
@@ -138,9 +140,23 @@ const logger = createLogger('chat');
 const DEFAULT_MODEL = '@makers/hy3-preview';
 
 export async function onRequest(context: any) {
-  const message = (context.request.body ?? {}).message as string | undefined;
+  // `messages` and nothing else — the one body a chat UI sends, and the one the
+  // preview probe exercises. See platform/conversation-id.md: a handler that
+  // also accepts a singular `message` has a second branch no client reaches,
+  // and a mistake in it ships answering every real request 400.
+  //
+  // Only the newest turn is read, because the Session below already holds this
+  // conversation's history — that is what "do not splice history by hand"
+  // means, and passing the whole array back in would be exactly that.
+  const messages = (context.request.body ?? {}).messages as
+    | { role?: string; content?: string }[]
+    | undefined;
+  const message = [...(Array.isArray(messages) ? messages : [])]
+    .reverse()
+    .find((m) => m?.role === 'user' && typeof m?.content === 'string' && m.content.trim())
+    ?.content;
   if (!message) {
-    return new Response(JSON.stringify({ error: "'message' is required" }), {
+    return new Response(JSON.stringify({ error: "'messages' is required" }), {
       status: 400, headers: { 'Content-Type': 'application/json' },
     });
   }
@@ -299,7 +315,10 @@ export async function onRequest(context: any) {
     // …same pending/completed handling as below…
   }
 
-  // 2) Start path — run the agent, persist the snapshot if it pauses
+  // 2) Start path — run the agent, persist the snapshot if it pauses.
+  // Singular `message` here and not the `messages` array `/chat` reads: this
+  // route's body is a control protocol (`action`, `approved`, `approvalIndex`),
+  // it is not what a chat UI posts, and it carries one prompt then finishes.
   const result = await run(agent, request.body.message, { signal: request.signal });
   const pending = result.state.getInterruptions();
   if (pending.length > 0) {

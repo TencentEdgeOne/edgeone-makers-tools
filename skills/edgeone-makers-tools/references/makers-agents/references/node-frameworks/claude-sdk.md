@@ -17,8 +17,10 @@
 ## Dependencies
 
 ```bash
-npm install @anthropic-ai/claude-agent-sdk zod
+npm install @anthropic-ai/claude-agent-sdk@^0.3.266 zod@^4.3.6
 ```
+
+> Of the four Node routes this is the only dependency set with no Node 22 claims anywhere in it, so the install is warning-free. It is also the largest tree — around 110 packages against roughly 25 for the others — which makes it the route where writing `package.json` first and letting the install run while you write the app saves the most wall-clock time.
 
 `edgeone.json`:
 ```json
@@ -237,9 +239,19 @@ export async function onRequest(context: any) {
   // ⭐ Always read env from context.env, never process.env
   const ctxEnv = context.env ?? {};
   const body = context.request.body ?? {};
-  const message = typeof body.message === 'string' ? body.message.trim() : '';
+  // `messages` and nothing else — the one body a chat UI sends, and the one the
+  // preview probe exercises. See platform/conversation-id.md: a handler that
+  // also accepts a singular `message` has a second branch no client reaches,
+  // and a mistake in it ships answering every real request 400.
+  //
+  // Only the newest turn is read, because the session binding below already
+  // holds this conversation's history on the platform side.
+  const message = [...(Array.isArray(body.messages) ? body.messages : [])]
+    .reverse()
+    .find((m: any) => m?.role === 'user' && typeof m?.content === 'string' && m.content.trim())
+    ?.content.trim() ?? '';
   if (!message) {
-    return new Response(JSON.stringify({ error: "'message' is required" }), {
+    return new Response(JSON.stringify({ error: "'messages' is required" }), {
       status: 400, headers: { 'Content-Type': 'application/json' },
     });
   }
