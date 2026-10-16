@@ -14,6 +14,13 @@ import path from 'path';
 const SKILL_ROOT = path.resolve('skills/edgeone-makers-tools');
 const SKILLS_DIR = path.resolve('skills/edgeone-makers-tools/references');
 const ROUTER_PATH = path.resolve('skills/edgeone-makers-tools/SKILL.md');
+const REQUIRED_WORKBUDDY_FIELDS = [
+  'version',
+  'display_name',
+  'display_name_en',
+  'description_zh',
+  'description_en',
+];
 const CURSOR_RULES_DIR = path.resolve('cursor/rules');
 const CODEX_DIR = path.resolve('codex');
 
@@ -55,6 +62,19 @@ function validateWorkBuddyLayout() {
   }
   walk(SKILL_ROOT);
   return errors;
+}
+
+function readFrontmatter(content) {
+  const match = /^---\r?\n([\s\S]*?)\r?\n---/.exec(content);
+  return match ? match[1] : '';
+}
+
+function validateWorkBuddyFrontmatter() {
+  const content = fs.readFileSync(ROUTER_PATH, 'utf-8');
+  const frontmatter = readFrontmatter(content);
+  return REQUIRED_WORKBUDDY_FIELDS
+    .filter((field) => !new RegExp(`^${field}:\\s*.+$`, 'm').test(frontmatter))
+    .map((field) => `SKILL.md: missing WorkBuddy frontmatter field ${field}`);
 }
 
 // Generate Cursor rules (.mdc format)
@@ -104,7 +124,11 @@ function validate() {
 }
 
 console.log('🔍 Validating skills...');
-const errors = [...validateWorkBuddyLayout(), ...validate()];
+const errors = [
+  ...validateWorkBuddyLayout(),
+  ...validateWorkBuddyFrontmatter(),
+  ...validate(),
+];
 if (errors.length > 0) {
   console.error('❌ Validation errors:');
   errors.forEach(e => console.error(`  - ${e}`));
