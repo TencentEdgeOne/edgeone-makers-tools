@@ -224,7 +224,7 @@ const store = getStore("my-store");
 const store = getStore({ name: "my-store", consistency: "strong" });
 ```
 
-**Outside Makers Functions** (local scripts, external services):
+**Outside Makers Functions** (local scripts, external services): `projectId` must identify the intended project and `token` must belong to its workspace; never infer either from global selection alone. Load real credentials from the environment, not source code or logs. See the [storage setup rules](../SKILL.md).
 ```javascript
 const store = getStore({
   name: "my-store",

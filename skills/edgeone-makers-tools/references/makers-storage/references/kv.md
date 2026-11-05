@@ -272,12 +272,14 @@ export async function onRequestGet() {
 
 ## Local Development
 
-```bash
-# 1. Link to a remote project (required for KV access)
-edgeone makers link
+Confirm the intended workspace, project and namespace binding using the [storage setup rules](../SKILL.md). Preserve an existing correct link; global switching alone does not move its KV target. Diagnose credential/association mismatch before re-linking.
 
-# 2. Start dev server
-edgeone makers dev
+```bash
+# 1. Initial link only when unlinked, with the target workspace credential
+edgeone makers link --name <project>
+
+# 2. Start dev against the established link
+edgeone makers dev --skip-env-sync
 
 # 3. Test
 curl http://localhost:8088/api/counter

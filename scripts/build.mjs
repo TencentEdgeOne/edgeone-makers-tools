@@ -31,6 +31,18 @@ function readSkillMd(skillDir) {
   return fs.readFileSync(skillPath, 'utf-8');
 }
 
+function rebaseReferences(content, skill, outPath) {
+  const sourceDir = path.join(SKILLS_DIR, skill);
+  return content.replace(/^(`{3,}|~{3,})[^\n]*\n[\s\S]*?^\1[ \t]*$|(`+)[^\n]*?\2|(\[[^\]\n]*\]\()([^\s)]+)(\))/gm, (match, fence, inline, prefix, target, suffix) => {
+    if (fence || inline || /^(?:[a-z][a-z\d+.-]*:|\/|#|<)/i.test(target)) return match;
+    const hash = target.indexOf('#');
+    const file = hash < 0 ? target : target.slice(0, hash);
+    const fragment = hash < 0 ? '' : target.slice(hash);
+    const relative = path.relative(path.dirname(outPath), path.resolve(sourceDir, file));
+    return `${prefix}${relative.split(path.sep).join('/')}${fragment}${suffix}`;
+  });
+}
+
 // Generate Cursor rules (.mdc format)
 function generateCursorRules() {
   fs.mkdirSync(CURSOR_RULES_DIR, { recursive: true });
@@ -38,7 +50,7 @@ function generateCursorRules() {
     const content = readSkillMd(skill);
     if (!content) continue;
     const outPath = path.join(CURSOR_RULES_DIR, `${skill}.mdc`);
-    fs.writeFileSync(outPath, content);
+    fs.writeFileSync(outPath, rebaseReferences(content, skill, outPath));
     console.log(`  → ${outPath}`);
   }
 }
@@ -50,7 +62,7 @@ function generateCodexSkills() {
     const content = readSkillMd(skill);
     if (!content) continue;
     const outPath = path.join(CODEX_DIR, `${skill}.md`);
-    fs.writeFileSync(outPath, content);
+    fs.writeFileSync(outPath, rebaseReferences(content, skill, outPath));
     console.log(`  → ${outPath}`);
   }
 }

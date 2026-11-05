@@ -89,7 +89,7 @@ Do not pass these — they have no effect and will mislead the user:
 | `projectId` | Anonymous project ID. |
 | `deploymentId` | Deployment ID. |
 | `anonymousToken` | Anonymous identity token (the Sid). Needed to claim. |
-| `claimUrl` | Bare web claim URL. ⛔ **Do NOT present this to the user** — claiming through it leaves the CLI unaware, and the next deploy would create a second anonymous project. The user-facing claim link is the `claimLoginUrl` from `edgeone login --claim` (see Claim flow). |
+| `claimUrl` | Bare web claim URL. ⛔ **Do NOT present this to the user** — claiming through it leaves the CLI unaware, and the next deploy would create a second anonymous project. The user-facing claim link is the `claimLoginUrl` from `edgeone login --interaction agent --claim` (see Claim flow). |
 | `claimCommand` | Ready-to-run CLI claim command. **For you to execute, never to display** — see the note below. |
 | `expiresAt` | Token expiry as an ISO 8601 timestamp, when the backend returns one. **Do not show this to the user** — tell them to claim within 60 minutes (see below). Useful to you for diagnostics. May be absent. |
 | `site` | `china` or `global` — the API site this project lives on. |
@@ -102,7 +102,7 @@ Do not pass these — they have no effect and will mislead the user:
 
 `suggestion` is only present for the rate-limit case. `errorCode` may be absent for generic failures.
 
-⛔ **Never print `claimCommand` to the user.** Sandboxed IDEs (WorkBuddy and similar) give the user no terminal, so they cannot run it — and non-technical users cannot read it anyway. The claim link you show comes from `edgeone login --claim`. `claimCommand` is a fallback for headless/CI environments with no browser, executed by you, never displayed.
+⛔ **Never print `claimCommand` to the user.** Sandboxed IDEs (WorkBuddy and similar) give the user no terminal, so they cannot run it — and non-technical users cannot read it anyway. The claim link you show comes from `edgeone login --interaction agent --claim`. `claimCommand` is a fallback for headless/CI environments with no browser, executed by you, never displayed.
 
 ---
 
@@ -196,7 +196,7 @@ Exact allowances are not documented consistently across sources, so they are del
 When exceeded, the CLI reports `LimitExceeded.Upload`, exits non-zero, and with `--json` emits:
 
 ```json
-{"status":"error","errorCode":"RATE_LIMIT_EXCEEDED","message":"Daily anonymous deploy limit reached.","suggestion":"Please login (edgeone login) to deploy without limits, or try again tomorrow."}
+{"status":"error","errorCode":"RATE_LIMIT_EXCEEDED","message":"Daily anonymous deploy limit reached.","suggestion":"Please login (edgeone login --interaction agent) to deploy without limits, or try again tomorrow."}
 ```
 
 Correct response: tell the user the anonymous quota is used up, and offer logging in (no quota) or retrying tomorrow. Do not retry in a loop.
@@ -235,10 +235,10 @@ The backend claims **asynchronously** and only migrates projects whose deploymen
 
 ## Claim flow
 
-**Route A — `edgeone login --claim` (the flow, and the only one you present).** Run it immediately after the anonymous deploy, in the background:
+**Route A — `edgeone login --interaction agent --claim` (the flow, and the only one you present).** Run it immediately after the anonymous deploy, in the background:
 
 ```bash
-edgeone login --claim --local --json
+edgeone login --interaction agent --claim --local --json
 ```
 
 What it does:
@@ -299,7 +299,7 @@ edgeone makers deploy --anonymous --json
 curl -sSI "<url from the json>" | head -1
 
 # 3. Start the claim listener in the background right away
-edgeone login --claim --local --json
+edgeone login --interaction agent --claim --local --json
 # → first JSON line has claimLoginUrl; process exits 0 once the user claims
 ```
 

@@ -35,7 +35,8 @@
 
 - [ ] `.gitignore` covers at least: `node_modules` / `.env` / `.edgeone` / `.next` (or your framework's build-output dir)
 
-- [ ] `.edgeone/project.json` exists (Name + ProjectId)
+- [ ] `.edgeone/project.json` parses with non-empty Name + ProjectId; ZoneId records the intended workspace (legacy missing values are CLI-resolved, never guessed)
+- [ ] Effective credential matches the intended project/workspace; a global switch does not re-link the directory or replace explicit/local credentials
 
 - [ ] `edgeone.json` sets `agents.framework` (`claude-agent-sdk` / `openai-agents-sdk` / `langgraph` / `crewai` / `deepagents` — **no `basic`**, the schema enum does not include it) — **required for console icon display**
 

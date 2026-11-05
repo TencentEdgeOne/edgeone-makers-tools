@@ -13,7 +13,7 @@ When you need EdgeOne Makers platform development guidance, read the matching Sk
 | KV + Blob Storage | skills/edgeone-makers-tools/references/makers-storage/SKILL.md |
 | Persist dynamic data for a site (messages, uploads, votes, save-state) — **no database; use Blob** | skills/edgeone-makers-tools/references/makers-storage/SKILL.md |
 | Middleware (auth, rewrites, routing) | skills/edgeone-makers-tools/references/makers-middleware/SKILL.md |
-| CLI command reference | skills/edgeone-makers-tools/references/makers-cli/SKILL.md |
+| CLI commands, login/account switch, workspace selection and Agent session resume | skills/edgeone-makers-tools/references/makers-cli/SKILL.md |
 | Project structure / scaffolding | skills/edgeone-makers-tools/references/makers-recipes/SKILL.md |
 | Environment adaptation (WorkBuddy / sandbox / CI) | skills/edgeone-makers-tools/references/makers-env-adaption/SKILL.md |
 

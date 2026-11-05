@@ -44,7 +44,7 @@ preview     │                      ┌─ dev server running? ─ Yes ──�
 |---|---|---|
 | Preview local dev server | `present_files("http://127.0.0.1:8088/")` | ❌ Passing `/path/to/index.html` (IDE opens it via file://) |
 | Preview a deployed project | `present_files(deploy_url)` with `?eo_token=...` | ❌ Passing a local `dist/index.html` path |
-| Start dev server | `edgeone makers dev --name <p> --skip-env-sync` | ❌ `python -m http.server` / `npx serve` |
+| Start dev server (valid link) | `edgeone makers dev --skip-env-sync` | ❌ `python -m http.server` / `npx serve` |
 | Verify dev server is up (agent-side API check) | `curl --noproxy '*' http://127.0.0.1:8088/api/...` ✅ works (same sandbox) | ❌ `curl localhost:8088` / plain `curl` (proxy + IPv6 → 404/000) |
 | Verify dev server is up (user-facing) | `present_files(http://127.0.0.1:8088/)` (platform tunnel) | ❌ Telling user to open `127.0.0.1:8088` — their browser can't reach the sandbox |
 
@@ -65,9 +65,9 @@ WorkBuddy is a sandboxed remote IDE environment. When running AI coding tasks, i
 
 > **⚠️ Common misread: WorkBuddy is a *desktop IDE sandbox*, NOT a headless environment.**
 > - CLI **interactive prompts** (site picker, confirmations) hang inside the sandbox → use the non-interactive flags in this section.
-> - **BUT browser login (`edgeone login --site <x>`) works fully** — WorkBuddy launches the host OS browser AND routes the OAuth callback back into the sandbox.
+> - **Browser callbacks can work** — WorkBuddy launches the host OS browser and routes OAuth callbacks back into the sandbox, but this does not provide an interactive terminal for selecting multiple workspaces.
 >
-> Deploy/link login should default to browser login and only fall back to `-t <token>` after browser login is confirmed to fail. Do NOT jump to token login just because the caller is an "Agent".
+> Always add `--interaction agent` to login/account-switch/workspace-switch commands, even when a connector supplies a PTY. Multi-workspace `selection_required` is handled in the conversation, not a terminal. Follow [makers-cli](../skills/edgeone-makers-tools/references/makers-cli/SKILL.md) for the browser login, workspace question and session resume; no TTY is not a reason to request another API token.
 
 ---
 
@@ -79,15 +79,17 @@ Inside the WorkBuddy sandbox, CLI interactive prompts cause the process to hang 
 |------|---------|------|
 | Local development | `--skip-env-sync` | Skips the "sync environment variables?" confirmation |
 | Linking a project | `--name <project>` | Skips the interactive project picker |
-| Auth when not logged in | `-t <token>` | Passes the token directly, no login popup |
+| Login, account switch, workspace switch | `--interaction agent` | Return workspace choices for the conversation; no terminal picker |
+| Explicit token intent or unattended CI without browser auth | `-t <target-workspace-token>` | Alternative credential, not the default for an Agent with a person |
 | Deploy output | `--json` | Machine-readable JSON, avoids ANSI parsing |
 
 ```bash
-# Correct: local development
-edgeone makers dev --name my-project --skip-env-sync
+# Valid link: preserve its workspace/project
+edgeone makers dev --skip-env-sync
+edgeone makers deploy --json
 
-# Correct: deploy
-edgeone makers deploy -n my-project --json
+# Confirmed initial link or deliberate re-link, after completed Agent authentication
+edgeone makers link --name <project>
 
 # Wrong: will hang
 edgeone makers dev
@@ -97,17 +99,18 @@ edgeone makers dev
 
 ### 2. Login authentication
 
-**Token resolution priority** (the CLI checks in this order automatically):
-1. `-t <token>` command-line argument
-2. `EDGEONE_PAGES_API_TOKEN` environment variable
-3. `<cwd>/.edgeone/auth.json` (written by `edgeone login --local`)
-4. `~/.edgeone/` global credentials
+Read [makers-cli](../skills/edgeone-makers-tools/references/makers-cli/SKILL.md) for native token precedence and linked-workspace adoption. Explicit `-t`/`EDGEONE_PAGES_API_TOKEN` wins; otherwise linked `dev`/`env`/`deploy` can select their owning workspace before `.edgeone/auth.json` / global fallback.
 
-**Recommended approach**: browser login + the `--local` flag:
+`.edgeone/auth.json` holds a single credential, not a multi-workspace cache. `edgeone workspace use --interaction agent` does not rewrite `.edgeone/auth.json` or the directory link. Re-link only for an intended project change; resolve a local/exported credential mismatch with consent, not by silently deleting auth files or asking for another token.
+
+When the user wants this directory's future deploys in another workspace, follow [the standard re-link flow](../skills/edgeone-makers-tools/references/makers-cli/SKILL.md#re-link-this-directory-to-another-workspace). Use `link --name` after completed target authentication, check ProjectId/ZoneId before deploying, and do not move/delete the old association as a normal workaround. Confirm project creation and `.env` changes; a token loaded from the project's `.env` can still shadow the global switch.
+
+Use browser authentication and handle `selection_required` through the conversation, following [makers-cli](../skills/edgeone-makers-tools/references/makers-cli/SKILL.md). Run login in the background while browser auth is pending; keep its listener alive. A first-login response with `sessionId` is resumed in the same directory with the chosen ID. An already-authenticated switch can return choices without a session; then run the named switch. Exit 0 with pending status does not permit dev/link/deploy to proceed.
 ```bash
-edgeone login --site china --local
+edgeone login --site <china|global> --local --interaction agent
 ```
-`--local` writes credentials to the project directory at `<cwd>/.edgeone/auth.json`, bypassing home-directory write restrictions.
+With explicit token intent or truly unavailable browser authentication, a target workspace's token can instead be persisted with consent; never use this as the default for a missing TTY.
+`--local` requests a project-local credential copy; it does not eliminate all global cache writes. If login reports a home-write error, report it and use `-t` / `EDGEONE_PAGES_API_TOKEN` for the invocation rather than claiming login succeeded.
 
 **Login status detection**:
 ```bash
@@ -180,7 +183,7 @@ The sandbox blocks writes to `~/.edgeone/`, but allows writes to the project dir
 | `<cwd>/.edgeone/` | ✅ | Where `--local` writes |
 | `~/.edgeone/` | ❌ | EPERM error |
 
-A `setLocalData EPERM` does not affect the running service; it only affects the CLI's local state persistence.
+An `EPERM` while writing CLI state can leave login/cache/association incomplete even if a dev process is already running. Check the command result; do not claim persistence succeeded. `--local` does not suppress every global write. Prefer a per-invocation target-workspace token when home writes are blocked.
 
 ---
 
@@ -195,7 +198,7 @@ A `setLocalData EPERM` does not affect the running service; it only affects the 
 #### 7.2 Deploy in background — why, and what the kill really means
 
 - **Foreground kill = wall-clock budget, not a hang.** A foreground Bash command in this sandbox has a fixed ~100s wall-clock budget; at the limit the whole process tree gets SIGKILL (`exit 137 = 128 + 9`), regardless of whether it keeps printing. During a deploy the CLI prints `Deployment in progress... elapsed: ~XXs` every ~10s — those heartbeat lines do NOT reset or extend the budget. So "still printing → killed at ~100s" is expected, not a stall.
-- **Killing the CLI does NOT usually fail the deploy.** The deployment itself runs server-side. A foreground CLI killed at `Created deployment` / `Process` has very likely continued on the server and gone live (confirmed in practice: a deploy killed at ~100s was later verified live, took ~674s end-to-end). Re-running `deploy` (same `-n <project>`) reuses the project and returns the URL.
+- **Killing the CLI does NOT usually fail the deploy.** The deployment itself runs server-side. A foreground CLI killed at `Created deployment` / `Process` has very likely continued on the server and gone live (confirmed in practice: a deploy killed at ~100s was later verified live, took ~674s end-to-end). Before any retry, resolve the same project/workspace and check deployment status; another deploy creates a new deployment. Preserve an existing link, rather than adding a new name merely to obtain a URL.
 - **Always use `run_in_background: true` for deploy** so the CLI survives past the foreground budget and emits the final `--json` line with the live URL. Do not poll the task across turns — rely on the `<task-notification>` completion event. (Cross-turn `TaskOutput` may report the handle as "not found"; the process still finished.)
 - **`--json` still prints progress heartbeats** to stdout/stderr, not a single clean JSON line. Parse the **last** line for the result object; treat the progress lines as noise. (This is a CLI cleanliness issue, unrelated to the kill behavior — do not assume "no output = process ended"; the sandbox judges liveness by OS process state, not by stdout bytes.)
 - **Clean up background processes** after use: a `edgeone makers dev` left running keeps holding port 8088 and may collide with the next dev/deploy. Stop it with `TaskStop` or kill it when the session moves on.
@@ -206,12 +209,12 @@ After finishing development, **start the dev server and preview directly** — d
 
 > ⚠️ **WorkBuddy default behavior**: when you create an HTML file the platform may auto-open a preview via file:// — **ignore it**, that is not a valid preview. You must wait until `edgeone makers dev` is up, then re-open via the HTTP URL to override it.
 
-1. Start `edgeone makers dev --name <project> --skip-env-sync` (**background async**, see §7)
+1. Resolve the workspace/link first (§11). For a valid link start `edgeone makers dev --skip-env-sync`; add `--name <project>` only for confirmed initial linking (**background async**, see §7)
 2. Wait 2-3 seconds for the dev server to be ready
 3. **Pass `http://127.0.0.1:8088/` to `present_files`** (note it is `127.0.0.1`, **not** `localhost` — see §4)
 4. Tell the user: "The project's local preview is running, please check it out. If everything looks good, I can deploy it live for you directly."
 
-Only after the user confirms, run `edgeone makers deploy -n <project> --json` (**background async**, see §7 and §7.2 — it exceeds the foreground wall-clock budget).
+Only after the user confirms, run `edgeone makers deploy --json` for the valid link; use `-n` only for a confirmed unlinked/new target, not as an output or non-interactive flag (**background async**, see §7 and §7.2).
 
 #### ⛔ file:// preview is strictly forbidden
 
@@ -265,14 +268,11 @@ Note: the value is a **bare host**, without an `http://` prefix and without a po
 
 ### 11. Project linking (required for Blob/KV)
 
-Projects that use Blob Storage or KV must ensure the project is linked (a `.edgeone/project.json` exists) before starting dev. When not linked, Blob/KV calls report `Missing: deployCredential`.
+Projects using Blob/KV need a valid project association before dev. Read and parse `.edgeone/project.json`; a non-empty `ProjectId` identifies the link, `Name` identifies the intended project, and `ZoneId` records its owning workspace. File existence alone is insufficient. Let the CLI resolve legacy links without `ZoneId`; never guess or hand-edit a workspace into build config.
 
-**Precondition — login first**: linking (and therefore Blob/KV) requires a logged-in account. The full chain is **Blob → must be linked → linking requires login**. If `edgeone whoami` returns exit 1, run `edgeone login` (browser) or use `edgeone makers link -t <token>` with a token **before** attempting to link. Do NOT try to link while unauthenticated.
+**Precondition — authenticate the intended workspace**: use the matching login or explicit API token before linking. A successful `whoami` proves authentication, not that a linked command will use the desired workspace. Already-linked dev/env/deploy defaults to the directory's workspace; keep the association unless the user deliberately changes targets. For env operations, confirm both project and environment before pulling/writing values. Restart dev after an intentional credential/association change.
 
-**Detect whether it is linked**:
-```bash
-cat .edgeone/project.json 2>/dev/null && echo "LINKED" || echo "NOT LINKED"
-```
+Use `edgeone workspace ls` to distinguish current and linked workspaces when supported. For a workspace change, run `edgeone workspace use --interaction agent`; handle the returned choices in the conversation and then invoke the selected ID. No-TTY multi-workspace authentication follows the Agent session protocol, not a token-copy request. See [makers-cli](../skills/edgeone-makers-tools/references/makers-cli/SKILL.md).
 
 **How to link**:
 
@@ -315,8 +315,8 @@ The user has **no terminal** in the WorkBuddy sandbox. Any command you print as 
 
 | Situation | Do this | Not this |
 |---|---|---|
-| Anonymous project needs claiming | Run `edgeone login --claim --local --json` in the background and present its `claimLoginUrl` as a clickable link; the listener auto-links the project when the user finishes claiming | ❌ Printing `edgeone makers claim --sid <token>`, or presenting the bare `claimUrl` from the deploy JSON (the CLI never learns the login state) |
-| The user needs to log in | Explain, then run `edgeone login --site <china\|global> --local` yourself | ❌ "Run `edgeone login` in your terminal" |
+| Anonymous project needs claiming | Run `edgeone login --interaction agent --claim --local --json` in the background and present its `claimLoginUrl` as a clickable link; the listener auto-links the project when the user finishes claiming | ❌ Printing `edgeone makers claim --sid <token>`, or presenting the bare `claimUrl` from the deploy JSON (the CLI never learns the login state) |
+| The user needs to log in | Explain, run browser login with `--interaction agent`, ask for workspace selection here, and resume before continuing | ❌ Asking a user with no terminal to run login or pick a workspace in the terminal |
 | Something needs installing | Run it yourself in Bash | ❌ "Please run `npm install -g edgeone`" |
 
 You are the one with shell access — use it. Only ask the user to type something when it genuinely cannot be automated (e.g. completing a login in the browser window you opened), and say plainly what you need from them.

@@ -12,7 +12,7 @@ When you need EdgeOne Makers platform development guidance, read the matching Sk
 | Cloud Functions (Node.js / Go / Python APIs) | skills/edgeone-makers-tools/references/makers-cloud-functions/SKILL.md |
 | KV + Blob Storage | skills/edgeone-makers-tools/references/makers-storage/SKILL.md |
 | Middleware (auth, rewrites, routing) | skills/edgeone-makers-tools/references/makers-middleware/SKILL.md |
-| CLI command reference | skills/edgeone-makers-tools/references/makers-cli/SKILL.md |
+| CLI commands, login/account switch, workspace selection and Agent session resume | skills/edgeone-makers-tools/references/makers-cli/SKILL.md |
 | Project structure / scaffolding | skills/edgeone-makers-tools/references/makers-recipes/SKILL.md |
 
 ⚠️ Only read the Skill relevant to the current task. Do not load all skills at once.

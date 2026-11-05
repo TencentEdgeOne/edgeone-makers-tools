@@ -46,7 +46,9 @@ What type of project are you migrating?
 
 Before starting framework-specific changes, check these global items:
 
-- [ ] Create `edgeone.json` with correct `agents.framework` and `buildCommand`/`outputDirectory`
+- [ ] Confirm the intended workspace/project and credential using [makers-cli](../makers-cli/SKILL.md); preserve an existing link or deliberately re-link before remote operations
+- [ ] Create `edgeone.json` with correct `agents.framework` and `buildCommand`/`outputDirectory`; do not add `zone_id` as a workspace selector
+- [ ] Declare `AI_GATEWAY_API_KEY=` and `AI_GATEWAY_BASE_URL=` in `.env.example`; let the CLI manage its own credentials without overwriting hand-written keys
 - [ ] Move backend code from Express routes / Next.js API routes into `agents/` directory
 - [ ] Replace `process.env` / `os.environ` with `context.env` / `ctx.env`
 - [ ] Replace `req.headers.get('x')` with `context.request.headers['x']` (Node) or plain dict access (Python)

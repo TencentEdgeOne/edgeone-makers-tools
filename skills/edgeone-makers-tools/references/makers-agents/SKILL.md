@@ -130,7 +130,7 @@ EdgeOne Makers Agent **is not** a generic API route pattern (not Vercel AI SDK's
 │   ├── _logger.ts
 │   └── <resource>/index.ts          # e.g. articles/, preferences/, history/, health/
 ├── .edgeone/
-│   └── project.json                 # { Name, ProjectId }
+│   └── project.json                 # { Name, ProjectId, ZoneId } — project + owning workspace
 ├── edgeone.json                     # Deployment config + agents.framework
 ├── .env.example                     # ⚠️ MUST exist: declares AI_GATEWAY_API_KEY= and AI_GATEWAY_BASE_URL=
 ├── package.json                     # TS routes (A/B/C/D)
@@ -282,9 +282,11 @@ This tells the platform that the command was triggered from an AI skill context.
 
 ### Local development
 
+Confirm the intended workspace/project and credential using [makers-cli](../makers-cli/SKILL.md). Preserve an existing valid link: `dev`/`env`/`deploy` follows its workspace, not a later global switch. For an unlinked project, authenticate the intended workspace before this setup; `link` can create projects and pull env vars.
+
 ```bash
-# 1. Link to remote project (pulls project ID + env vars)
-PAGES_SOURCE=skills edgeone makers link
+# 1. Initial link to the confirmed target (skip when already correctly linked)
+PAGES_SOURCE=skills edgeone makers link --name <project>
 
 # 2. Pull remote environment variables to local .env
 PAGES_SOURCE=skills edgeone makers env pull
@@ -302,7 +304,7 @@ AI_GATEWAY_API_KEY=
 AI_GATEWAY_BASE_URL=
 ```
 
-The CLI will detect these declarations and automatically fetch + inject the values at deploy time.
+The CLI detects these declarations and fetches/injects values using the command's effective workspace credential. For local `.env`, `.edgeone/ai-gateway.json` records the workspace and key fingerprint for CLI-written keys. Subsequent dev/deploy refreshes a key only when that record still matches and the effective workspace changed. Hand-written or user-modified keys are not overwritten; an existing `AI_GATEWAY_BASE_URL` is retained. Do not implement your own key replacement or print keys. `--skip-ai-gateway-sync` skips the CLI credential sync when the host intentionally manages credentials.
 
 **User-defined business variables** must be set manually before deployment:
 

@@ -8,7 +8,8 @@ description: >-
   storing data, and deploying on Tencent EdgeOne Makers. Trigger whenever the user
   develops, scaffolds, or deploys anything on EdgeOne Makers / EdgeOne Pages: AI agents
   (DeepAgents, LangGraph, CrewAI, OpenAI/Claude SDK), Cloud Functions (Node/Go/Python),
-  Edge Functions (V8), KV + Blob storage, middleware, CLI usage, project scaffolding,
+  Edge Functions (V8), KV + Blob storage, middleware, CLI usage, workspace selection
+  or switching (工作站点), credential/linked-project mismatches, project scaffolding,
   and — importantly — persisting dynamic site data (messages, uploads, votes, save-state)
   where there is NO managed database, so Blob is used as the backend. Also trigger on
   "deploy to EdgeOne", "上线", "发布", "部署到 EdgeOne". This SKILL is a routing table;
@@ -33,7 +34,7 @@ When you need EdgeOne Makers platform development guidance, read the matching Sk
 | KV + Blob Storage | references/makers-storage/SKILL.md |
 | Persist dynamic data for a site (messages, uploads, votes, save-state) — **no database; use Blob** | references/makers-storage/SKILL.md |
 | Middleware (auth, rewrites, routing) | references/makers-middleware/SKILL.md |
-| CLI command reference | references/makers-cli/SKILL.md |
+| CLI commands, login/account switch, workspace selection (工作站点), Agent session resume and linked-project target diagnosis | references/makers-cli/SKILL.md |
 | Project structure / scaffolding | references/makers-recipes/SKILL.md |
 | Environment adaptation (WorkBuddy / sandbox / CI) | references/makers-env-adaption/SKILL.md |
 
