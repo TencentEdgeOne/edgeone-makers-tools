@@ -21,6 +21,6 @@ Server-side functions supporting Node.js, Go, and Python runtimes.
 
 | Runtime | When to use | Reference |
 |---------|-------------|-----------|
-| Node.js | Express/Koa patterns, npm ecosystem | [references/node-functions.md](references/node-functions.md) |
-| Go | High performance, Gin/Echo/Chi | [references/go-functions.md](references/go-functions.md) |
-| Python | Flask/FastAPI, ML libraries | [references/python-functions.md](references/python-functions.md) |
+| Node.js | Express/Koa patterns, npm ecosystem | [references/node-functions.md](../skills/edgeone-makers-tools/references/makers-cloud-functions/references/node-functions.md) |
+| Go | High performance, Gin/Echo/Chi | [references/go-functions.md](../skills/edgeone-makers-tools/references/makers-cloud-functions/references/go-functions.md) |
+| Python | Flask/FastAPI, ML libraries | [references/python-functions.md](../skills/edgeone-makers-tools/references/makers-cloud-functions/references/python-functions.md) |

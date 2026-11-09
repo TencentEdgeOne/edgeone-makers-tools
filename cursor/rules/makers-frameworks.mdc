@@ -71,16 +71,16 @@ Next.js and Nuxt are supported by the builder directly and need none.
 
 | Framework | Read |
 |-----------|------|
-| Astro | [references/astro.md](references/astro.md) |
-| React Router v7 | [references/react-router.md](references/react-router.md) |
-| SvelteKit | [references/sveltekit.md](references/sveltekit.md) |
-| TanStack Start | [references/tanstack-start.md](references/tanstack-start.md) |
-| Vike | [references/vike.md](references/vike.md) |
-| Next.js | [references/nextjs.md](references/nextjs.md) |
-| Nuxt | [references/nuxt.md](references/nuxt.md) |
-| Vite / React / Vue single-page app | [references/vite-spa.md](references/vite-spa.md) |
-| Hugo and other static site generators | [references/static-generators.md](references/static-generators.md) |
-| Anything else (Docusaurus, Angular, Gatsby, Hexo, Qwik, Remix, Solid) | [references/other-frameworks.md](references/other-frameworks.md) |
+| Astro | [references/astro.md](../../skills/edgeone-makers-tools/references/makers-frameworks/references/astro.md) |
+| React Router v7 | [references/react-router.md](../../skills/edgeone-makers-tools/references/makers-frameworks/references/react-router.md) |
+| SvelteKit | [references/sveltekit.md](../../skills/edgeone-makers-tools/references/makers-frameworks/references/sveltekit.md) |
+| TanStack Start | [references/tanstack-start.md](../../skills/edgeone-makers-tools/references/makers-frameworks/references/tanstack-start.md) |
+| Vike | [references/vike.md](../../skills/edgeone-makers-tools/references/makers-frameworks/references/vike.md) |
+| Next.js | [references/nextjs.md](../../skills/edgeone-makers-tools/references/makers-frameworks/references/nextjs.md) |
+| Nuxt | [references/nuxt.md](../../skills/edgeone-makers-tools/references/makers-frameworks/references/nuxt.md) |
+| Vite / React / Vue single-page app | [references/vite-spa.md](../../skills/edgeone-makers-tools/references/makers-frameworks/references/vite-spa.md) |
+| Hugo and other static site generators | [references/static-generators.md](../../skills/edgeone-makers-tools/references/makers-frameworks/references/static-generators.md) |
+| Anything else (Docusaurus, Angular, Gatsby, Hexo, Qwik, Remix, Solid) | [references/other-frameworks.md](../../skills/edgeone-makers-tools/references/makers-frameworks/references/other-frameworks.md) |
 
 Load one. Loading the whole set is 10 documents to answer a question about one framework.
 
