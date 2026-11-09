@@ -232,25 +232,25 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 
 | Topic | Read |
 |-------|------|
-| Node entry (onRequest, context, AbortSignal) | [platform/node-entry.md](references/platform/node-entry.md) |
-| Python entry (handler, ctx, asyncio.Event) | [platform/python-entry.md](references/platform/python-entry.md) |
-| Environment variables + model convention | [platform/env-and-model.md](references/platform/env-and-model.md) |
-| SSE streaming protocol | [platform/sse-protocol.md](references/platform/sse-protocol.md) |
-| conversation-id dual-channel + frontend | [platform/conversation-id.md](references/platform/conversation-id.md) |
-| agents/ vs cloud-functions/ separation | [platform/cloud-functions.md](references/platform/cloud-functions.md) |
-| Store (context.store) | [capabilities/store.md](references/capabilities/store.md) |
-| Sandbox (context.sandbox) | [capabilities/sandbox.md](references/capabilities/sandbox.md) |
-| Tools (context.tools) | [capabilities/tools.md](references/capabilities/tools.md) |
-| Claude Agent SDK (Node) | [node-frameworks/claude-sdk.md](references/node-frameworks/claude-sdk.md) |
-| OpenAI Agents SDK (Node) | [node-frameworks/openai-agents.md](references/node-frameworks/openai-agents.md) |
-| LangGraph (Node) | [node-frameworks/langgraph.md](references/node-frameworks/langgraph.md) |
-| DeepAgents (Node) | [node-frameworks/deepagents.md](references/node-frameworks/deepagents.md) |
-| Claude Agent SDK (Python) | [python-frameworks/claude-sdk.md](references/python-frameworks/claude-sdk.md) |
-| OpenAI Agents SDK (Python) | [python-frameworks/openai-agents.md](references/python-frameworks/openai-agents.md) |
-| LangGraph (Python) | [python-frameworks/langgraph.md](references/python-frameworks/langgraph.md) |
-| DeepAgents (Python) | [python-frameworks/deepagents.md](references/python-frameworks/deepagents.md) |
-| CrewAI (Python only) | [python-frameworks/crewai.md](references/python-frameworks/crewai.md) |
-| Review checklist | [review-checklist.md](references/review-checklist.md) |
+| Node entry (onRequest, context, AbortSignal) | [platform/node-entry.md](../skills/edgeone-makers-tools/references/makers-agents/references/platform/node-entry.md) |
+| Python entry (handler, ctx, asyncio.Event) | [platform/python-entry.md](../skills/edgeone-makers-tools/references/makers-agents/references/platform/python-entry.md) |
+| Environment variables + model convention | [platform/env-and-model.md](../skills/edgeone-makers-tools/references/makers-agents/references/platform/env-and-model.md) |
+| SSE streaming protocol | [platform/sse-protocol.md](../skills/edgeone-makers-tools/references/makers-agents/references/platform/sse-protocol.md) |
+| conversation-id dual-channel + frontend | [platform/conversation-id.md](../skills/edgeone-makers-tools/references/makers-agents/references/platform/conversation-id.md) |
+| agents/ vs cloud-functions/ separation | [platform/cloud-functions.md](../skills/edgeone-makers-tools/references/makers-agents/references/platform/cloud-functions.md) |
+| Store (context.store) | [capabilities/store.md](../skills/edgeone-makers-tools/references/makers-agents/references/capabilities/store.md) |
+| Sandbox (context.sandbox) | [capabilities/sandbox.md](../skills/edgeone-makers-tools/references/makers-agents/references/capabilities/sandbox.md) |
+| Tools (context.tools) | [capabilities/tools.md](../skills/edgeone-makers-tools/references/makers-agents/references/capabilities/tools.md) |
+| Claude Agent SDK (Node) | [node-frameworks/claude-sdk.md](../skills/edgeone-makers-tools/references/makers-agents/references/node-frameworks/claude-sdk.md) |
+| OpenAI Agents SDK (Node) | [node-frameworks/openai-agents.md](../skills/edgeone-makers-tools/references/makers-agents/references/node-frameworks/openai-agents.md) |
+| LangGraph (Node) | [node-frameworks/langgraph.md](../skills/edgeone-makers-tools/references/makers-agents/references/node-frameworks/langgraph.md) |
+| DeepAgents (Node) | [node-frameworks/deepagents.md](../skills/edgeone-makers-tools/references/makers-agents/references/node-frameworks/deepagents.md) |
+| Claude Agent SDK (Python) | [python-frameworks/claude-sdk.md](../skills/edgeone-makers-tools/references/makers-agents/references/python-frameworks/claude-sdk.md) |
+| OpenAI Agents SDK (Python) | [python-frameworks/openai-agents.md](../skills/edgeone-makers-tools/references/makers-agents/references/python-frameworks/openai-agents.md) |
+| LangGraph (Python) | [python-frameworks/langgraph.md](../skills/edgeone-makers-tools/references/makers-agents/references/python-frameworks/langgraph.md) |
+| DeepAgents (Python) | [python-frameworks/deepagents.md](../skills/edgeone-makers-tools/references/makers-agents/references/python-frameworks/deepagents.md) |
+| CrewAI (Python only) | [python-frameworks/crewai.md](../skills/edgeone-makers-tools/references/makers-agents/references/python-frameworks/crewai.md) |
+| Review checklist | [review-checklist.md](../skills/edgeone-makers-tools/references/makers-agents/references/review-checklist.md) |
 
 ---
 

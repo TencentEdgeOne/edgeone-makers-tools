@@ -2,7 +2,7 @@
 
 Detail reference for login-free deployment. For the decision flow and the commands to run, see [SKILL.md](../SKILL.md) — read that first.
 
-Requires CLI `>= 1.6.29`.
+This version of the Skill requires CLI `>= 1.7.0`, including login-free deployment and claim. Follow the shared release-availability check in the deployment Skill; if the required public package is not yet available, stop rather than falling back to an older CLI.
 
 ## Contents
 
@@ -213,7 +213,7 @@ Correct response: tell the user the anonymous quota is used up, and offer loggin
 | `errorCode: TOKEN_EXPIRED` / CGI `code: 104` | Anonymous token expired or unknown | Run the anonymous deploy again — it mints a fresh token. |
 | `InvalidParameter.Security` | Generated project name collided or was rejected | Retry; a new random suffix is generated each run. |
 | `COS upload failed: ...` | Network or credential failure during upload | Retry the deploy. COS credentials are short-lived, so a stale run cannot be resumed. |
-| `Deployment polling timed out after 5 minutes` | Build did not reach a terminal state in time | Retry. Polling runs every 3 s for up to 5 minutes. |
+| `Deployment polling timed out after 5 minutes` | Terminal status was not observed within the polling window | Verify the original remote deployment through supported status tools before another deploy. Timeout is not proof of failure; do not automatically create another project or deployment. |
 | `Deployment failed: <mapped message>` | Remote build failed | Read the mapped message (e.g. `Build script error`, `Install failed`, `Memory exceed limit`, `Time exceed limit`) and fix the project's build. |
 | `Detected logged-in account, --anonymous is ignored` | Credentials were found | Expected. The normal deploy flow runs instead. |
 
@@ -249,7 +249,7 @@ What it does:
 4. The user logs in and claims on that page; the console relays the login state back to the listener after the claim completes.
 5. On success the CLI saves credentials (plus `.edgeone/auth.json` with `--local`), waits briefly for the async transfer to become visible, links the project (`.edgeone/project.json`), deletes `.edgeone/anonymous.json`, and exits 0 with `{"status":"success","projectId":...,"projectName":...,"linked":true}`.
 
-If it exits non-zero (timeout / not completed), the anonymous state file is still there — re-run the same command for a fresh link.
+A non-zero exit may follow remote completion and failed local persistence. Check effective identity, directory association and original remote ownership through supported tools; do not infer unclaimed status from local files or immediately replay login. Create a fresh listener only after verifying the original claim did not complete and the user's intent remains unchanged.
 
 The bare `claimUrl` from the deploy JSON bypasses all of this: the project gets claimed but the CLI never learns the login state, never links the project, and the next deploy starts a second anonymous project. Never present it.
 
