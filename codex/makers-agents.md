@@ -26,7 +26,7 @@ validate:
     message: "Never write `store?.langgraphStore ?? store` — in cloud-function context it falls back to a store with no .get and crashes (Critical Rule 12)."
 metadata:
   author: edgeone
-  version: "1.0.1"
+  version: "1.1.1"
 ---
 
 # EdgeOne Makers Agent Development Guide
@@ -232,25 +232,25 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 
 | Topic | Read |
 |-------|------|
-| Node entry (onRequest, context, AbortSignal) | [platform/node-entry.md](references/platform/node-entry.md) |
-| Python entry (handler, ctx, asyncio.Event) | [platform/python-entry.md](references/platform/python-entry.md) |
-| Environment variables + model convention | [platform/env-and-model.md](references/platform/env-and-model.md) |
-| SSE streaming protocol | [platform/sse-protocol.md](references/platform/sse-protocol.md) |
-| conversation-id dual-channel + frontend | [platform/conversation-id.md](references/platform/conversation-id.md) |
-| agents/ vs cloud-functions/ separation | [platform/cloud-functions.md](references/platform/cloud-functions.md) |
-| Store (context.store) | [capabilities/store.md](references/capabilities/store.md) |
-| Sandbox (context.sandbox) | [capabilities/sandbox.md](references/capabilities/sandbox.md) |
-| Tools (context.tools) | [capabilities/tools.md](references/capabilities/tools.md) |
-| Claude Agent SDK (Node) | [node-frameworks/claude-sdk.md](references/node-frameworks/claude-sdk.md) |
-| OpenAI Agents SDK (Node) | [node-frameworks/openai-agents.md](references/node-frameworks/openai-agents.md) |
-| LangGraph (Node) | [node-frameworks/langgraph.md](references/node-frameworks/langgraph.md) |
-| DeepAgents (Node) | [node-frameworks/deepagents.md](references/node-frameworks/deepagents.md) |
-| Claude Agent SDK (Python) | [python-frameworks/claude-sdk.md](references/python-frameworks/claude-sdk.md) |
-| OpenAI Agents SDK (Python) | [python-frameworks/openai-agents.md](references/python-frameworks/openai-agents.md) |
-| LangGraph (Python) | [python-frameworks/langgraph.md](references/python-frameworks/langgraph.md) |
-| DeepAgents (Python) | [python-frameworks/deepagents.md](references/python-frameworks/deepagents.md) |
-| CrewAI (Python only) | [python-frameworks/crewai.md](references/python-frameworks/crewai.md) |
-| Review checklist | [review-checklist.md](references/review-checklist.md) |
+| Node entry (onRequest, context, AbortSignal) | [platform/node-entry.md](../skills/edgeone-makers-tools/references/makers-agents/references/platform/node-entry.md) |
+| Python entry (handler, ctx, asyncio.Event) | [platform/python-entry.md](../skills/edgeone-makers-tools/references/makers-agents/references/platform/python-entry.md) |
+| Environment variables + model convention | [platform/env-and-model.md](../skills/edgeone-makers-tools/references/makers-agents/references/platform/env-and-model.md) |
+| SSE streaming protocol | [platform/sse-protocol.md](../skills/edgeone-makers-tools/references/makers-agents/references/platform/sse-protocol.md) |
+| conversation-id dual-channel + frontend | [platform/conversation-id.md](../skills/edgeone-makers-tools/references/makers-agents/references/platform/conversation-id.md) |
+| agents/ vs cloud-functions/ separation | [platform/cloud-functions.md](../skills/edgeone-makers-tools/references/makers-agents/references/platform/cloud-functions.md) |
+| Store (context.store) | [capabilities/store.md](../skills/edgeone-makers-tools/references/makers-agents/references/capabilities/store.md) |
+| Sandbox (context.sandbox) | [capabilities/sandbox.md](../skills/edgeone-makers-tools/references/makers-agents/references/capabilities/sandbox.md) |
+| Tools (context.tools) | [capabilities/tools.md](../skills/edgeone-makers-tools/references/makers-agents/references/capabilities/tools.md) |
+| Claude Agent SDK (Node) | [node-frameworks/claude-sdk.md](../skills/edgeone-makers-tools/references/makers-agents/references/node-frameworks/claude-sdk.md) |
+| OpenAI Agents SDK (Node) | [node-frameworks/openai-agents.md](../skills/edgeone-makers-tools/references/makers-agents/references/node-frameworks/openai-agents.md) |
+| LangGraph (Node) | [node-frameworks/langgraph.md](../skills/edgeone-makers-tools/references/makers-agents/references/node-frameworks/langgraph.md) |
+| DeepAgents (Node) | [node-frameworks/deepagents.md](../skills/edgeone-makers-tools/references/makers-agents/references/node-frameworks/deepagents.md) |
+| Claude Agent SDK (Python) | [python-frameworks/claude-sdk.md](../skills/edgeone-makers-tools/references/makers-agents/references/python-frameworks/claude-sdk.md) |
+| OpenAI Agents SDK (Python) | [python-frameworks/openai-agents.md](../skills/edgeone-makers-tools/references/makers-agents/references/python-frameworks/openai-agents.md) |
+| LangGraph (Python) | [python-frameworks/langgraph.md](../skills/edgeone-makers-tools/references/makers-agents/references/python-frameworks/langgraph.md) |
+| DeepAgents (Python) | [python-frameworks/deepagents.md](../skills/edgeone-makers-tools/references/makers-agents/references/python-frameworks/deepagents.md) |
+| CrewAI (Python only) | [python-frameworks/crewai.md](../skills/edgeone-makers-tools/references/makers-agents/references/python-frameworks/crewai.md) |
+| Review checklist | [review-checklist.md](../skills/edgeone-makers-tools/references/makers-agents/references/review-checklist.md) |
 
 ---
 
@@ -380,7 +380,15 @@ edgeone makers env pull
    edgeone makers env ls
    ```
 
-5. **Deploy**:
+5. **Check that every peer dependency is declared in `package.json`**:
+   ```bash
+   npm ls --depth=0 2>&1 | grep -i "peer dep"
+   ```
+   The deployed runtime resolves auto-externalized packages (`deepagents`, `@anthropic-ai/claude-agent-sdk`, every `@langchain/*`) from what `package.json` **declares**. npm 7+ installs peers automatically without declaring them, so a package that is missing here still resolves locally and in preview, and is simply absent in production — `import` fails at module load and every route on that endpoint hangs until the gateway returns an HTML 500.
+
+   This is not the same failure as a missing API key, and the difference is diagnostic: a missing key fails only after input validation passes, so a request with a deliberately invalid body still gets its fast `400`. A module that failed to load answers nothing at all, on every route, including that one.
+
+6. **Deploy**:
    ```bash
    edgeone makers deploy
    ```

@@ -65,9 +65,9 @@ WorkBuddy is a sandboxed remote IDE environment. When running AI coding tasks, i
 
 > **⚠️ Common misread: WorkBuddy is a *desktop IDE sandbox*, NOT a headless environment.**
 > - CLI **interactive prompts** (site picker, confirmations) hang inside the sandbox → use the non-interactive flags in this section.
-> - **BUT browser login (`edgeone login --site <x>`) works fully** — WorkBuddy launches the host OS browser AND routes the OAuth callback back into the sandbox.
+> - Desktop hosts can open the browser and route its callback; whether CLI or host owns that step depends on the actual configuration.
 >
-> Deploy/link login should default to browser login and only fall back to `-t <token>` after browser login is confirmed to fail. Do NOT jump to token login just because the caller is an "Agent".
+> Follow the shared makers-cli flow. Do not jump to token login just because the caller is an Agent, or retry browser authentication when the command only returned workspace choices.
 
 ---
 
@@ -78,8 +78,8 @@ Inside the WorkBuddy sandbox, CLI interactive prompts cause the process to hang 
 | Scenario | Required flag | Reason |
 |------|---------|------|
 | Local development | `--skip-env-sync` | Skips the "sync environment variables?" confirmation |
-| Linking a project | `--name <project>` | Skips the interactive project picker |
-| Auth when not logged in | `-t <token>` | Passes the token directly, no login popup |
+| Linking a project | `--name <project>` + explicit link mode when supported | Confirm name/workspace and creation policy before changing association |
+| Auth when not logged in | `--interaction agent` | Browser authentication with conversation workspace selection; use secure environment credentials for browserless CI |
 | Deploy output | `--json` | Machine-readable JSON, avoids ANSI parsing |
 
 ```bash
@@ -97,26 +97,16 @@ edgeone makers dev
 
 ### 2. Login authentication
 
-**Token resolution priority** (the CLI checks in this order automatically):
-1. `-t <token>` command-line argument
-2. `EDGEONE_PAGES_API_TOKEN` environment variable
-3. `<cwd>/.edgeone/auth.json` (written by `edgeone login --local`)
-4. `~/.edgeone/` global credentials
+Follow the shared [login, switching and target flow](../skills/edgeone-makers-tools/references/makers-cli/SKILL.md). It supports standalone Skill execution via native CLI; MCP is optional, and no expert team is needed. Do not keep a separate login procedure in this environment guide.
 
-**Recommended approach**: browser login + the `--local` flag:
-```bash
-edgeone login --site china --local
-```
-`--local` writes credentials to the project directory at `<cwd>/.edgeone/auth.json`, bypassing home-directory write restrictions.
+- Desktop callers use agent interaction; the login listener remains alive until its final result. A pending workspace selection is not login completion. For an already authenticated account use `workspace use` to change workspace, not another login or account switch.
+- Effective credentials may come from an explicit argument, environment, project local auth or global CLI state. Global switching does not overwrite a project-local credential; verify identity in the original project directory and obtain consent to correct the source without printing or deleting its contents.
+- `--local` is opt-in additional credential persistence and may write global state too. It does not guarantee bypassing home write restrictions, and must not be the default response to sandbox errors.
+- Use `whoami --json` after checking CLI `>= 1.7.0` and its JSON capability: true = authenticated, false = unauthed, null = verification unavailable. Missing JSON support on a reported matching version means checking the installed package/path, not a legacy fallback; exit 1 alone cannot distinguish auth from connectivity/file failures.
+- On an approval-triggered re-run, a login result may already be consumed. Verify identity first; do not automatically replay it, switch commands to bypass policy, or restart browser authentication in a monolithic retry script.
+- A pure-static preview can run without login if it needs no remote credentials. Pure local Blob persistence follows the storage/Agent reference; cloud-backed Blob/KV/Gateway access needs the appropriate target and credential. Deployment and binding must retain the original project ownership.
 
-**Login status detection**:
-```bash
-edgeone whoami  # exit 0 = logged in, exit 1 = not logged in (does not hang)
-```
-
-**When is login actually required?** Login is only needed when the project uses **Blob** or other credentialed backends — and strictly because of the dependency chain: **Blob requires the project to be linked, and linking requires a logged-in account first.** So `edgeone makers dev` for a **pure-static** site runs fine without login — **do NOT force a login prompt for static-only previews**. Login (or `-t <token>`) becomes mandatory the moment dev/deploy must touch Blob storage. (The trigger condition and the link chain live in makers-storage.)
-
-**CLI version requirement**: >= 1.6.7 (older versions lack the non-interactive fixes; whoami will hang)
+Use makers-cli's unified CLI `>= 1.7.0` execution baseline and feature capability checks. If the public release is unavailable or installed flags do not match, stop rather than falling back to an older CLI. Reading guidance or writing code does not require CLI installation.
 
 ---
 
@@ -180,7 +170,7 @@ The sandbox blocks writes to `~/.edgeone/`, but allows writes to the project dir
 | `<cwd>/.edgeone/` | ✅ | Where `--local` writes |
 | `~/.edgeone/` | ❌ | EPERM error |
 
-A `setLocalData EPERM` does not affect the running service; it only affects the CLI's local state persistence.
+File permissions depend on the actual host. A persistence denial can occur after a remote step or consumption of a one-use login result; it is not harmless proof of success. Keep the original error, inspect effective status, and use the shared approval/retry boundary rather than changing permissions or blindly rerunning authentication.
 
 ---
 
@@ -190,13 +180,13 @@ A `setLocalData EPERM` does not affect the running service; it only affects the 
 |------|---------|------|
 | `npm install` | **Foreground sync** | Usually 10-30s; running it in the background would leave later commands missing dependencies |
 | `edgeone makers dev` | **Background async** (`run_in_background`) | Long-running process, must not block the conversation |
-| `edgeone makers deploy` | **Background async** (`run_in_background`) | Cold deploys (build → upload → Process → live) routinely take **2–10+ minutes**. The foreground wall-clock budget (~100s) SIGKILLs the CLI mid-deploy (exit 137) even while it keeps printing progress — you lose the final URL line. Run it in the background and wait for the completion notification. |
+| `edgeone makers deploy` | Foreground with adequate timeout when supported; otherwise a host-managed background task | Wait for the original operation's final result. Background alone is not completion; do not start another deployment because output paused or the foreground budget expired. |
 
 #### 7.2 Deploy in background — why, and what the kill really means
 
-- **Foreground kill = wall-clock budget, not a hang.** A foreground Bash command in this sandbox has a fixed ~100s wall-clock budget; at the limit the whole process tree gets SIGKILL (`exit 137 = 128 + 9`), regardless of whether it keeps printing. During a deploy the CLI prints `Deployment in progress... elapsed: ~XXs` every ~10s — those heartbeat lines do NOT reset or extend the budget. So "still printing → killed at ~100s" is expected, not a stall.
-- **Killing the CLI does NOT usually fail the deploy.** The deployment itself runs server-side. A foreground CLI killed at `Created deployment` / `Process` has very likely continued on the server and gone live (confirmed in practice: a deploy killed at ~100s was later verified live, took ~674s end-to-end). Re-running `deploy` (same `-n <project>`) reuses the project and returns the URL.
-- **Always use `run_in_background: true` for deploy** so the CLI survives past the foreground budget and emits the final `--json` line with the live URL. Do not poll the task across turns — rely on the `<task-notification>` completion event. (Cross-turn `TaskOutput` may report the handle as "not found"; the process still finished.)
+- Host wall-clock limits vary. Set adequate timeout for the actual tool; heartbeat output does not extend it. Do not infer success or a hang solely from output timing.
+- If the CLI is killed after creating a deployment, the remote result is uncertain. Verify the original operation's status before a new attempt; re-running deploy is not a status query and can create another deployment.
+- If the host requires a background task, retain its handle and await its completion notification. Do not treat a missing handle as completion, automatically relaunch the command, or end with a success claim before verified output.
 - **`--json` still prints progress heartbeats** to stdout/stderr, not a single clean JSON line. Parse the **last** line for the result object; treat the progress lines as noise. (This is a CLI cleanliness issue, unrelated to the kill behavior — do not assume "no output = process ended"; the sandbox judges liveness by OS process state, not by stdout bytes.)
 - **Clean up background processes** after use: a `edgeone makers dev` left running keeps holding port 8088 and may collide with the next dev/deploy. Stop it with `TaskStop` or kill it when the session moves on.
 
@@ -265,28 +255,14 @@ Note: the value is a **bare host**, without an `http://` prefix and without a po
 
 ### 11. Project linking (required for Blob/KV)
 
-Projects that use Blob Storage or KV must ensure the project is linked (a `.edgeone/project.json` exists) before starting dev. When not linked, Blob/KV calls report `Missing: deployCredential`.
+Cloud-backed Blob/KV/Gateway access needs a verified directory association and credentials for its owning workspace. Read `.edgeone/project.json` as project metadata, then follow the shared makers-cli flow to verify identity and ownership. Mere file existence or SDK import does not prove a usable cloud binding; a pure local storage mode must not be forced to create a remote project.
 
-**Precondition — login first**: linking (and therefore Blob/KV) requires a logged-in account. The full chain is **Blob → must be linked → linking requires login**. If `edgeone whoami` returns exit 1, run `edgeone login` (browser) or use `edgeone makers link -t <token>` with a token **before** attempting to link. Do NOT try to link while unauthenticated.
+- Existing association: preserve it; global switching does not migrate the target. If authentication is needed, authenticate the owning workspace, not an arbitrary default.
+- Missing association: ask for the target workspace/name and existing/create policy. Use the shared explicit link modes and preserve local env; absent target does not authorize automatic creation.
+- Unknown identity, unavailable project or failed ownership query: report the concrete failure, not a missing-login guess. Do not launch login solely because whoami exits 1.
+- Cloud creation, changing the deployment target and pulling env each require the corresponding user authorization. Do not use dev --name, default auto linking, deleting project.json, or copying to a new directory as a workaround.
 
-**Detect whether it is linked**:
-```bash
-cat .edgeone/project.json 2>/dev/null && echo "LINKED" || echo "NOT LINKED"
-```
-
-**How to link**:
-
-```bash
-# Explicit link (auto-creates the project if it does not exist)
-edgeone makers link --name <project-name> -t <token>
-
-# Or implicitly link via the dev command
-edgeone makers dev --name <project-name> --skip-env-sync
-```
-
-If the project named by `--name` does not exist remotely, the `link` command creates it automatically.
-
-**Note**: even for a pure static project, if the code imports `@edgeone/pages-blob`, not linking will always cause an error.
+After verifying the target, start the original dev operation with env preservation. Truly local Blob persistence and static previews retain their independent no-cloud path; consult the relevant storage/Agent reference for the chosen mode.
 
 ---
 
@@ -294,8 +270,7 @@ If the project named by `--name` does not exist remotely, the `link` command cre
 
 | Framework/package | Minimum version | Reason |
 |---------|---------|------|
-| EdgeOne CLI | >= 1.6.7 | Non-interactive fixes, whoami fail-fast, --json support |
-| EdgeOne CLI (anonymous deploy / `claim` only) | >= 1.6.29 | `--anonymous` and `claim` do not exist below this |
+| EdgeOne CLI (all commands, including anonymous deploy / claim) | >= 1.7.0 | Unified execution baseline; verify installed capabilities and public release availability via makers-cli before running commands |
 | Next.js | 16.x | The framework adapter tracks new versions |
 | @edgeone/pages-blob | >= 0.0.14 | Older versions have known bugs |
 
@@ -316,7 +291,7 @@ The user has **no terminal** in the WorkBuddy sandbox. Any command you print as 
 | Situation | Do this | Not this |
 |---|---|---|
 | Anonymous project needs claiming | Run `edgeone login --claim --local --json` in the background and present its `claimLoginUrl` as a clickable link; the listener auto-links the project when the user finishes claiming | ❌ Printing `edgeone makers claim --sid <token>`, or presenting the bare `claimUrl` from the deploy JSON (the CLI never learns the login state) |
-| The user needs to log in | Explain, then run `edgeone login --site <china\|global> --local` yourself | ❌ "Run `edgeone login` in your terminal" |
+| The user needs to log in | Execute the shared makers-cli agent login flow after version/capability checks; no default local credential copy | ❌ Sending the user to a terminal or repeating a site-only/local login procedure |
 | Something needs installing | Run it yourself in Bash | ❌ "Please run `npm install -g edgeone`" |
 
 You are the one with shell access — use it. Only ask the user to type something when it genuinely cannot be automated (e.g. completing a login in the browser window you opened), and say plainly what you need from them.

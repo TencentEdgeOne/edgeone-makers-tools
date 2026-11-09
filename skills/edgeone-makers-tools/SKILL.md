@@ -20,6 +20,8 @@ metadata:
 
 # EdgeOne Makers Skills
 
+Executing any EdgeOne CLI command in this Skill requires CLI `>= 1.7.0`. Before execution, read `references/makers-cli/SKILL.md` for version/capability checks and release availability; if the required public package is not available yet, stop rather than repeatedly upgrading or falling back to old commands. Writing code or reading these guides alone does not require CLI installation. Standalone usage keeps `agent` interaction; MCP and expert teams are optional, not prerequisites.
+
 When you need EdgeOne Makers platform development guidance, read the matching Skill based on the task:
 
 | Task | Read |

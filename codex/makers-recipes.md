@@ -44,7 +44,7 @@ const res = await fetch('/api/users');
 const users = await res.json();
 ```
 
-> 💾 **Where does the data live?** This platform has **no database**. The API skeletons above return empty data — to actually persist records, uploads, votes, or per-user state, back them with **Blob**. See the recipe below and [makers-storage → Blob as your backend](../makers-storage/references/blob.md).
+> 💾 **Where does the data live?** This platform has **no database**. The API skeletons above return empty data — to actually persist records, uploads, votes, or per-user state, back them with **Blob**. See the recipe below and [makers-storage → Blob as your backend](../skills/edgeone-makers-tools/references/makers-storage/references/blob.md).
 
 ## Dynamic site with Blob persistence (guestbook / gallery / voting / save-state)
 
@@ -96,7 +96,7 @@ await fetch('/api/messages', {                     // post
 const { items } = await fetch('/api/messages').then((r) => r.json());  // list
 ```
 
-Swap the key scheme for other shapes: `users/<uid>.json` for save-state, `counts/<option>.json` (strong consistency) for votes, `uploads/<id>.jpg` + `items/<id>.json` for file uploads. Full patterns: [makers-storage → Blob as your backend](../makers-storage/references/blob.md).
+Swap the key scheme for other shapes: `users/<uid>.json` for save-state, `counts/<option>.json` (strong consistency) for votes, `uploads/<id>.jpg` + `items/<id>.json` for file uploads. Full patterns: [makers-storage → Blob as your backend](../skills/edgeone-makers-tools/references/makers-storage/references/blob.md).
 
 ## Full-stack app — Go (Gin framework)
 
@@ -203,7 +203,7 @@ my-app/
 
 ## Edge API + KV counter
 
-⚠️ **Prerequisites**: You must enable KV Storage in the console and bind a namespace first. See [../makers-storage/references/kv.md](../makers-storage/references/kv.md)
+⚠️ **Prerequisites**: You must enable KV Storage in the console and bind a namespace first. See [../makers-storage/references/kv.md](../skills/edgeone-makers-tools/references/makers-storage/references/kv.md)
 
 ```
 my-app/
