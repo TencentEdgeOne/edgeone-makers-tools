@@ -1,49 +1,39 @@
-# `skillhub` branch
+# WorkBuddy publishing branch
 
-This branch is the **publishing branch** for CodeBuddy plugin marketplace and
-SkillHub. Its **only** difference from `main` is that the root `SKILL.md`
-carries a valid YAML frontmatter combining two sets of fields:
+`fix/workbuddy-flat-skill-layout` is the WorkBuddy publishing branch. All skill development stays on `main`; do not merge this publishing layout back into `main`.
 
-- **SkillHub fields** (`slug`, `displayName`, `version`, `summary`, `license`) —
-  required by SkillHub's CLI (`skillhub publish`).
-- **Claude Code / npx skills fields** (`name`, `description`) — required by
-  `npx skills add` and CodeBuddy plugin marketplace.
+## Package contract
 
-YAML frontmatter is key-value, both sets coexist without conflict — each tool
-reads only the keys it knows.
+The upload ZIP contains exactly one `edgeone-makers-tools/` directory:
 
-## Why a separate branch?
+- `SKILL.md` — latest main router, WorkBuddy market frontmatter, flat reference paths.
+- `references/*.md` — all capability and supporting documents, with no nested directories or additional `SKILL.md` files.
 
-`npx skills add` (vercel-labs/skills CLI, v1.5.x) and CodeBuddy / SkillHub
-disagree on what the root `SKILL.md` should contain:
+WorkBuddy frontmatter requires top-level `name`, `display_name`, `display_name_en`, `description`, `description_zh`, `description_en`, `version`, and `author`. Keep the package version, root entry version, `metadata.version`, and `_meta.json.version` aligned. Current publishing version: `2.3.5`.
 
-| Tool | Root `SKILL.md` requirement |
-|------|----------------------------|
-| `npx skills add` | Must **not** have valid frontmatter, otherwise it shadows `skills/<name>/SKILL.md` and only the root is installed (and from a git remote, sub-directories are not copied). |
-| CodeBuddy / SkillHub | Must have valid frontmatter with `name` field, otherwise upload/install fails with "missing name". |
+Specification: https://open.workbuddy.cn/docs/skill
 
-→ `main` keeps the no-frontmatter root SKILL.md (so `npx skills add` installs
-the 9 sub-skills correctly).
-→ `skillhub` adds frontmatter on top (so CodeBuddy / SkillHub accept it).
+## Synchronize from main
 
-## Maintenance flow
+1. Fetch `origin/main`, switch to this branch, and merge `origin/main`. Preserve branch history; do not force-push or change `main`.
+2. For skill-content conflicts, take the latest **main content**, then reapply the publishing layout. Never keep an older flat document merely to avoid a merge conflict.
+3. Flatten each source document deterministically:
+   - `references/<capability>/SKILL.md` → `references/<capability>.md`.
+   - `references/<capability>/references/<path>.md` → `references/<capability>-<path-with-hyphens>.md`.
+   - Example: `references/makers-agents/references/node-frameworks/claude-sdk.md` → `references/makers-agents-node-frameworks-claude-sdk.md`.
+4. Rewrite document links and plain-text file paths, preserving anchors. Remove obsolete nested files and directories. Update the root router, repository instruction routes, and `_meta.json.files`.
+5. Preserve all main capabilities and their CLI requirements. Bump the WorkBuddy version from the previous publishing version and keep all version fields aligned.
+6. Run `npm run build` to validate the publishing layout/frontmatter and regenerate Cursor/Codex guides. Check local Markdown links, file-manifest parity, and document completeness against main.
 
-1. All development happens on `main` (or feature branches → `main`).
-2. Before publishing to CodeBuddy / SkillHub, sync `main` into `skillhub`:
+## Build the upload ZIP
 
-   ```bash
-   git checkout skillhub
-   git merge main          # or: git rebase main
-   # The only conflict (if any) is on root SKILL.md frontmatter — keep skillhub's frontmatter, take main's body.
-   git push origin skillhub
-   ```
+Run from the repository root:
 
-3. Publish from `skillhub` to CodeBuddy / SkillHub.
+```bash
+npm run build
+(cd skills && zip -r /tmp/edgeone-makers-tools-workbuddy-2.3.5.zip edgeone-makers-tools -x '*/.DS_Store')
+```
 
-## Install commands
+Upload `/tmp/edgeone-makers-tools-workbuddy-2.3.5.zip` in the WorkBuddy open platform. Do not upload a whole-repository archive: plugin manifests, hooks, generated guides, repository metadata, and development scripts are not part of this skill package.
 
-| Target | Command / Source |
-|--------|------------------|
-| `npx skills add` (Claude Code / Cursor / Codex / CodeBuddy CLI …) | `npx skills add TencentEdgeOne/edgeone-makers-tools` — uses `main` |
-| CodeBuddy plugin marketplace | Install `edgeone-makers-tools` — backed by `skillhub` |
-| SkillHub | Upload `skillhub` branch as the source |
+Local validation does not prove server-side acceptance or marketplace publication. Those require uploading the ZIP and completing WorkBuddy review.

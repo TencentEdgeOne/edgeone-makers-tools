@@ -15,16 +15,16 @@ description: >-
   ⚠️ Also trigger when any agent is about to execute `edgeone makers deploy` or `edgeone makers deploy`
   commands — the skill contains critical rules for parsing deploy output and presenting access URLs.
   Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy —
-  use the relevant EdgeOne Makers runtime troubleshooting guidance).
+  use makers-env-adaption / makers-recipes for troubleshooting).
 pathPatterns:
   - "*.sh"
   - .github/workflows/**
 validate:
   - pattern: "whoami[^\\n]*\\s-t\\s"
-    message: "edgeone whoami does not accept -t. Check the exit code instead: 0 = logged in, 1 = not."
+    message: "edgeone whoami does not accept -t. Use safely injected environment credentials and whoami --json: true = authenticated, false = unauthed, null = verification failed; exit 1 alone is not enough."
 metadata:
   author: edgeone
-  version: "2.12.3"
+  version: "2.12.4"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -33,7 +33,7 @@ Deploy any project to **EdgeOne Makers**.
 
 ## ⛔ Critical Rules (never skip)
 
-1. **CLI version ≥ `1.6.0`** — reinstall if lower. Versions below `1.6.0` lack the non-interactive fixes (whoami fail-fast, `--json` output) and hang in Agent/CI environments. Never proceed with an outdated version. **Anonymous deploy and `claim` additionally require `1.6.29`** — that is a higher, feature-specific floor; see **Anonymous Deploy**. Do not block a normal authenticated deploy because the CLI is below `1.6.29`.
+1. **CLI version ≥ `1.7.0` for every CLI execution flow**, including authenticated and anonymous deployment / claim. Upgrade lower versions before commands, and verify the installed binary's capabilities via makers-cli. If the planned public release is not yet available, stop and report that instead of repeatedly installing or using old-version login/token fallbacks. Writing code alone does not require CLI installation.
 2. **Never truncate the deploy URL — this applies to EVERY mention** — `EDGEONE_DEPLOY_URL` includes query parameters (`?eo_token=...&eo_time=...`) required for access. Without them the page returns 401. Always output the **complete** URL with full query string. This rule applies to: the primary display, summary tables, footnotes, comparisons, code blocks, `present_files` calls — **every single occurrence** of the URL in your reply. Truncation is any removal of the `?` and everything after it.
 
    ❌ WRONG (truncated — will 401):
@@ -48,7 +48,7 @@ Deploy any project to **EdgeOne Makers**.
 
    **Self-check after writing your reply**: scan for every instance of the `.edgeone.cool` domain. Does each one include `?eo_token=`? If any doesn't, fix it NOW — the user will get a 401.
 3a. **Prefer `--json` when running non-interactively** — in Agent/CI/headless contexts, always pass `--json` to `deploy` so the result is a single machine-readable line; no need to scrape colored/`\r`-animated stdout. See **Parse Deploy Output**.
-3b. **Use `edgeone whoami` to check login status** — on CLI ≥ 1.6.0, `whoami` fails fast (exit 1) when not logged in instead of hanging. If it exits 0, the user is already logged in and `-t` is not needed. **Do NOT** check `cat .edgeone/.token` — CLI stores credentials in `~/.edgeone/<hash>` files, not a fixed `.token` path.
+3b. **Use the shared authentication flow** in [makers-cli](makers-cli.md). After verifying CLI ≥ 1.7.0 and JSON capability, check `whoami --json`: true = authenticated, false = explicitly unauthed, null = verification failed. Missing JSON capability means checking the actual package/path, not falling back to an older CLI; exit 1 alone does not prove missing login. Do not inspect private credential caches or write a separate token file. Login, workspace switching, account switching and changing the directory target are different actions.
 4. **The deploy URL MUST be placed at the very top of the visible reply body (own line, code block, or heading — not inline, not mid-reply), AND ALSO pinned via `present_files` (or the IDE's preview tool) to the side panel.** Two UI failures to survive: thinking / reasoning / "深度思考" blocks hide content by default; long replies get auto-folded by IDE chat cards, burying anything placed mid-reply. `present_files` is unaffected by chat folding — that's the second, always-visible channel. Complete URL, no truncation (Rule 2). Example format:
    ```
    🌐 Live URL: https://my-project-abc123.edgeone.cool?<auth_query_params>
@@ -56,11 +56,11 @@ Deploy any project to **EdgeOne Makers**.
    Then append any other notes (console URL, caveats, etc.).
 
    **Self-check before ending the turn (MANDATORY)** — read back what the user will actually SEE (NOT your thinking / reasoning content). Two questions: (a) Is the complete `.edgeone.cool` URL present at the top of the visible reply, in a code block or heading? (b) Was `present_files` called with that URL? If either answer is no, send an **additional short message** containing ONLY the `🌐 Live URL: <full URL>` block and call `present_files`. Do not end the turn until both channels carry the URL. "I already mentioned it in my reasoning" is NOT a substitute for placing it in the visible body.
-5. **Ask the user to choose China or Global site** before browser login. Never assume. (Token login via `edgeone login --token` auto-detects site, no need to ask.)
-6. **Prefer Browser Login; fall back to Token only after browser login is confirmed to fail** (see Login section for the ~60s fallback threshold and the Agent-in-IDE clarification — WorkBuddy is NOT headless). Token-first only when the user explicitly requests it.
-7. **After token login, ask if the user wants to save the token locally** for future use.
-8. **Before triggering any browser popup (login / registration), explain the reason and the benefits to the user first** — never silently launch a browser window.
-9. **On any CLI failure, surface the actual error text to the user before retrying, switching commands, or proposing a workaround.** Do NOT paraphrase (e.g. don't rewrite `Makers project exceeds 40 limit` into "maybe a name conflict or permission"). Do NOT silently pivot from `makers dev` to `makers deploy` (or vice versa) hoping to bypass — a systemic failure (auth / quota / permission) hits both with the same cause. Quote the raw error, name the root cause, then propose the fix or ask the user.
+5. **Standalone uses agent interaction, not auto.** Complete browser authentication and the user's workspace choice using the shared CLI flow; only pin `--site` when the user specified it. Do not guess a workspace from plan/name/order.
+6. **Keep independent usage supported.** MCP is an optional equivalent path, not a required dependency. Desktop browser login is available where the host supports it; browserless CI keeps using securely provisioned environment credentials. Never force an expert team or a browser in unattended CI.
+7. **Credentials remain CLI-managed.** Do not extract cached tokens or offer a new token file. Persistent local login is an explicit user choice, not an automatic fallback for switching failure.
+8. **Before a browser popup, briefly ask the user to complete login.** Waiting output or elapsed time alone does not prove failure; retain the callback listener and original pending result. Do not start another authentication just because a tool call returned choices.
+9. **On failure, preserve its concrete cause and stop unsafe retries.** Use structured errorCode/message, summarize safely in the user's language, and do not print raw headers or credential paths. Do not guess hidden prompts, switch dev/deploy to bypass errors, or replay possibly consumed authentication after an approval-triggered re-run; follow the shared retry boundary.
 10. **Write every user-facing message in the user's own language** — **all** prose, blockquotes, and prompts in this skill are written in English purely to specify *meaning*; none of it is a string to paste. If the user writes to you in Chinese, speak Chinese — the login explanation, the site choice, the token question, the deploy result, all of it. Likewise for any other language. Emitting this skill's English strings into a non-English conversation is a bug. Only literal CLI commands, flags, env var names, and JSON field names stay verbatim. ⚠️ Where this skill gives a **fixed template** (Steps 2 and 4 of Anonymous Deploy), translating it is required but rewriting or extending it is not allowed — match it line for line.
 
 **Rules 11-14 apply to the anonymous deploy / claim flow only:**
@@ -98,13 +98,14 @@ Run these checks first, then follow the decision table. **Run them silently** �
 # Check 0: Set environment variable (required before any edgeone command)
 export PAGES_SOURCE=skills
 
-# Check 1: CLI installed and correct version? (must be >= 1.6.0; anonymous deploy needs >= 1.6.29)
+# Check 1: Require CLI >= 1.7.0 before further operations
 edgeone -v
+# Stop if the required public release is unavailable; do not use an older CLI
 
-# Check 2: Already logged in? (whoami fails fast, won't hang)
-edgeone whoami
-# If exit 0 → logged in, no -t needed
-# If exit 1 → not logged in, need token or browser login
+# Check 2: Verify JSON status capability and actual credentials
+edgeone whoami --json
+# true = authenticated; false = unauthed; null = could not verify
+# An exit 1 alone must not trigger another login
 
 # NOTE: This auth gate is for `deploy` (account-bound upload to your EdgeOne
 # account). For `edgeone makers dev` (local preview), login is ONLY required
@@ -113,20 +114,20 @@ edgeone whoami
 # requires login, so login before linking/starting dev. See makers-storage /
 # makers-env-adaption for the dev auth rule and the link chain.
 
-# Check 3: Project already linked?
-cat edgeone.json 2>/dev/null
+# Check 3: Read only the project association, not credential files
+cat .edgeone/project.json 2>/dev/null
 ```
 
 ### Decision Table
 
 | CLI version | Login status | Action |
 |-------------|-------------|--------|
-| Not installed or < 1.6.0 | — | → Go to **Install CLI** |
-| `≥ 1.6.0` ✓ | Logged in (or token present) | → Go to **Deploy** |
-| `≥ 1.6.0` ✓ | Not logged in, has saved token | → Go to **Deploy with Token** (use saved token) |
-| `≥ 1.6.29` ✓ | Not logged in, no saved token | → Go to **Anonymous Deploy** — default to anonymous only when the task is anonymous-native (scheduled / disposable / user asked for it); otherwise ask the user to choose anonymous deploy or login. If there is no way to ask, deploy with `--anonymous --json` and surface the claim link and the 60-minute window in the result (see Step 2) |
-| `1.6.0`–`1.6.28` | Not logged in, no saved token | Anonymous deploy is unavailable on this version → **Try Browser Login first** (see Login section). If the browser doesn't open or nothing happens within ~60 seconds, fall back to **Token Login**. Do NOT preemptively skip browser login by guessing "this looks like an Agent/CI environment" — that guess is often wrong; in particular, **WorkBuddy is a desktop IDE sandbox and fully supports browser login** |
-| `≥ 1.6.0` ✓ | User explicitly provides a token or requests token login | → Go to **Deploy with Token** / **Token Login** |
+| Not installed or < 1.7.0 | — | → **Install CLI**; if the required public package is unavailable, stop instead of continuing with an older version |
+| `≥ 1.7.0` ✓ | Authenticated, owning project/target confirmed | → **Deploy**; keep existing directory association |
+| `≥ 1.7.0` with verified capabilities | Pending selection or business confirmation | → Shared CLI flow: ask by names, continue original result or confirm via workspace use; no deploy yet |
+| `≥ 1.7.0` | Identity verification error/unknown | Stop and explain the safe cause; do not automatically relogin or switch |
+| `≥ 1.7.0` ✓ | Explicitly unauthed, no environment credentials | → **Anonymous Deploy** only when that task fits or the user chooses it; otherwise agent browser login. Do not use login-free deployment to bypass an existing project's auth/target error |
+| `≥ 1.7.0` ✓ | Securely provided environment credentials | Verify effective identity/target; use the same deployment flow without creating a token cache |
 
 ---
 
@@ -136,117 +137,22 @@ cat edgeone.json 2>/dev/null
 npm install -g edgeone@latest
 ```
 
-Verify: `edgeone -v` — confirm output is `1.6.0` or higher. Retry installation if not. (Versions < 1.6.0 hang on `whoami`/login in non-interactive environments and lack `--json`.) Anonymous deploy and `claim` need `1.6.29`; if `latest` is still below that, those two features are simply unavailable — normal authenticated deploy works fine.
+Verify `edgeone -v` is `1.7.0` or higher, then check the actual command capabilities via makers-cli. If `@latest` resolves below the baseline or the planned release is not published yet, report the unavailable release and stop; do not repeatedly install or continue via a lower-version authenticated/token path. Prepare these changes on a feature branch, and publish the Skill only after public CLI `1.7.0` is available and verified.
 
 ---
 
 ## Login
 
-### 0. Explain the registration/login step
+Use [makers-cli](makers-cli.md) as the single login/workspace instruction source. It applies to independent Skill users without an expert team or MCP. Do not repeat an older site-only login procedure here.
 
-Before triggering any login flow, explain to the user **why** this step is needed and **what** to expect. Do not silently launch a browser window.
+1. Check effective identity without printing private files. If explicitly unauthed and a browser is available, say “请打开链接完成登录。” and run the agent login flow in the project directory. A site flag is optional on the unified page unless the user chose a site.
+2. On `selection_required`, show available workspace names neutrally. Continue with the original returned parameters; waiting or exit 0 is not completion. If the account is already authenticated and the user wants another workspace, use `workspace use`, not another `login`. `switch` changes accounts, not workspaces.
+3. When switching needs an uncached credential, let the supported workspace command drive target-specific browser authentication. Existing cached credentials may avoid it; never promise all spaces switch without login. Keep the pending listener alive and do not combine login, polling and resume into one automatically replayed shell script.
+4. If a host approval re-runs an already partially executed command, inspect identity before another attempt. Follow the shared one-use-result recovery rules; do not disable file policy, replay consumed results, or imply that using a single shell fixes the CLI's persistence failure.
+5. In browserless CI or explicit token use, accept credentials through the host's secure environment mechanism with the matching region, not chat echo or a command string. `whoami` has no `-t` option, but safely injected environment credentials can be verified before business operations. A token is scoped to its actual workspace, not interchangeable across targets.
+6. Leave credential persistence to CLI. Do not read private caches, create `.edgeone/.token`, or automatically add `--local`; explicit local persistence can keep an old credential active after a global switch. Obtain consent to change the source when this happens, not to blindly delete it.
 
-Tell the user:
-
-> You need to log in or register an EdgeOne Makers account. Here's what to expect:
-> - **Why login is required**: Deployment uploads your build output to your own account, generating a unique access URL and project record.
-> - **What you get for free**: EdgeOne Makers offers a free tier with global CDN acceleration, automatic HTTPS, and custom domain binding — typically more than enough for personal projects.
-> - **What happens next**: I'll run `edgeone login`, and your default browser will open the Tencent Cloud login page. Please complete the login/registration and authorize access, then come back here.
-> - **If you get stuck**: If the browser doesn't open, or the CLI keeps waiting after you've logged in, let me know — I'll switch to Token login instead.
-
-If the user does not respond within ~60 seconds (no browser popup or no progress reported), **proactively ask** about their status (whether the browser opened, any errors, or if they want to switch to Token login). Do not wait indefinitely.
-
-### 1. Ask the user to choose a site, then ALWAYS pass `--site`
-
-Use the IDE's selection control (`ask_followup_question`) before running any login command:
-
-> Choose your EdgeOne Makers site:
-> - **China** — For users in mainland China (console.cloud.tencent.com)
-> - **Global** — For users outside China (console.intl.cloud.tencent.com)
-
-⚠️ **CRITICAL**: After the user chooses, you MUST invoke login with an explicit
-`--site <china|global>` flag (e.g. `edgeone login --site china`).
-**NEVER run a bare `edgeone login` (without `--site`) when driven by an Agent / skill.**
-A bare `login` in a non-interactive context fails fast asking for
-`--site` (it no longer pops an interactive site-picker that would hang). The site choice
-is meant to happen here in the conversation, not inside the CLI.
-
-### 2. Login methods reference
-
-Two login methods are available. **Per Rule 6, always try Browser Login first**; the table below is a reference for when each method applies, not a decision procedure — do not use it to guess the environment.
-
-| Method | When it applies |
-|--------|-----------------|
-| **Browser Login** | Default. Works in all local desktop IDEs (VS Code, Cursor, WorkBuddy) — the IDE bridges the OS browser + OAuth callback into the sandbox. |
-| **Token Login** | Fallback after Browser Login is confirmed to fail (no browser popup / no progress within ~60s), OR when the user explicitly provides a token or requests token login. Also the only option in truly detached environments (SSH-only, CI runners, browserless containers). |
-
-#### Browser Login
-
-```bash
-# China site
-edgeone login --site china
-
-# Global site
-edgeone login --site global
-```
-
-Wait for the user to complete browser auth. The CLI prints a success message when done.
-
-⚠️ **Browser Session Reuse Trap**: If the user previously logged into a **different site** (e.g., logged into Global site before, now trying China site, or vice versa), the browser may **silently reuse the old Tencent Cloud session**. The CLI will appear to succeed, but actually binds to the wrong account — subsequent `deploy` will fail with auth errors or `whoami` shows an unexpected account.
-
-If this happens, guide the user to:
-1. Click "**Sign in with a different account**" on the login page; or
-2. Log out from **all Tencent Cloud consoles** (both `console.cloud.tencent.com` and `console.intl.cloud.tencent.com`) first, then re-run `edgeone login`.
-
-#### Token Login
-
-Two methods available:
-
-**Method A: `edgeone login --token` (persistent, recommended)**
-
-```bash
-edgeone login --token <token>
-```
-
-Auto-detects china/global from the token — no `--site` flag needed. Persists login state for subsequent commands.
-
-> 💡 **Reuse the token from a prior browser login — no console trip needed.** `edgeone login --site <x>` (browser) auto-generates an API Token and writes it to `~/.edgeone/<hash>` (JSON with `value.Token`). You can reuse that `Token` value directly as `EDGEONE_PAGES_API_TOKEN="<Token>"` or `-t <Token>` for `makers dev`/`deploy` in headless/agent contexts, instead of creating a new token in the console.
-
-**Method B: Pass `-t` directly in deploy (per-invocation)**
-
-Token is used for that single deploy only; no persistent login state is saved.
-
-```bash
-edgeone makers deploy -t <token>
-```
-
-⚠️ **Important**: `edgeone whoami` does NOT support a `-t` flag. Do NOT attempt to verify a token with `whoami -t <token>`. When the user provides a token, skip login checks entirely and go straight to deploy.
-
-Guide the user to obtain a token:
-1. Go to the console:
-   - **China**: https://console.cloud.tencent.com/edgeone/pages?tab=settings
-   - **Global**: https://console.intl.cloud.tencent.com/edgeone/pages?tab=settings
-2. Find **API Token** → **Create Token** → Copy it
-
-⚠️ Remind the user: the token has account-level permissions. Never commit it to a repository.
-
-### 3. Offer to save the token locally
-
-After the user provides a token, ask:
-
-> Save this token locally for future deployments?
-> - **Yes** — Save to `.edgeone/.token` (auto-used next time)
-> - **No** — Use for this deployment only
-
-**If Yes:**
-
-```bash
-mkdir -p .edgeone
-echo "<token>" > .edgeone/.token
-grep -q '.edgeone/.token' .gitignore 2>/dev/null || echo '.edgeone/.token' >> .gitignore
-```
-
-Confirm to the user: "✅ Token saved to `.edgeone/.token` and added to `.gitignore`."
+Authentication failure, unknown identity and unconfirmed business target are different states. Briefly tell the customer the action needed, keep internal IDs and commands out of normal conversation, and continue the original authorized task after verification without another “continue” prompt.
 
 ---
 
@@ -255,37 +161,18 @@ Confirm to the user: "✅ Token saved to `.edgeone/.token` and added to `.gitign
 ### Browser-authenticated deploy (Makers projects)
 
 ```bash
-# Project already linked (edgeone.json exists)
-edgeone makers deploy
+# Verified directory association exists in .edgeone/project.json
+edgeone makers deploy --json
 
-# New project (no edgeone.json)
-edgeone makers deploy -n <project-name>
+# Unbound project, after confirming its name and target workspace
+edgeone makers deploy -n <project-name> --json
 ```
 
-`<project-name>`: auto-generate from the project directory name. The first deploy creates `edgeone.json` automatically.
+Confirm the meaningful name and workspace before creating a new project. `.edgeone/project.json` records the resulting association; `edgeone.json` only configures the application. Existing projects omit replacement names. Global selection changes alone never move the directory target. For an explicitly requested change, follow the shared safe link flow and verify the new association before deployment.
 
 ### Token-based deploy (Makers projects)
 
-First check for a saved token:
-
-```bash
-cat .edgeone/.token 2>/dev/null
-```
-
-- Saved token found → use it, tell the user: "Using saved token from `.edgeone/.token`"
-- No saved token → ask the user to provide one (see Token Login above)
-
-```bash
-# Project already linked
-edgeone makers deploy -t <token>
-
-# New project
-edgeone makers deploy -n <project-name> -t <token>
-```
-
-The token already contains site info — no `--site` flag needed.
-
-After a successful deploy with a manually-entered token, ask if the user wants to save it (see "Offer to save the token locally" above).
+Use the same commands as browser-authenticated deployment with securely injected `EDGEONE_PAGES_API_TOKEN` and matching `EDGEONE_PAGES_API_REGION`. Verify the effective target; token presence alone is not authorization to choose a workspace or replace a directory association. CLI may reuse valid stored credentials internally, but the Skill must not extract those values or persist an extra token file. This remains supported for independent Skill / CI users without MCP or browser interaction.
 
 ### Deploy to preview environment
 
@@ -299,8 +186,10 @@ When running inside an Agent, CI, or any non-TTY context, **add `--json`** so th
 result is emitted as a single machine-readable line — no scraping of colored stdout:
 
 ```bash
+# Existing confirmed target
+edgeone makers deploy --json
+# New project only after name/workspace confirmation
 edgeone makers deploy -n <project-name> --json
-edgeone makers deploy -n <project-name> -t <token> --json
 ```
 
 ### Makers Agent Projects deploy
@@ -308,21 +197,22 @@ edgeone makers deploy -n <project-name> -t <token> --json
 For projects with `agents/` directory (AI Agent projects), use `edgeone makers deploy` which auto-runs build:
 
 ```bash
-edgeone makers deploy -n <name> -t <token> --json
-edgeone makers deploy -n <name> -t <token> --json -e preview
+# Linked Agent project; credentials remain CLI-managed or securely injected
+edgeone makers deploy --json
+edgeone makers deploy --json -e preview
 ```
 
 Note: `edgeone makers deploy` automatically runs build before deploying — no separate `edgeone makers build` step needed.
 
 ### Build behavior
 
-The CLI auto-detects the framework, runs the build, and uploads the output directory. No manual config needed.
+The CLI runs the configured build and uploads its output. When a framework needs a platform adapter or a non-default output directory, follow makers-frameworks first; local preview success does not prove the deployment contract is satisfied.
 
 ---
 
 ## Anonymous Deploy (no login required)
 
-When the user is not logged in and has no token, they can deploy anonymously and claim the project later. Requires CLI `>= 1.6.29`. On `1.6.0`–`1.6.28` this feature does not exist — use **Login** or a token instead.
+When explicitly unauthed and using no account credential, the user can choose login-free deployment and later claim the project. This Skill requires CLI `>= 1.7.0` for that flow too. If the baseline package is not available, stop; do not replace it with an older CLI, token flow or a different target.
 
 ### Step 1: Exclusion check — run this FIRST
 
@@ -454,9 +344,9 @@ The background `login --claim` process exits on its own when the console relays 
 
 Tell the user plainly, in their language: the project is now in their account, and any further deploys will update that same project. Then use the normal deploy flow (`edgeone makers deploy --json`) for all later deploys.
 
-If the process exits non-zero (the user never completed the link within 60 minutes), the anonymous project is still unclaimed: re-run `edgeone login --claim --local --json` for a fresh link and present it again in the same template.
+A non-zero listener exit does not prove the project is unclaimed: a remote claim may have completed before local persistence failed. Check effective identity, current directory association and the confirmed project's remote ownership through supported CLI/tools without extracting tokens. Do not relaunch login, redeploy or replay a possibly consumed result while status is uncertain. Only after confirming that the original claim did not complete and the user still wants it should a fresh listener/link be created.
 
-If the user asks you to "帮我认领" / "claim it for me": point them to the same link again while the listener is still running; if it already exited, re-run the command for a fresh link. Never print the CLI claim command — `edgeone makers claim --sid` remains only for headless/CI environments with no browser (see critical rule 13).
+If the user asks you to "帮我认领" / "claim it for me": share the same link while the listener is active. If it ended, verify original status first as above; do not assume expiry means no remote completion. Never print the CLI claim command — `makers claim` remains a supported headless/CI route, not a desktop user's terminal instruction.
 
 For the full JSON schema, rate limits, error codes, state-file fields, and site-resolution rules, see [makers-deploy-anonymous-deploy.md](makers-deploy-anonymous-deploy.md).
 
@@ -524,20 +414,24 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 | Error | Solution |
 |-------|----------|
 | `command not found: edgeone` | Run `npm install -g edgeone@latest` |
-| CLI version < 1.6.0 | Reinstall: `npm install -g edgeone@latest`. Older versions hang on whoami/login in non-interactive contexts |
-| `--anonymous` / `claim` reported as an unknown option | The installed CLI is below `1.6.29`. Run `npm install -g edgeone@latest`; if that is still below `1.6.29`, anonymous deploy is not released yet — use login or a token instead |
-| Browser does not open during login | Switch to token login |
-| "not authenticated" / exit 1 from `whoami` | Expected when not logged in — whoami fails fast instead of hanging. Offer anonymous deploy (see Anonymous Deploy), run `edgeone login`, or provide a token |
-| Non-interactive deploy says "browser login is unavailable" + exits 1 | Expected fail-fast in Agent/CI/headless with no token. Provide a token via `-t <token>` or set `EDGEONE_PAGES_API_TOKEN` |
+| CLI version < 1.7.0 | Upgrade with `npm install -g edgeone@latest` and verify. If the required release is not available yet, report it and stop rather than repeatedly installing or continuing with old commands |
+| Required workspace/JSON/link/anonymous flags missing | Verify the actual binary path and installed package version; this Skill requires CLI ≥ 1.7.0 with those capabilities. An unavailable public release is not solved by repeated installs, legacy flags or token fallbacks |
+| Browser does not open during login | Display the original waiting link and verify whether CLI or host owns browser opening; do not start a second login solely on elapsed time |
+| Explicit authenticated=false / legacy text "not authenticated" | Complete supported agent login; exit 1 alone is not proof of missing credentials |
+| authenticated=null / service or local-file error | Report safe cause and retry only the failed verification when appropriate; do not relogin automatically |
+| Non-interactive deploy says "browser login is unavailable" | Desktop Skill: targeted workspace use with agent interaction, complete authentication and retry the original task. Browserless CI: safely injected credentials; do not silently switch project targets |
 | Deploy seems to hang at `[DeployStatus] Deploying...` | Non-TTY emits heartbeat lines; it is NOT stuck. If a wrapper still mis-detects, use `--json` or run in background and poll. Do not kill it |
 | Auth error with token | Token may be expired — regenerate at the console |
-| Login appears successful but `deploy` reports auth error | Browser reused a session from the wrong site, binding the wrong account. Click "Sign in with a different account" on the login page, or log out from all Tencent Cloud consoles first |
-| `edgeone whoami` shows an unexpected account | Browser session reuse. Click "Sign in with a different account" or log out from all consoles and re-login |
-| `Failed to create pages project` (dev) / `Makers project exceeds 40 limit` (deploy) | Account hit the **40-project cap**. Both dev and deploy fail the same way. Present ONLY these two options to the user, verbatim — no "recommended" tag on either, no third option (do NOT suggest CloudStudio or any other platform, do NOT invent alternatives): ① user deletes an unused project in the EdgeOne Makers console; ② user names an existing linked project via `-n <existing-project-name>`. Agent MUST NOT delete projects itself (CLI has no delete command by design — do not route around via HTTP APIs or cached credentials). |
-| Project name conflict | Use a different name with `-n` |
+| Login appears successful but deployment/identity has a different target | Verify same-directory effective identity, explicit credential sources and original project binding. Pending selection is not completed login; do not guess browser session reuse or delete auth files |
+| `edgeone whoami` shows an unexpected account | Ask the user to confirm the intended account and credential source; use account switch only when authorized, not as workspace switching |
+| Explicit project quota exceeded | Stop creating. Ask the user to manage unused projects themselves or confirm an existing project in the intended workspace; verify and link that target first. Do not delete projects or pass another name to bypass a bound directory. A generic creation error alone does not prove quota exhaustion |
+| PROJECT_ALREADY_EXISTS | Creation was refused; verify the existing project's ownership, then ask whether to link it or confirm another name. Never switch modes automatically |
+| PROJECT_NOT_FOUND | Confirm the target name/workspace; linking an existing project does not authorize creation |
+| PROJECT_LOOKUP_FAILED | Query failed, not proof of absence; do not create a replacement |
+| LINK_CANCELLED | Respect cancellation and stop; generic legacy errors are not evidence of user cancellation |
 | Build failure | Check logs — usually missing deps or bad build script |
-| `whoami` says "not authenticated" but `edgeone login` just succeeded | Expected in agent/headless: `whoami` and `makers dev`/`deploy` read API-Token auth, not the browser session. Reuse the auto-generated token from `~/.edgeone/<hash>` (`value.Token`) as `EDGEONE_PAGES_API_TOKEN` / `-t`. See Token Login note above. |
-| `makers dev` hangs on an interactive "Link existing / Create and link" menu | Dev was started without `-n` and fell into the interactive picker. Kill it, then restart with `edgeone makers dev -n <project-name> --skip-env-sync` — dev auto-creates the project if missing and links it internally. Always pass `-n` to dev whenever the project uses Blob/KV. |
+| Login returned choices / already_logged_in, but target not verified | Follow the shared distinction: complete original pending login, or workspace use for an authenticated account. Never extract a token from cache or repeatedly replay a consumed result |
+| `makers dev` requires linking or asks to create | Stop the blocked preview, confirm target and creation policy, explicitly link first, then restart dev preserving env. Do not use a name as permission to create or change an existing directory target |
 | `curl` to the deploy URL returns 302 → DingTalk SSO login | Preview gateway requires browser-based `eo_token` validation (JS), which `curl` can't do. Open the full `?eo_token=...&eo_time=...` URL in a real browser — it validates the token and bypasses SSO. Not a code bug. |
 
 ---

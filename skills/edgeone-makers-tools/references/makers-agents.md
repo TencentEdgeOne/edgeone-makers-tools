@@ -11,8 +11,8 @@ description: >-
   agent endpoint", "wire LangGraph into Makers", "stream LLM responses with SSE",
   "review my agent template", "use context.store / context.sandbox / context.tools".
   Do NOT trigger for plain Edge Functions, Cloud Functions, or middleware
-  (those don't run AI logic — use the matching EdgeOne Makers capability instead).
-  Do NOT trigger for deployment workflows (use the deployment capability).
+  (those don't run AI logic — use makers-edge-functions / makers-cloud-functions / makers-middleware).
+  Do NOT trigger for deployment workflows (use makers-deploy).
   Do NOT trigger for generic AI framework development outside
   an EdgeOne Makers project.
 pathPatterns:
@@ -26,7 +26,7 @@ validate:
     message: "Never write `store?.langgraphStore ?? store` — in cloud-function context it falls back to a store with no .get and crashes (Critical Rule 12)."
 metadata:
   author: edgeone
-  version: "1.0.0"
+  version: "1.1.1"
 ---
 
 # EdgeOne Makers Agent Development Guide
@@ -50,8 +50,8 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 > Cross-reference: if your code uses `context.store` or KV APIs, also read `makers-storage.md`.
 
 **Do NOT use for:**
-- Plain Edge Functions / Cloud Functions / Middleware → use the matching capability
-- Deployment workflows → use the deployment capability
+- Plain Edge Functions / Cloud Functions / Middleware → `makers-edge-functions` / `makers-cloud-functions` / `makers-middleware`
+- Deployment workflows → `makers-deploy`
 - Generic AI framework development outside an EdgeOne Makers project
 - Other platforms (Cloudflare Workers AI, Vercel AI SDK, AWS Bedrock)
 
@@ -59,7 +59,7 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 
 1. Skim the **Mental Model** below — Makers ≠ generic API routes
 2. Walk the **Decision Tree** to pick one of the five framework routes
-3. Read the matching framework reference file for a copy-paste skeleton
+3. Read the matching `references/*-route.md` for a copy-paste skeleton
 4. Self-check against the **Twelve Red Lines**
 5. Run through `makers-agents-review-checklist.md` before considering the work done
 
@@ -380,7 +380,15 @@ edgeone makers env pull
    edgeone makers env ls
    ```
 
-5. **Deploy**:
+5. **Check that every peer dependency is declared in `package.json`**:
+   ```bash
+   npm ls --depth=0 2>&1 | grep -i "peer dep"
+   ```
+   The deployed runtime resolves auto-externalized packages (`deepagents`, `@anthropic-ai/claude-agent-sdk`, every `@langchain/*`) from what `package.json` **declares**. npm 7+ installs peers automatically without declaring them, so a package that is missing here still resolves locally and in preview, and is simply absent in production — `import` fails at module load and every route on that endpoint hangs until the gateway returns an HTML 500.
+
+   This is not the same failure as a missing API key, and the difference is diagnostic: a missing key fails only after input validation passes, so a request with a deliberately invalid body still gets its fast `400`. A module that failed to load answers nothing at all, on every route, including that one.
+
+6. **Deploy**:
    ```bash
    edgeone makers deploy
    ```

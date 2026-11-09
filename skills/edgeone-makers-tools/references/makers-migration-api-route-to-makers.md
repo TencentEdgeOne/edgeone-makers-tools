@@ -16,8 +16,8 @@ EdgeOne Makers supports running an agent **without any agent framework**: you ju
 Next.js / Flask / FastAPI) into that form.
 
 For framework-specific migrations, see the sibling files:
-`langgraph-to-makers.md`, `deepagents-to-makers.md`, `openai-agents-to-makers.md`,
-`claude-agent-sdk-to-makers.md`, `crewai-to-makers.md`.
+`makers-migration-langgraph-to-makers.md`, `makers-migration-deepagents-to-makers.md`, `makers-migration-openai-agents-to-makers.md`,
+`makers-migration-claude-agent-sdk-to-makers.md`, `makers-migration-crewai-to-makers.md`.
 
 ---
 

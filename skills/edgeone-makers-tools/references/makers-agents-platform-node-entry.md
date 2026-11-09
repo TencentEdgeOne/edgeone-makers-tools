@@ -65,7 +65,7 @@ This file appears after a build; routes are derived by the CLI scanning the `age
 | `context.conversation_id` | string | Automatically injected from the HTTP header `makers-conversation-id` |
 | `context.run_id` | string | The current run ID (note: it is `run_id`, not `runId` in camelCase) |
 | `context.utils.abortActiveRun(conversationId)` | function | **Injected by the agent runtime only** — cloud-function does not have it |
-| `context.agent` | object | **Injected only in cloud-function**, contains `{ conversation_id, store }`. ⚠️ The shape of `store` is **not the same as** `context.store` — the runtime strips out `langgraphCheckpointer` and `langgraphStore` inside `createCloudFunctionAgentStore`, leaving only the generic message API plus `openaiSession` / `claudeSessionStore`. See [store.md](makers-agents-capabilities-store.md) |
+| `context.agent` | object | **Injected only in cloud-function**, contains `{ conversation_id, store }`. ⚠️ The shape of `store` is **not the same as** `context.store` — the runtime strips out `langgraphCheckpointer` and `langgraphStore` inside `createCloudFunctionAgentStore`, leaving only the generic message API plus `openaiSession` / `claudeSessionStore`. See [makers-agents-capabilities-store.md](makers-agents-capabilities-store.md) |
 
 ### Skeleton
 ```typescript

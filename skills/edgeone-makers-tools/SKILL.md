@@ -1,18 +1,18 @@
 ---
 slug: edgeone-makers-tools
 name: edgeone-makers-tools
-version: "2.3.4"
+displayName: EdgeOne Makers
 display_name: EdgeOne Makers
 display_name_en: EdgeOne Makers
 description_zh: >-
-  EdgeOne Makers 平台开发技能包，覆盖 AI Agent、云函数、边缘函数、KV 与 Blob 存储、
-  中间件、项目脚手架、环境适配和部署流程，帮助 AI 编程助手在 EdgeOne Makers
-  上构建、调试和发布应用。
+  EdgeOne Makers 平台开发技能包，覆盖 Web 框架、AI Agent、云函数、边缘函数、
+  KV 与 Blob 存储、中间件、项目迁移、脚手架、环境适配和部署流程。
 description_en: >-
-  EdgeOne Makers platform development skills covering AI agents, Cloud Functions,
-  Edge Functions, KV and Blob storage, middleware, project scaffolding, environment
-  adaptation, and deployment workflows.
-displayName: EdgeOne Makers
+  EdgeOne Makers platform development skills for web frameworks, AI agents,
+  Cloud Functions, Edge Functions, KV and Blob storage, middleware, migration,
+  scaffolding, environment adaptation, and deployment.
+version: "2.3.5"
+author: edgeone
 license: MIT
 description: >-
   EdgeOne Makers platform development router — the single entry point for building,
@@ -26,20 +26,23 @@ description: >-
   read only the sub-skill relevant to the current task, never all of them at once.
 metadata:
   author: edgeone
-  version: "2.3.4"
+  version: "2.3.5"
 ---
 
 # EdgeOne Makers Skills
+
+Executing any EdgeOne CLI command in this Skill requires CLI `>= 1.7.0`. Before execution, read `references/makers-cli.md` for version/capability checks and release availability; if the required public package is not available yet, stop rather than repeatedly upgrading or falling back to old commands. Writing code or reading these guides alone does not require CLI installation. Standalone usage keeps `agent` interaction; MCP and expert teams are optional, not prerequisites.
 
 When you need EdgeOne Makers platform development guidance, read the matching Skill based on the task:
 
 | Task | Read |
 |------|------|
+| Web framework support — which adapter, build output, 404, and unsupported features (Next.js, Nuxt, Astro, SvelteKit, React Router, TanStack Start, Vike, Vite, Hugo) | references/makers-frameworks.md |
 | AI Agent development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI) | references/makers-agents.md |
+| Migrate an existing agent project to EdgeOne Makers | references/makers-migration.md |
 | Deploy project to EdgeOne | references/makers-deploy.md |
 | Edge Functions (V8 lightweight functions) | references/makers-edge-functions.md |
 | Cloud Functions (Node.js / Go / Python APIs) | references/makers-cloud-functions.md |
-| Migrate existing agent project to EdgeOne Makers format | references/makers-migration.md |
 | KV + Blob Storage | references/makers-storage.md |
 | Persist dynamic data for a site (messages, uploads, votes, save-state) — **no database; use Blob** | references/makers-storage.md |
 | Middleware (auth, rewrites, routing) | references/makers-middleware.md |
@@ -48,3 +51,7 @@ When you need EdgeOne Makers platform development guidance, read the matching Sk
 | Environment adaptation (WorkBuddy / sandbox / CI) | references/makers-env-adaption.md |
 
 ⚠️ Only read the Skill relevant to the current task. Do not load all skills at once.
+
+A full-stack framework that needs a platform adapter previews correctly and deploys
+broken without one, and no gate catches it — so when a request names a framework, read
+`makers-frameworks` before writing the config.

@@ -458,7 +458,7 @@ After migration, verify these items before deploying:
 ## See Also
 
 - Agent development guide: [makers-agents.md](makers-agents.md)
-- Platform conventions: [makers-agents-platform-node-entry.md](makers-agents-platform-node-entry.md)
+- Platform conventions: [makers-agents/references/platform/](../makers-agents/references/platform/)
 - CLI commands: [makers-cli.md](makers-cli.md)
 - Deploy guide: [makers-deploy.md](makers-deploy.md)
 

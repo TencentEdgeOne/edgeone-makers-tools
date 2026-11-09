@@ -1,6 +1,14 @@
 # SSE Streaming Protocol Convention
 
-> Covers: unified event types, heartbeat, response headers, reusable `createSSEResponse` helper.
+## Contents
+
+- [Principle](#principle)
+- [Unified Event Type Table](#unified-event-type-table)
+- [Reusable SSE Helper](#reusable-sse-helper-place-in-agents_sharedts--multimodal-version-recommended)
+- [⭐ Reading the stream on the frontend](#reading-the-stream-on-the-frontend)
+- [⛔ A failed turn must not leave its user message in the posted history](#a-failed-turn-must-not-leave-its-user-message-in-the-posted-history)
+
+> Covers: unified event types, heartbeat, response headers, reusable `createSSEResponse` helper, the frontend reader contract.
 
 ---
 ## 4. SSE Streaming Protocol Convention (the most important unification)
@@ -81,5 +89,61 @@ export function createSSEResponse(
 
 > **Recommendation**: consolidate this helper set into `_shared.ts` and have every endpoint call `createSSEResponse(gen, signal)`.
 > Don't rewrite a `ReadableStream` in every file (the older content-creator code did this inline; align toward the multimodal version).
+
+### ⭐ Reading the stream on the frontend
+
+`[DONE]` is the only thing separating a turn that finished from a turn that was
+cut off, so **the reader must record whether it arrived** and the UI must branch
+on it. A reader that leaves its loop on `done` and then looks only at how much
+text it collected cannot tell the two apart, and reports a dropped turn as an
+empty answer.
+
+```javascript
+let sawDone = false;
+const reader = resp.body.getReader();
+const decoder = new TextDecoder();
+let buffer = '';
+
+while (!sawDone) {
+  const { done, value } = await reader.read();
+  if (done) break;                       // closed early — sawDone is still false
+  buffer += decoder.decode(value, { stream: true });
+
+  let idx;
+  while ((idx = buffer.indexOf('\n')) !== -1) {
+    const line = buffer.slice(0, idx).trim();
+    buffer = buffer.slice(idx + 1);
+    if (!line.startsWith('data:')) continue;
+    const payload = line.slice(5).trim();
+    if (payload === '[DONE]') { sawDone = true; break; }
+    if (payload) handleEvent(JSON.parse(payload));
+  }
+}
+
+if (!sawDone && !aborted) {
+  // A truncated stream. Say so, and offer a retry — do not fall through to
+  // whatever the UI says when a turn legitimately produced no text.
+  showRetry('连接中断，请重试');
+}
+```
+
+The window this protects is widest on the first request an endpoint serves: a
+cold agent instance can take ten seconds or more to reach its first token, which
+is what the heartbeat is for, and is also long enough for anything between the
+two ends to give up.
+
+### ⛔ A failed turn must not leave its user message in the posted history
+
+The `messages` array sent to `/chat` must end with exactly one `user` message and
+**must never contain two consecutive `user` messages**. When a turn produces no
+assistant reply, its user message has to come back out of the history that gets
+posted — keep it on screen marked as failed if you like, but do not post it again
+behind the next question.
+
+Leaving it in is a bug that outlives the turn that caused it. The model receives
+two questions in a row and answers both in one reply, and every later turn
+carries the same doubled history. The user does not see a network error; they see
+an assistant answering something they asked several turns ago. One dropped turn
+then reads as a broken conversation rather than as a retry.
 
 ---

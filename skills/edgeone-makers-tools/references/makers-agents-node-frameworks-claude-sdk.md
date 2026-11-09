@@ -17,8 +17,10 @@
 ## Dependencies
 
 ```bash
-npm install @anthropic-ai/claude-agent-sdk zod
+npm install @anthropic-ai/claude-agent-sdk@^0.3.266 zod@^4.3.6
 ```
+
+> Of the four Node routes this is the only dependency set with no Node 22 claims anywhere in it, so the install is warning-free. It is also the largest tree — around 110 packages against roughly 25 for the others — which makes it the route where writing `package.json` first and letting the install run while you write the app saves the most wall-clock time.
 
 `edgeone.json`:
 ```json
@@ -49,7 +51,7 @@ npm install @anthropic-ai/claude-agent-sdk zod
 ## Core Pattern Walkthrough
 
 ### 1. Gateway env mapping (from `_model.ts`)
-See `resolveModelName` + `collectGatewayEnv` in [`node-entry.md`](makers-agents-platform-node-entry.md) §3. Key points:
+See `resolveModelName` + `collectGatewayEnv` in [`makers-agents-platform-node-entry.md`](makers-agents-platform-node-entry.md) §3. Key points:
 - Map `AI_GATEWAY_*` to the `ANTHROPIC_*` variables the SDK expects
 - Return a `Record` and inject it via `query()`'s `options.env`. **Do not read `process.env`** — agent endpoints disable `process.env`; always go through `context.env`.
 - ⚠️ **Must include writable config directories** — the Claude CLI subprocess requires a writable `~/.claude` and temp directory. In the EdgeOne Makers serverless runtime, HOME is typically not writable — the SDK silently exits with zero output if it cannot initialise its config directory.
@@ -133,7 +135,7 @@ async function resolveLegacySessionBinding(
 ```
 > **Principle**: take `conversation_id` from `context.conversation_id`, falling back to the `makers-conversation-id` header.
 >
-> **Important**: Claude SDK has its own session/`resume`/`fork` mechanism via `context.store.claudeSessionStore()` (no-arg — unique to the Claude SDK). **Do not mix this with a langgraph checkpointer** — the two state models are incompatible. See [`langgraph.md`](makers-agents-node-frameworks-langgraph.md) for the langgraph-style alternative.
+> **Important**: Claude SDK has its own session/`resume`/`fork` mechanism via `context.store.claudeSessionStore()` (no-arg — unique to the Claude SDK). **Do not mix this with a langgraph checkpointer** — the two state models are incompatible. See [`makers-agents-node-frameworks-langgraph.md`](makers-agents-node-frameworks-langgraph.md) for the langgraph-style alternative.
 >
 > **Transcript lifecycle**: the transcript lives in the runtime SessionStore (`claude_sessions/...`) — not process memory — which is what makes resume survive a restart. Mapping and deletion semantics: see `makers-agents-capabilities-store.md` §7.2 / §7.4.
 
@@ -163,7 +165,7 @@ if (sandbox) {
 // - All strategies fail → degrade to inline-text mode
 ```
 
-See [`sandbox.md`](makers-agents-capabilities-sandbox.md) for the full upload strategy reference.
+See [`makers-agents-capabilities-sandbox.md`](makers-agents-capabilities-sandbox.md) for the full upload strategy reference.
 
 ### 5. File cache (working around the ephemeral sandbox)
 ```typescript
@@ -237,9 +239,19 @@ export async function onRequest(context: any) {
   // ⭐ Always read env from context.env, never process.env
   const ctxEnv = context.env ?? {};
   const body = context.request.body ?? {};
-  const message = typeof body.message === 'string' ? body.message.trim() : '';
+  // `messages` and nothing else — the one body a chat UI sends, and the one the
+  // preview probe exercises. See makers-agents-platform-conversation-id.md: a handler that
+  // also accepts a singular `message` has a second branch no client reaches,
+  // and a mistake in it ships answering every real request 400.
+  //
+  // Only the newest turn is read, because the session binding below already
+  // holds this conversation's history on the platform side.
+  const message = [...(Array.isArray(body.messages) ? body.messages : [])]
+    .reverse()
+    .find((m: any) => m?.role === 'user' && typeof m?.content === 'string' && m.content.trim())
+    ?.content.trim() ?? '';
   if (!message) {
-    return new Response(JSON.stringify({ error: "'message' is required" }), {
+    return new Response(JSON.stringify({ error: "'messages' is required" }), {
       status: 400, headers: { 'Content-Type': 'application/json' },
     });
   }
@@ -318,7 +330,7 @@ if (!sandboxWorking && uploadedFiles.length > 0) {
 ```
 > **Principle**: the sandbox is best-effort. Text files can degrade to inline content; for binaries that can't degrade, tell the model explicitly that they were skipped.
 
-> Beyond `sandbox.runCode(...)` (top-level) and `sandbox.commands.run(...)`, the Claude SDK route can also use `screenshot({ fullPage: true })`, `context.tools.files()`, and `context.tools.browser()` — see [`sandbox.md`](makers-agents-capabilities-sandbox.md).
+> Beyond `sandbox.runCode(...)` (top-level) and `sandbox.commands.run(...)`, the Claude SDK route can also use `screenshot({ fullPage: true })`, `context.tools.files()`, and `context.tools.browser()` — see [`makers-agents-capabilities-sandbox.md`](makers-agents-capabilities-sandbox.md).
 
 ---
 
@@ -376,9 +388,9 @@ async function stopAgent() {
 ## See Also
 
 
-- Route C (OpenAI Agents): [`openai-agents.md`](makers-agents-node-frameworks-openai-agents.md)
-- Route D (LangGraph + DeepAgents): [`langgraph.md`](makers-agents-node-frameworks-langgraph.md)
-- Route E (CrewAI): [`crewai.md`](makers-agents-python-frameworks-crewai.md)
-- Platform conventions: [`node-entry.md`](makers-agents-platform-node-entry.md)
-- Sandbox & tools reference: [`sandbox.md`](makers-agents-capabilities-sandbox.md)
+- Route C (OpenAI Agents): [`makers-agents-node-frameworks-openai-agents.md`](makers-agents-node-frameworks-openai-agents.md)
+- Route D (LangGraph + DeepAgents): [`makers-agents-node-frameworks-langgraph.md`](makers-agents-node-frameworks-langgraph.md)
+- Route E (CrewAI): [`makers-agents-python-frameworks-crewai.md`](makers-agents-python-frameworks-crewai.md)
+- Platform conventions: [`makers-agents-platform-node-entry.md`](makers-agents-platform-node-entry.md)
+- Sandbox & tools reference: [`makers-agents-capabilities-sandbox.md`](makers-agents-capabilities-sandbox.md)
 - Review checklist: [`makers-agents-review-checklist.md`](makers-agents-review-checklist.md)

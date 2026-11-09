@@ -39,32 +39,37 @@ edgeone makers env rm KEY      # Remove
 
 ## Project Linking
 
+Read the [deployment login entry](makers-deploy.md#login), which routes to the single makers-cli login/workspace flow, before authentication, switching or changing a target. Standalone native CLI is supported; MCP is optional. `.edgeone/project.json` is the association, not `edgeone.json`.
+
 ```bash
-edgeone makers link
-edgeone makers link --name <project> -t <token>   # Non-interactive
+# After confirming the existing target and actual workspace
+edgeone makers link --name <project> --mode link_existing --skip-env-sync --expected-workspace <workspaceId> --json
 ```
+
+Creating instead requires explicit creation consent and create_upload mode. Do not delete the association or create in another directory to bypass it.
 
 ## Token Management
 
-| Task | How |
-|------|-----|
-| Save token | Stored in `.edgeone/.token` (auto-added to `.gitignore`) |
-| Update token | Delete `.edgeone/.token`, then deploy again — prompted to enter and save a new one |
-| Use saved token | Automatic — the agent reads `.edgeone/.token` before each token deploy |
+Credentials are managed by CLI or securely injected into the process environment. Do not read or copy its private cache or write a separate token file. Global workspace switching does not replace an explicit environment or project-local credential; verify effective identity in the original directory and ask before changing its source. Local persistence is opt-in, not a sandbox permission workaround. See the shared flow for one-use result handling after failed approval re-runs.
 
 ## Full Command Reference (Makers)
 
 | Action | Command |
 |--------|---------|
 | Install CLI | `npm install -g edgeone@latest` |
-| Check version | `edgeone -v` (require ≥ 1.6.0; anonymous deploy and `claim` need ≥ 1.6.29) |
-| Login (China, browser) | `edgeone login --site china` |
-| Login (Global, browser) | `edgeone login --site global` |
-| Login (token, auto-site) | `edgeone login --token <token>` |
+| Check version | `edgeone -v` (require ≥ 1.7.0 for all CLI execution; if the public package is unavailable, stop and explain rather than retrying installs) |
+| Login (desktop, unknown target) | `edgeone login --interaction agent` |
+| Login (China, explicit site) | `edgeone login --site china --interaction agent` |
+| Login (Global, explicit site) | `edgeone login --site global --interaction agent` |
+| Complete pending login | `edgeone login --interaction agent --session <sessionId> --workspace <workspaceId>` |
+| Choose workspace | `edgeone workspace use --interaction agent` |
+| Switch/confirm workspace | `edgeone workspace use <workspaceId> --interaction agent` |
+| Continue pending switch | `edgeone workspace use <workspaceId> --interaction agent --session <sessionId>` |
+| Discover workspaces | `edgeone workspace ls --json` |
 | Login + claim anonymous project | `edgeone login --claim --local --json` (run in background after an anonymous deploy; prints `claimLoginUrl`, then waits) |
-| View login info | `edgeone whoami` |
-| Logout | `edgeone logout` |
-| Switch account | `edgeone switch` |
+| View login info | `edgeone whoami --json` after verifying CLI ≥ 1.7.0 and actual JSON capability |
+| Logout (only when requested, not workspace switching) | `edgeone logout` |
+| Switch account | `edgeone switch --interaction agent` |
 | Init functions | `edgeone makers init` |
 | Local dev | `edgeone makers dev` |
 | Link project | `edgeone makers link` |
@@ -108,12 +113,8 @@ For projects with `agents/` directory (AI Agent endpoints). `edgeone makers` com
 | `--site china\|global` | deploy (with `--anonymous`), login | Target API site; auto-detected by IP when omitted |
 | `--sid <token>` | claim | Anonymous identity token; optional when `.edgeone/anonymous.json` exists. **Not** the same as `-t` |
 
-**Token precedence** (highest to lowest):
-1. `-t <token>` flag on the command
-2. `EDGEONE_PAGES_API_TOKEN` environment variable
-3. `.edgeone/.token` file (saved token)
-4. Browser login state
+**Credential precedence** is resolved by CLI: explicit argument / environment, project-local auth, then global login. Directory association may select its owning workspace for project operations. The flag examples describe syntax only, not permission to expose tokens in chat or command logs; prefer secure environment injection and preserve existing sources unless the user authorizes a change.
 
 ## Anonymous Deploy
 
-For login-free deployment and the claim flow, see [anonymous-deploy.md](makers-deploy-anonymous-deploy.md).
+For login-free deployment and the claim flow, see [makers-deploy-anonymous-deploy.md](makers-deploy-anonymous-deploy.md).

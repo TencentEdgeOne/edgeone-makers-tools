@@ -13,7 +13,7 @@ npx skills add TencentEdgeOne/edgeone-makers-tools
 This installs **one skill — `edgeone-makers-tools`** into your agent's skills
 directory (`.codebuddy/skills/edgeone-makers-tools/`, `.claude/skills/edgeone-makers-tools/`,
 `.cursor/skills/edgeone-makers-tools/`, …). Its `SKILL.md` is a router that loads the
-matching capability file under `references/` on demand — one skill in your list, full
+matching capability under `references/` on demand — one skill in your list, full
 coverage inside.
 
 ### Option B — CodeBuddy plugin marketplace / SkillHub
@@ -32,10 +32,11 @@ After installation, your AI coding agent will automatically detect relevant task
 
 ## Capabilities
 
-The single `edgeone-makers-tools` skill routes to these capabilities (each is a file under `skills/edgeone-makers-tools/references/`):
+The single `edgeone-makers-tools` skill routes to these capabilities (each lives at `skills/edgeone-makers-tools/references/<name>.md` on this WorkBuddy publishing branch):
 
 | Capability | Description |
 |-------|-------------|
+| `makers-frameworks` | Web framework support matrix — platform adapters, build output, 404 conventions |
 | `makers-agents` | AI Agent development (DeepAgents, LangGraph, Claude SDK, OpenAI Agents, CrewAI) |
 | `makers-deploy` | Deploy projects to EdgeOne |
 | `makers-edge-functions` | Edge Functions (V8 lightweight runtime) |
@@ -93,27 +94,39 @@ Create a Claude Agent SDK endpoint with sandbox code execution
 
 ## Skill Structure
 
-One skill, with all routed capability files kept directly under `references/` so
-WorkBuddy can parse the package without nested subdirectories:
+One skill, capabilities bundled as reference docs it routes to on demand:
 
 ```
 skills/
 └── edgeone-makers-tools/
-    ├── SKILL.md                     # Router — matches the task
-    └── references/
-        ├── makers-agents.md         # AI Agent development router
-        ├── makers-agents-*.md       # Agent platform/framework references
-        ├── makers-deploy.md         # Deployment workflow
-        ├── makers-cloud-functions.md
-        ├── makers-migration.md
-        ├── makers-recipes.md
-        ├── makers-storage.md
-        └── ...                      # Other capability files
+    ├── SKILL.md                                 # Router + WorkBuddy market metadata
+    └── references/                              # All 56 reference files are direct children
+        ├── makers-frameworks.md                 # Web framework support matrix
+        ├── makers-frameworks-nextjs.md           # Framework-specific guidance
+        ├── makers-agents.md                     # AI Agent development
+        ├── makers-agents-platform-node-entry.md  # Platform conventions
+        ├── makers-agents-node-frameworks-claude-sdk.md
+        ├── makers-deploy.md                     # Deployment workflow
+        ├── makers-edge-functions.md             # V8 edge runtime
+        ├── makers-cloud-functions.md            # Node.js / Go / Python
+        ├── makers-storage.md                    # KV + Blob storage
+        ├── makers-middleware.md                 # Request interception
+        ├── makers-cli.md                        # CLI commands
+        ├── makers-recipes.md                    # Project templates
+        ├── makers-migration.md                  # Migrate existing agent projects
+        └── makers-env-adaption.md               # Sandbox / WorkBuddy / CI adaptation
 ```
 
 The skill follows the [skill-creator](https://github.com/anthropics/skills) standard:
-- `SKILL.md` — YAML frontmatter (name + description) + core instructions
-- `references/*.md` — detailed docs loaded on demand, routed from `SKILL.md`
+- `SKILL.md` — YAML frontmatter (including all eight required WorkBuddy fields) + core instructions
+- `references/` — detailed docs loaded on demand, routed from `SKILL.md`
+
+### WorkBuddy publishing
+
+`main` remains the development source. This branch, `fix/workbuddy-flat-skill-layout`,
+contains the WorkBuddy-compatible package: one entrypoint and no nested directories
+under `references/`. Package only `skills/edgeone-makers-tools/`, not the entire
+repository. See [BRANCH.md](BRANCH.md) for synchronization and ZIP upload instructions.
 
 ## Multi-Platform Support
 
