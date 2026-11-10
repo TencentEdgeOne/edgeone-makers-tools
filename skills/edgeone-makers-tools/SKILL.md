@@ -11,7 +11,7 @@ description_en: >-
   EdgeOne Makers platform development skills for web frameworks, AI agents,
   Cloud Functions, Edge Functions, KV and Blob storage, middleware, migration,
   scaffolding, environment adaptation, and deployment.
-version: "2.3.5"
+version: "2.3.6"
 author: edgeone
 license: MIT
 description: >-
@@ -26,7 +26,7 @@ description: >-
   read only the sub-skill relevant to the current task, never all of them at once.
 metadata:
   author: edgeone
-  version: "2.3.5"
+  version: "2.3.6"
 ---
 
 # EdgeOne Makers Skills

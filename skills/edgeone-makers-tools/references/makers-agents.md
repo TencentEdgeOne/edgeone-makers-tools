@@ -59,7 +59,7 @@ This skill covers five supported frameworks (DeepAgents, LangGraph, CrewAI, Open
 
 1. Skim the **Mental Model** below — Makers ≠ generic API routes
 2. Walk the **Decision Tree** to pick one of the five framework routes
-3. Read the matching `references/*-route.md` for a copy-paste skeleton
+3. Read the document for the selected framework and runtime in the [Routing table](#routing) for a copy-paste skeleton
 4. Self-check against the **Twelve Red Lines**
 5. Run through `makers-agents-review-checklist.md` before considering the work done
 

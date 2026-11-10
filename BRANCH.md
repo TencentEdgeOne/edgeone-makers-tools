@@ -9,7 +9,7 @@ The upload ZIP contains exactly one `edgeone-makers-tools/` directory:
 - `SKILL.md` — latest main router, WorkBuddy market frontmatter, flat reference paths.
 - `references/*.md` — all capability and supporting documents, with no nested directories or additional `SKILL.md` files.
 
-WorkBuddy frontmatter requires top-level `name`, `display_name`, `display_name_en`, `description`, `description_zh`, `description_en`, `version`, and `author`. Keep the package version, root entry version, `metadata.version`, and `_meta.json.version` aligned. Current publishing version: `2.3.5`.
+WorkBuddy frontmatter requires top-level `name`, `display_name`, `display_name_en`, `description`, `description_zh`, `description_en`, `version`, and `author`. Keep the package version, root entry version, `metadata.version`, and `_meta.json.version` aligned. Current publishing version: `2.3.6`.
 
 Specification: https://open.workbuddy.cn/docs/skill
 
@@ -23,7 +23,7 @@ Specification: https://open.workbuddy.cn/docs/skill
    - Example: `references/makers-agents/references/node-frameworks/claude-sdk.md` → `references/makers-agents-node-frameworks-claude-sdk.md`.
 4. Rewrite document links and plain-text file paths, preserving anchors. Remove obsolete nested files and directories. Update the root router, repository instruction routes, and `_meta.json.files`.
 5. Preserve all main capabilities and their CLI requirements. Bump the WorkBuddy version from the previous publishing version and keep all version fields aligned.
-6. Run `npm run build` to validate the publishing layout/frontmatter and regenerate Cursor/Codex guides. Check local Markdown links, file-manifest parity, and document completeness against main.
+6. Run `npm run build` to validate the publishing layout/frontmatter and regenerate Cursor/Codex guides. Check local Markdown links, file-manifest parity, and document completeness against main. Also check resource paths inside inline code: an obsolete wildcard path can fail WorkBuddy review even when Markdown links pass.
 
 ## Build the upload ZIP
 
@@ -31,9 +31,13 @@ Run from the repository root:
 
 ```bash
 npm run build
-(cd skills && zip -r /tmp/edgeone-makers-tools-workbuddy-2.3.5.zip edgeone-makers-tools -x '*/.DS_Store')
+(cd skills && zip -r /tmp/edgeone-makers-tools-workbuddy-2.3.6.zip edgeone-makers-tools -x '*/.DS_Store')
 ```
 
-Upload `/tmp/edgeone-makers-tools-workbuddy-2.3.5.zip` in the WorkBuddy open platform. Do not upload a whole-repository archive: plugin manifests, hooks, generated guides, repository metadata, and development scripts are not part of this skill package.
+Upload `/tmp/edgeone-makers-tools-workbuddy-2.3.6.zip` in the WorkBuddy open platform. Do not upload a whole-repository archive: plugin manifests, hooks, generated guides, repository metadata, and development scripts are not part of this skill package.
 
 Local validation does not prove server-side acceptance or marketplace publication. Those require uploading the ZIP and completing WorkBuddy review.
+
+## 2.3.6 review correction
+
+WorkBuddy rejected 2.3.5 because the agent usage instructions referenced a nonexistent wildcard route resource. The instructions now point to the existing Routing table, which selects the bundled document by framework and runtime. Preserve this correction when synchronizing from main; do not add empty route files to satisfy the scanner.
