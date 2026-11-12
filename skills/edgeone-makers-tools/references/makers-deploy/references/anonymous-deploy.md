@@ -69,15 +69,17 @@ Do not pass these — they have no effect and will mislead the user:
 
 ### Success
 
+Illustrative output only; token and signature values are placeholders, not real credentials. Use the actual CLI output at runtime, not these placeholders.
+
 ```json
 {
   "status": "success",
-  "url": "https://my-app-a3f8b2c1.edgeone.dev?eo_token=abc123&eo_time=1234567890",
+  "url": "https://my-app-a3f8b2c1.edgeone.dev?eo_token=<signed-access-token>&eo_time=<signature-timestamp>",
   "projectId": "makers-ihtxkls1k3jc",
   "deploymentId": "dppxfikip2rt",
-  "anonymousToken": "98a71090aaae2670c6fe0024a250d6f3",
-  "claimUrl": "https://console.tencentcloud.com/edgeone/pages/claim?token=98a71090aaae2670c6fe0024a250d6f3",
-  "claimCommand": "edgeone makers claim --sid 98a71090aaae2670c6fe0024a250d6f3",
+  "anonymousToken": "<anonymous-token>",
+  "claimUrl": "https://console.tencentcloud.com/edgeone/pages/claim?token=<anonymous-token>",
+  "claimCommand": "edgeone makers claim --sid <anonymous-token>",
   "expiresAt": "2026-07-28T21:10:48.000Z",
   "site": "global"
 }
