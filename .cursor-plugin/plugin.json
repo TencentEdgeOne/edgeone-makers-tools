@@ -1,8 +1,12 @@
 {
   "name": "edgeone-makers-tools",
   "description": "EdgeOne Makers platform development skills — AI Agents, Cloud Functions, Edge Functions, Storage, Middleware, and Deployment.",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "author": {
     "name": "EdgeOne"
-  }
+  },
+  "homepage": "https://pages.edgeone.ai",
+  "repository": "https://github.com/TencentEdgeOne/edgeone-makers-tools",
+  "logo": "assets/icon.png",
+  "keywords": ["edgeone", "edgeone makers", "deploy", "hosting", "edge-functions", "cloud-functions", "ai-agents", "serverless"]
 }
