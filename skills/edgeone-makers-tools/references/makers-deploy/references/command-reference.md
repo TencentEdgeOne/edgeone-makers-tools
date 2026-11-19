@@ -56,7 +56,7 @@ Credentials are managed by CLI or securely injected into the process environment
 
 | Action | Command |
 |--------|---------|
-| Install CLI | `npm install -g edgeone@latest` |
+| Install CLI | `npm install -g edgeone@1.7.3` (ask the user for consent first) |
 | Check version | `edgeone -v` (require ≥ 1.7.0 for all CLI execution; if the public package is unavailable, stop and explain rather than retrying installs) |
 | Login (desktop, unknown target) | `edgeone login --interaction agent` |
 | Login (China, explicit site) | `edgeone login --site china --interaction agent` |
@@ -66,7 +66,7 @@ Credentials are managed by CLI or securely injected into the process environment
 | Switch/confirm workspace | `edgeone workspace use <workspaceId> --interaction agent` |
 | Continue pending switch | `edgeone workspace use <workspaceId> --interaction agent --session <sessionId>` |
 | Discover workspaces | `edgeone workspace ls --json` |
-| Login + claim anonymous project | `edgeone login --claim --local --json` (run in background after an anonymous deploy; prints `claimLoginUrl`, then waits) |
+| Login + claim anonymous project | `edgeone login --claim --local --json` (with user consent, run in background after an anonymous deploy; prints `claimLoginUrl`, then waits) |
 | View login info | `edgeone whoami --json` after verifying CLI ≥ 1.7.0 and actual JSON capability |
 | Logout (only when requested, not workspace switching) | `edgeone logout` |
 | Switch account | `edgeone switch --interaction agent` |

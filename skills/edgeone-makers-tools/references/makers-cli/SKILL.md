@@ -5,20 +5,22 @@ description: >-
   Use when running edgeone CLI commands for dev, build, deploy, env management.
 metadata:
   author: edgeone
-  version: "1.2.1"
+  version: "1.3.0"
 ---
 
 # EdgeOne Makers CLI Reference
 
 ## Install
 
+Global installs need the user's consent — ask first, then install the pinned version:
+
 ```bash
-npm install -g edgeone@latest
+npm install -g edgeone@1.7.3
 ```
 
 **This Skill requires CLI `>= 1.7.0` for every CLI execution flow**, including local dev, build, login, switching, linking, env, authenticated deployment and anonymous deployment / claim. Check `edgeone -v` before the first CLI operation and upgrade if lower. Writing code or reading guidance does not require installing/upgrading CLI; local previews do not require authentication unless they use credentialed services.
 
-**Release availability**: `1.7.0` is the planned public CLI baseline. If it is not yet available from the user's configured registry, or `@latest` still resolves below it, stop and explain that the required release is unavailable; do not repeatedly install, silently continue with an older CLI, switch registries without consent, or assume a local development build is publicly released. This Skill should be published after the public `1.7.0` package is available and verified.
+**Release availability**: `1.7.0` is the public CLI baseline this Skill requires. If the pinned release is not yet available from the user's configured registry, stop and explain that the required release is unavailable; do not repeatedly install, silently continue with an older CLI, switch registries without consent, or assume a local development build is publicly released.
 
 Version alone is not proof of the invoked package's capabilities: verify the actual CLI on PATH. `login --help` must expose `--interaction`, `--workspace`, `--session`; explicit linking requires `makers link --help` with `--mode`, `link_existing`, `create_upload`, `--skip-env-sync`, `--expected-workspace`, and `--json`; `whoami --help` must expose `--json`. Missing capabilities after a reported version match require checking the installed package/path, not a legacy fallback, guessed flags or private credential files. An arbitrary exit 1 is never proof of missing login.
 

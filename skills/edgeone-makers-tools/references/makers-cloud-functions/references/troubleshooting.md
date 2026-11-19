@@ -30,7 +30,7 @@ Inside the sandbox, `localhost:8088` is routed to an internal sandbox fallback s
 This is **unrelated** to project code, static hosting, or the `setLocalData` EPERM.
 
 ### Correct verification methods (WorkBuddy, in priority order)
-1. **WorkBuddy built-in browser preview** (pass `http://localhost:8088/` to `present_files`) — uses the host network, reliable.
+1. **WorkBuddy built-in browser preview** (pass `http://localhost:8088/` to `present_files` when available) — uses the host network, reliable.
 2. **Have the user verify from their system terminal**: `curl -I http://localhost:8088/` or just open it in a browser.
 3. **Deploy live directly** and verify with the real URL (closest to the production environment).
 

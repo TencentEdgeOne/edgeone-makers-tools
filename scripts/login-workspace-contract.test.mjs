@@ -89,3 +89,37 @@ test('environment guidance shares the flow without forcing local login or cloud 
   const reference = readFileSync(path.join(root, 'skills/edgeone-makers-tools/references/makers-deploy/references/command-reference.md'), 'utf8');
   assert.doesNotMatch(reference, /\]\(\.\.\/\.\.\/makers-cli/);
 });
+
+test('review compliance: pinned installs with consent, no silent credential writes, host tools only when available', () => {
+  const ref = (p) => readFileSync(path.join(root, 'skills/edgeone-makers-tools/references', p), 'utf8');
+  const installDocs = [
+    ref('makers-cli/SKILL.md'),
+    ref('makers-deploy/SKILL.md'),
+    ref('makers-deploy/references/command-reference.md'),
+    ref('makers-agents/SKILL.md'),
+    ref('makers-cloud-functions/references/node-functions.md'),
+    ref('makers-cloud-functions/references/go-functions.md'),
+    ref('makers-cloud-functions/references/python-functions.md'),
+  ];
+  for (const text of installDocs) {
+    assert.doesNotMatch(text, /npm install -g edgeone@latest/);
+    for (const cmd of text.match(/npm install -g edgeone\S*/g) ?? []) {
+      assert.ok(/edgeone@1\.7\.3/.test(cmd), cmd);
+    }
+  }
+  assert.match(installDocs[0], /consent — ask first/);
+  assert.match(installDocs[1], /Ask the user for consent before any global install/);
+  const deploy = read('makers-deploy');
+  assert.match(deploy, /Start the claim listener only with the user's consent/);
+  assert.match(deploy, /first confirm they want EdgeOne Makers/);
+  assert.doesNotMatch(deploy, /Place the deploy URL at the very top|pinned via `present_files`|\(Rule 4\)/);
+  assert.doesNotMatch(deploy, /Scheduled \/ automated jobs|先看看效果|no way to ask at all/);
+  const env = read('makers-env-adaption');
+  assert.doesNotMatch(env, /Run it yourself in Bash/);
+  assert.match(env, /when available; when it is not/);
+  assert.match(ref('makers-deploy/references/anonymous-deploy.md'), /user's consent/);
+  const rootSkill = readFileSync(path.join(root, 'SKILL.md'), 'utf8');
+  for (const link of [...rootSkill.matchAll(/\]\(([^)]+)\)/g)].map((match) => match[1])) {
+    assert.ok(existsSync(path.resolve(root, link)), `root SKILL.md: unresolved ${link}`);
+  }
+});

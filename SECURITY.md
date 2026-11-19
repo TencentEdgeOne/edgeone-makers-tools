@@ -25,7 +25,7 @@ released.
 
 ## Scope
 
-This repository contains agent skills (SKILL.md, reference docs, hooks, and
+This repository contains agent skills (SKILL.md, reference docs, and
 build scripts) for the EdgeOne Makers platform. Vulnerabilities in these files,
 the CI workflows, or the published skill artifacts are in scope. Vulnerabilities
 in the EdgeOne platform itself should be reported through the
