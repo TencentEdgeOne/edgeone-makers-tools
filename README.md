@@ -28,6 +28,10 @@ SkillHub. They register the same single `edgeone-makers-tools` skill.
 /plugin install edgeone-makers-tools@edgeone-makers
 ```
 
+Maintain only `skills/edgeone-makers-tools/`. Run `npm run package:claude` (Node.js and the system `zip` command required) to produce `../edgeone-makers-tools-claude.zip`, beside the repository. The script temporarily prepares the skill and references, normalizes frontmatter, and includes the manifest, license, and PNG icon; it excludes Hooks, executable scripts, package manifests, and lockfiles, then removes the temporary files. No generated copy or archive is kept inside the repository; regenerate the ZIP after source changes. Its root contains `.claude-plugin/` and `skills/`, with no extra wrapper directory.
+
+The GitHub marketplace commands above install from the source repository, not the generated ZIP. For Claude directory review, use the ZIP if artifact upload is supported; otherwise extract it and host the clean contents as the submission source. Do not assume a ZIP replaces a required repository URL or guarantees approval.
+
 After installation, your AI coding agent will automatically detect relevant tasks and load the right skill.
 
 ## Capabilities
@@ -133,7 +137,7 @@ This repo includes plugin manifests for multiple AI platforms:
 - `.cursor-plugin/` — Cursor
 - `.codebuddy-plugin/` — CodeBuddy
 
-Hooks (`hooks/`) provide context-aware skill injection via `UserPromptSubmit` and `PreToolUse` events.
+All platform integrations use skills without runtime Hooks. Instructions and references remain available, but there is no automatic write-time validation or signal logging.
 
 ## Requirements
 

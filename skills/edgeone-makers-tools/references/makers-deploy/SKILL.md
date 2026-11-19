@@ -24,7 +24,7 @@ validate:
     message: "edgeone whoami does not accept -t. Use safely injected environment credentials and whoami --json: true = authenticated, false = unauthed, null = verification failed; exit 1 alone is not enough."
 metadata:
   author: edgeone
-  version: "2.12.4"
+  version: "2.13.0"
 ---
 
 # EdgeOne Makers Deployment Skill
@@ -49,13 +49,6 @@ Deploy any project to **EdgeOne Makers**.
    **Self-check after writing your reply**: scan for every instance of the `.edgeone.cool` domain. Does each one include `?eo_token=`? If any doesn't, fix it NOW — the user will get a 401.
 3a. **Prefer `--json` when running non-interactively** — in Agent/CI/headless contexts, always pass `--json` to `deploy` so the result is a single machine-readable line; no need to scrape colored/`\r`-animated stdout. See **Parse Deploy Output**.
 3b. **Use the shared authentication flow** in [makers-cli](../makers-cli/SKILL.md). After verifying CLI ≥ 1.7.0 and JSON capability, check `whoami --json`: true = authenticated, false = explicitly unauthed, null = verification failed. Missing JSON capability means checking the actual package/path, not falling back to an older CLI; exit 1 alone does not prove missing login. Do not inspect private credential caches or write a separate token file. Login, workspace switching, account switching and changing the directory target are different actions.
-4. **The deploy URL MUST be placed at the very top of the visible reply body (own line, code block, or heading — not inline, not mid-reply), AND ALSO pinned via `present_files` (or the IDE's preview tool) to the side panel.** Two UI failures to survive: thinking / reasoning / "深度思考" blocks hide content by default; long replies get auto-folded by IDE chat cards, burying anything placed mid-reply. `present_files` is unaffected by chat folding — that's the second, always-visible channel. Complete URL, no truncation (Rule 2). Example format:
-   ```
-   🌐 Live URL: https://my-project-abc123.edgeone.cool?<auth_query_params>
-   ```
-   Then append any other notes (console URL, caveats, etc.).
-
-   **Self-check before ending the turn (MANDATORY)** — read back what the user will actually SEE (NOT your thinking / reasoning content). Two questions: (a) Is the complete `.edgeone.cool` URL present at the top of the visible reply, in a code block or heading? (b) Was `present_files` called with that URL? If either answer is no, send an **additional short message** containing ONLY the `🌐 Live URL: <full URL>` block and call `present_files`. Do not end the turn until both channels carry the URL. "I already mentioned it in my reasoning" is NOT a substitute for placing it in the visible body.
 5. **Standalone uses agent interaction, not auto.** Complete browser authentication and the user's workspace choice using the shared CLI flow; only pin `--site` when the user specified it. Do not guess a workspace from plan/name/order.
 6. **Keep independent usage supported.** MCP is an optional equivalent path, not a required dependency. Desktop browser login is available where the host supports it; browserless CI keeps using securely provisioned environment credentials. Never force an expert team or a browser in unattended CI.
 7. **Credentials remain CLI-managed.** Do not extract cached tokens or offer a new token file. Persistent local login is an explicit user choice, not an automatic fallback for switching failure.
@@ -67,7 +60,7 @@ Deploy any project to **EdgeOne Makers**.
 
 11. **The claim command's parameter is `--sid`, NOT `--token`** — `edgeone makers claim --sid <anonymous-token>`. The `-t` / `--token` flag on `claim` is the **account API token**, an entirely different credential. Passing the anonymous token to `-t` fails. Product documentation showing `claim --token <anonymous-token>` is wrong; trust this rule.
 12. **Present the anonymous deploy result with the fixed template in Step 4** — it is a template, not an example: reproduce it exactly, substituting only the URL and the claim link. Never show the raw `expiresAt` timestamp, never state a different duration, and never add lines to it. 60 minutes is the product's stated claim window and the conservative instruction, so that is what the template says even though the token's observed lifetime can be longer. It frames the *link* as expiring, not the project as being deleted.
-13. **The claim link you present must come from `edgeone login --claim`, never the bare `claimUrl`** — right after an anonymous deploy, run `edgeone login --claim --local --json` in the background and put its `claimLoginUrl` in the template. Only that link carries the login → claim → callback chain that lets the CLI learn the login state and auto-link the project; the bare `claimUrl` from deploy output claims without telling the CLI, so the user's next deploy would create a second anonymous project. Never print `claimCommand`, `edgeone makers claim --sid ...`, or any other command as the user's way to claim — in sandboxed IDEs like WorkBuddy the user has no terminal and literally cannot run it. `makers claim` is only a fallback for headless/CI environments, run by you, never displayed.
+13. **The claim link you present must come from `edgeone login --claim`, never the bare `claimUrl`** — after an anonymous deploy, get the user's consent (the listener persists login credentials into the project once claiming completes), then run `edgeone login --claim --local --json` in the background and put its `claimLoginUrl` in the template. Only that link carries the login → claim → callback chain that lets the CLI learn the login state and auto-link the project; the bare `claimUrl` from deploy output claims without telling the CLI, so the user's next deploy would create a second anonymous project. Never print `claimCommand`, `edgeone makers claim --sid ...`, or any other command as the user's way to claim — in sandboxed IDEs like WorkBuddy the user has no terminal and literally cannot run it. `makers claim` is only a fallback for headless/CI environments, run by you, never displayed.
 14. **Keep the claim pitch minimal — do not over-promise, and do not teach domains** — say only that signing in *keeps* the project. ❌ Never write "permanently yours", "no time limit or access restrictions", "unlimited", or anything implying the URL then works unconditionally forever: a claimed project may still need a custom domain, and mainland-China access can require ICP filing, so those claims are false. ❌ Also do not volunteer custom domains, ICP filing, DNS, or console navigation while the user is just deciding whether to claim — that front-loads complexity onto someone who only wanted a live URL. The claim page owns the follow-up flow. Answer such topics only when the user asks.
 
 ---
@@ -126,18 +119,20 @@ cat .edgeone/project.json 2>/dev/null
 | `≥ 1.7.0` ✓ | Authenticated, owning project/target confirmed | → **Deploy**; keep existing directory association |
 | `≥ 1.7.0` with verified capabilities | Pending selection or business confirmation | → Shared CLI flow: ask by names, continue original result or confirm via workspace use; no deploy yet |
 | `≥ 1.7.0` | Identity verification error/unknown | Stop and explain the safe cause; do not automatically relogin or switch |
-| `≥ 1.7.0` ✓ | Explicitly unauthed, no environment credentials | → **Anonymous Deploy** only when that task fits or the user chooses it; otherwise agent browser login. Do not use login-free deployment to bypass an existing project's auth/target error |
+| `≥ 1.7.0` ✓ | Explicitly unauthed, no environment credentials | → **Anonymous Deploy** only when the user explicitly chooses it; otherwise agent browser login. Do not use login-free deployment to bypass an existing project's auth/target error |
 | `≥ 1.7.0` ✓ | Securely provided environment credentials | Verify effective identity/target; use the same deployment flow without creating a token cache |
 
 ---
 
 ## Install CLI
 
+Ask the user for consent before any global install, then install the pinned version:
+
 ```bash
-npm install -g edgeone@latest
+npm install -g edgeone@1.7.3
 ```
 
-Verify `edgeone -v` is `1.7.0` or higher, then check the actual command capabilities via makers-cli. If `@latest` resolves below the baseline or the planned release is not published yet, report the unavailable release and stop; do not repeatedly install or continue via a lower-version authenticated/token path. Prepare these changes on a feature branch, and publish the Skill only after public CLI `1.7.0` is available and verified.
+Verify `edgeone -v` is `1.7.0` or higher, then check the actual command capabilities via makers-cli. If the pinned release is not available from the registry, report the unavailable release and stop; do not repeatedly install or continue via a lower-version authenticated/token path.
 
 ---
 
@@ -246,19 +241,15 @@ Plain static sites and frontend-framework projects with no such dependency may p
 
 If the user acknowledges the limitation and still wants to publish without logging in, you may proceed — but state prominently in your result that AI and storage features will not work until the project is claimed and configured (again: phrase it as "login-free / 免登录", never "anonymous / 匿名").
 
-### Step 2: Decide the path — default to anonymous only when the task fits, otherwise ask
+### Step 2: Decide the path — login-free only on explicit user choice
 
-**Go anonymous directly, without asking, only when the task itself is anonymous-native** — disposable or unattended by nature. Clear signals:
+**Mandatory rule for every deployment in this skill: only upload or publish when the user explicitly requests deployment, including login-free deployment. If the user asks to deploy without naming a target platform, first confirm they want EdgeOne Makers. Once deployment is requested, do not ask again for permission or deployment mode: use authenticated deployment when already logged in, or login-free deployment when verified unauthed, eligible, and explicitly chosen. Honor any user-specified mode and existing project target; do not bypass authentication errors or eligibility checks. A demo, local preview, or missing account alone is not consent.**
 
-- **Scheduled / automated jobs** — e.g. "每日定时生成一个页面并部署", cron pipelines, any task that must run with nobody watching
-- **Disposable one-offs** — a throwaway preview, a quick demo, "先看看效果", anything the user frames as temporary or just-for-now
-- **Explicit anonymous intent** — the user says "免登录", "不用登录", "anonymous", or "don't make me sign up"
+- **Explicit login-free intent** — the user says "免登录", "不用登录", "anonymous", or "don't make me sign up"
 
-In these cases the 60-minute expiry + claim-later model *is* the right answer, so asking is pure friction. Go straight to Step 3, and present the result with the fixed template in Step 4 (claim link + 60-minute window) — the template already tells the user how to keep it if they change their mind.
+In this case the 60-minute expiry + claim-later model *is* the right answer, so asking is pure friction. Go straight to Step 3, and present the result with the fixed template in Step 4 (claim link + 60-minute window) — the template already tells the user how to keep it if they change their mind.
 
-**Everything else — ask.** If the task isn't obviously disposable — anything the user might want to keep, share widely, or build on — present the choice. Do NOT try to judge the *environment* to skip the question: sandbox/TTY signals are unreliable and guessing wrong either needlessly interrupts a human or silently deploys something they wanted to keep.
-
-If the environment genuinely gives you no way to ask at all (no TTY, no question tool), asking is impossible — that's a constraint, not a judgment call. Deploy with `--anonymous --json` and make the claim link and the 60-minute window unmissable in your result.
+**Everything else — ask.** Do not guess from the task type or environment state that login-free deployment is what the user wants; guessing wrong silently deploys something they wanted to keep.
 
 **How to ask (when asking):** present the choice with the IDE's selection control (e.g. `ask_followup_question`). The option labels deliberately avoid the word "anonymous" — it is jargon and confuses non-technical users. Present these two options **exactly**, in the user's language. Do not paraphrase the labels, do not add caveats to the options themselves, and do not mention "anonymous" to the user at all — when you must name the concept, call it **"login-free deployment" / 「免登录部署」**, never "anonymous deploy / 匿名部署".
 The option text must be placed in the `label` exactly as is; it must not be split into the `description`.
@@ -295,7 +286,7 @@ Do **not** pass `-n`, `-e`, or `--area` — they are ignored under `--anonymous`
 
 Parse the **last line** of the deploy stdout as JSON (human-readable output precedes it). Fields are **camelCase**: `url`, `projectId`, `deploymentId`, `anonymousToken`, `claimUrl`, `claimCommand`, `expiresAt`, `site`.
 
-**Immediately start the claim listener in the background** — it must be listening before the user clicks the claim link, or the login state never reaches the CLI and the next deploy would create a second anonymous project:
+**Start the claim listener only with the user's consent.** It saves login credentials into this project (`.edgeone/auth.json`) once claiming completes, so tell the user and get consent first. With consent, run it in the background — it must be listening before the user clicks the claim link, or the login state never reaches the CLI and the next deploy would create a second anonymous project:
 
 ```bash
 edgeone login --claim --local --json
@@ -388,8 +379,6 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 | **Project ID** | Value after `EDGEONE_PROJECT_ID=` | — |
 | **Console URL** | Line after "You can view your deployment..." | — |
 
-**Show the user — the deploy URL MUST be at the very top of the visible reply AND pinned via `present_files` to the side panel (see Rule 4 for why both channels are required):**
-
 ⚠️ **URL Integrity Rules (read before composing your reply):**
 
 | Rule | Detail |
@@ -413,8 +402,8 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 
 | Error | Solution |
 |-------|----------|
-| `command not found: edgeone` | Run `npm install -g edgeone@latest` |
-| CLI version < 1.7.0 | Upgrade with `npm install -g edgeone@latest` and verify. If the required release is not available yet, report it and stop rather than repeatedly installing or continuing with old commands |
+| `command not found: edgeone` | Ask for consent, then run `npm install -g edgeone@1.7.3` |
+| CLI version < 1.7.0 | Ask for consent, then upgrade with `npm install -g edgeone@1.7.3` and verify. If the required release is not available yet, report it and stop rather than repeatedly installing or continuing with old commands |
 | Required workspace/JSON/link/anonymous flags missing | Verify the actual binary path and installed package version; this Skill requires CLI ≥ 1.7.0 with those capabilities. An unavailable public release is not solved by repeated installs, legacy flags or token fallbacks |
 | Browser does not open during login | Display the original waiting link and verify whether CLI or host owns browser opening; do not start a second login solely on elapsed time |
 | Explicit authenticated=false / legacy text "not authenticated" | Complete supported agent login; exit 1 alone is not proof of missing credentials |

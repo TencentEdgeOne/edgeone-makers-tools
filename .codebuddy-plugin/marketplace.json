@@ -16,8 +16,7 @@
       "strict": false,
       "skills": [
         "./skills/edgeone-makers-tools"
-      ],
-      "hooks": "./hooks/hooks.json"
+      ]
     }
   ]
 }

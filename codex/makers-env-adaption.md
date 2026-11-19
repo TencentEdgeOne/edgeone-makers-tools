@@ -17,7 +17,7 @@ validate:
     message: "Use 127.0.0.1, not localhost — in the sandbox localhost resolves to ::1 and yields false 404s."
 metadata:
   author: edgeone
-  version: "1.4.2"
+  version: "1.4.3"
 ---
 
 # Runtime Environment Adaptation Guide
@@ -29,7 +29,7 @@ metadata:
 
 ## 🚦 Quick Reference: Preview Decision Tree
 
-When you reach the "display / preview" step, **read this first before deciding how to call `present_files`**:
+When you reach the "display / preview" step, **read this first before deciding how to call `present_files`** (host-specific tool — use it when available; when it is not, show the URL at the top of your reply instead):
 
 ```
             ┌─ Delivering finished work? ── Yes ──→ present_files(deployed EdgeOne URL) ✅
@@ -290,9 +290,8 @@ The user has **no terminal** in the WorkBuddy sandbox. Any command you print as 
 
 | Situation | Do this | Not this |
 |---|---|---|
-| Anonymous project needs claiming | Run `edgeone login --claim --local --json` in the background and present its `claimLoginUrl` as a clickable link; the listener auto-links the project when the user finishes claiming | ❌ Printing `edgeone makers claim --sid <token>`, or presenting the bare `claimUrl` from the deploy JSON (the CLI never learns the login state) |
+| Anonymous project needs claiming | With the user's consent (it writes login credentials into the project), run `edgeone login --claim --local --json` in the background and present its `claimLoginUrl` as a clickable link; the listener auto-links the project when the user finishes claiming | ❌ Printing `edgeone makers claim --sid <token>`, or presenting the bare `claimUrl` from the deploy JSON (the CLI never learns the login state) |
 | The user needs to log in | Execute the shared makers-cli agent login flow after version/capability checks; no default local credential copy | ❌ Sending the user to a terminal or repeating a site-only/local login procedure |
-| Something needs installing | Run it yourself in Bash | ❌ "Please run `npm install -g edgeone`" |
 
 You are the one with shell access — use it. Only ask the user to type something when it genuinely cannot be automated (e.g. completing a login in the browser window you opened), and say plainly what you need from them.
 
