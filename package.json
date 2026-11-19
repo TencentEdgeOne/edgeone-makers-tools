@@ -5,8 +5,9 @@
   "type": "module",
   "description": "EdgeOne Makers platform development skills.",
   "scripts": {
-    "test": "node --test hooks/*.test.mjs scripts/*.test.mjs scripts/lib/*.test.mjs",
+    "test": "node --test scripts/*.test.mjs scripts/lib/*.test.mjs",
     "doctor": "node scripts/doctor.mjs",
-    "build": "node scripts/build.mjs"
+    "build": "node scripts/build.mjs",
+    "package:claude": "node scripts/build-claude-package.mjs"
   }
 }

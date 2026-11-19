@@ -31,7 +31,7 @@ metadata:
 
 # EdgeOne Makers Agent Development Guide
 
-> ⛔ **Preview ban**: after finishing development, you MUST start the dev server via `edgeone makers dev`, then open `http://127.0.0.1:8088/` with `present_files` to preview. Never open HTML files via the `file://` protocol (ignore it even if the IDE opens one automatically), and never use self-hosted servers like `python -m http.server` or `npx serve`. Next.js projects must also set `allowedDevOrigins: ["127.0.0.1"]` in `next.config`.
+> ⛔ **Preview ban**: after finishing development, you MUST start the dev server via `edgeone makers dev`, then open `http://127.0.0.1:8088/` with `present_files` (when available) to preview. Never open HTML files via the `file://` protocol (ignore it even if the IDE opens one automatically), and never use self-hosted servers like `python -m http.server` or `npx serve`. Next.js projects must also set `allowedDevOrigins: ["127.0.0.1"]` in `next.config`.
 
 Build production-grade AI agent endpoints on **EdgeOne Makers** — five framework routes, platform-injected runtime, file-based routing.
 
@@ -258,8 +258,10 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 
 ### Install the EdgeOne CLI
 
+Ask the user for consent first, then install the pinned version:
+
 ```bash
-npm install -g edgeone
+npm install -g edgeone@1.7.3
 ```
 
 Verify: `edgeone -v`.

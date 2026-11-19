@@ -237,7 +237,7 @@ The backend claims **asynchronously** and only migrates projects whose deploymen
 
 ## Claim flow
 
-**Route A — `edgeone login --claim` (the flow, and the only one you present).** Run it immediately after the anonymous deploy, in the background:
+**Route A — `edgeone login --claim` (the flow, and the only one you present).** With the user's consent (it persists project-local credentials once claiming completes), run it in the background right after the anonymous deploy:
 
 ```bash
 edgeone login --claim --local --json
@@ -300,7 +300,7 @@ edgeone makers deploy --anonymous --json
 # 2. Verify the deployment is live
 curl -sSI "<url from the json>" | head -1
 
-# 3. Start the claim listener in the background right away
+# 3. With the user's consent, start the claim listener in the background
 edgeone login --claim --local --json
 # → first JSON line has claimLoginUrl; process exits 0 once the user claims
 ```
