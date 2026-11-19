@@ -248,7 +248,7 @@ If the user acknowledges the limitation and still wants to publish without loggi
 
 ### Step 2: Decide the path — default to anonymous only when the task fits, otherwise ask
 
-**Go anonymous directly, without asking, only when the task itself is anonymous-native** — disposable or unattended by nature. Clear signals:
+**Mandatory rule for every deployment in this skill, overriding the default/ask guidance below: only upload or publish when the user explicitly requests deployment, including login-free deployment. Once requested, do not ask again for permission or deployment mode: use authenticated deployment when already logged in, or login-free deployment when verified unauthed and eligible. Honor any user-specified mode and existing project target; do not bypass authentication errors or eligibility checks. A demo, local preview, scheduled job without an explicit deployment instruction, or missing account alone is not consent.**
 
 - **Scheduled / automated jobs** — e.g. "每日定时生成一个页面并部署", cron pipelines, any task that must run with nobody watching
 - **Disposable one-offs** — a throwaway preview, a quick demo, "先看看效果", anything the user frames as temporary or just-for-now
