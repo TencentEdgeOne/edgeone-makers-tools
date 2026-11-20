@@ -1,40 +1,6 @@
 ---
-name: edgeone-makers-frameworks
-description: >-
-  Web framework support matrix for EdgeOne Makers — which platform adapter each
-  full-stack framework needs, where it plugs in, the build output directory, the
-  preview asset-prefix option, the 404 convention, version floors, and the
-  features the platform does not support yet. Read this whenever a request names
-  a web framework: Next.js, Nuxt, Astro, React Router, SvelteKit, TanStack Start,
-  Vike, Vite / React / Vue, Hugo, or any other frontend framework.
-pathPatterns:
-  - astro.config.mjs
-  - astro.config.js
-  - astro.config.ts
-  - svelte.config.js
-  - svelte.config.ts
-  - vite.config.js
-  - vite.config.ts
-  - vite.config.mjs
-  - next.config.js
-  - next.config.mjs
-  - nuxt.config.ts
-  - nuxt.config.js
-  - react-router.config.ts
-validate:
-  - pattern: "@astrojs/(?:vercel|netlify|cloudflare|node)"
-    message: "this is another platform's Astro adapter. EdgeOne Makers needs @edgeone/astro; a foreign adapter builds output this platform cannot serve."
-  - pattern: "@sveltejs/adapter-(?:vercel|netlify|cloudflare|node|auto)"
-    message: "this is not the EdgeOne SvelteKit adapter. Use @edgeone/sveltekit; adapter-auto cannot detect this platform and adapter-static only works for a fully prerendered site."
-  - pattern: "serverWrapper"
-    message: "serverWrapper is the @edgeone/vite 1.x API. Version 2.x discovers the framework entry through the Universal Deploy protocol, so the option is both unnecessary and ignored."
-  - pattern: "(?:async\\s+)?(?:redirects|rewrites)\\s*(?:\\(|:)"
-    message: "this platform does not run Next.js redirects or rewrites. Declare them in edgeone.json instead, which is the only place they take effect."
-  - pattern: "nitro(?:V2)?Plugin|@tanstack/start-plugin-nitro"
-    message: "the EdgeOne TanStack Start adapter cannot be used alongside a Nitro plugin. Drop the Nitro plugin; an official preset is not published yet."
-metadata:
-  author: edgeone
-  version: "1.0.0"
+name: "edgeone-makers-frameworks"
+description: "Web framework support matrix for EdgeOne Makers — which platform adapter each full-stack framework needs, where it plugs in, the build output directory, the preview asset-prefix option, the 404 convention, version floors, and the features the platform does not support yet. Read this whenever a request names a web framework: Next.js, Nuxt, Astro, React Router, SvelteKit, TanStack Start, Vike, Vite / React / Vue, Hugo, or any other frontend framework."
 ---
 
 # Web Frameworks

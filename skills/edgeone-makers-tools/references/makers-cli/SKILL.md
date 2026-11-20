@@ -1,11 +1,6 @@
 ---
-name: edgeone-makers-cli
-description: >-
-  EdgeOne Makers CLI command reference.
-  Use when running edgeone CLI commands for dev, build, deploy, env management.
-metadata:
-  author: edgeone
-  version: "1.3.0"
+name: "edgeone-makers-cli"
+description: "EdgeOne Makers CLI command reference. Use when running edgeone CLI commands for dev, build, deploy, env management."
 ---
 
 # EdgeOne Makers CLI Reference

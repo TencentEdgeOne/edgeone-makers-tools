@@ -1,30 +1,6 @@
 ---
-name: edgeone-makers-deploy
-description: >-
-  This skill deploys frontend and full-stack projects to EdgeOne Makers (Tencent EdgeOne).
-  Trigger this skill whenever deployment is part of the task — whether as the primary intent
-  or a secondary step. Examples: "deploy my app", "publish this site", "push this live",
-  "create a preview deployment", "deploy to EdgeOne", "ship to production",
-  "go live", "release", "publish a new version", "redeploy",
-  "上线", "发布", "发一版", "重新部署",
-  "搭建并部署", "开发并上线", "build and deploy", "create and deploy".
-  Also trigger for login-free deployment and project claiming:
-  "deploy without login", "no account yet", "anonymous deploy",
-  "claim project", "claim my deployment",
-  "免登录部署", "匿名部署", "还没有账号", "认领项目".
-  ⚠️ Also trigger when any agent is about to execute `edgeone makers deploy` or `edgeone makers deploy`
-  commands — the skill contains critical rules for parsing deploy output and presenting access URLs.
-  Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy —
-  use makers-env-adaption / makers-recipes for troubleshooting).
-pathPatterns:
-  - "*.sh"
-  - .github/workflows/**
-validate:
-  - pattern: "whoami[^\\n]*\\s-t\\s"
-    message: "edgeone whoami does not accept -t. Use safely injected environment credentials and whoami --json: true = authenticated, false = unauthed, null = verification failed; exit 1 alone is not enough."
-metadata:
-  author: edgeone
-  version: "2.13.0"
+name: "edgeone-makers-deploy"
+description: "This skill deploys frontend and full-stack projects to EdgeOne Makers (Tencent EdgeOne). Trigger this skill whenever deployment is part of the task — whether as the primary intent or a secondary step. Examples: \"deploy my app\", \"publish this site\", \"push this live\", \"create a preview deployment\", \"deploy to EdgeOne\", \"ship to production\", \"go live\", \"release\", \"publish a new version\", \"redeploy\", \"上线\", \"发布\", \"发一版\", \"重新部署\", \"搭建并部署\", \"开发并上线\", \"build and deploy\", \"create and deploy\". Also trigger for login-free deployment and project claiming: \"deploy without login\", \"no account yet\", \"anonymous deploy\", \"claim project\", \"claim my deployment\", \"免登录部署\", \"匿名部署\", \"还没有账号\", \"认领项目\". ⚠️ Also trigger when any agent is about to execute `edgeone makers deploy` or `edgeone makers deploy` commands — the skill contains critical rules for parsing deploy output and presenting access URLs. Do NOT trigger for post-deployment runtime errors (e.g. CORS issues, 500 errors after deploy — use makers-env-adaption / makers-recipes for troubleshooting)."
 ---
 
 # EdgeOne Makers Deployment Skill

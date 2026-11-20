@@ -1,23 +1,6 @@
 ---
-name: edgeone-makers-edge-functions
-description: >-
-  V8-based lightweight edge functions on EdgeOne Makers. Covers routing, KV storage access,
-  request/response handling, and environment variables at the edge.
-pathPatterns:
-  - edge-functions/**
-  - functions/**
-validate:
-  - pattern: "process\\.env"
-    message: "Use context.env in EdgeOne Makers runtime code."
-  - pattern: "new\\s+Headers\\s*\\("
-    message: "Use plain object headers for this runtime surface."
-  - pattern: "fs\\.writeFile"
-    message: "Edge Functions do not support filesystem writes."
-  - pattern: "Response\\.json\\s*\\("
-    message: "Response.json() is not available in this V8 runtime — use new Response(JSON.stringify(data), { headers: { 'Content-Type': 'application/json' } })."
-metadata:
-  author: edgeone
-  version: "1.0.0"
+name: "edgeone-makers-edge-functions"
+description: "V8-based lightweight edge functions on EdgeOne Makers. Covers routing, KV storage access, request/response handling, and environment variables at the edge."
 ---
 
 # Edge Functions

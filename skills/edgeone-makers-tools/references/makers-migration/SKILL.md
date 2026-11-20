@@ -1,21 +1,6 @@
 ---
-name: edgeone-makers-migration
-description: >-
-  Migrate existing AI agent projects (LangChain, LangGraph, OpenAI Agents SDK,
-  Claude Agent SDK, CrewAI) to EdgeOne Makers platform conventions.
-  Use when the user wants to adapt a standard agent project to run on EdgeOne Makers,
-  convert Express/Next.js API routes to Makers handlers, or add platform capabilities
-  (context.tools, context.sandbox, context.store).
-  Do NOT trigger for new agent projects (use makers-agents instead).
-pathPatterns:
-  - agents/**
-  - cloud-functions/**
-validate:
-  - pattern: "process\\.env|os\\.environ"
-    message: "Migration checklist: replace process.env / os.environ with context.env (TS) or ctx env access (Python)."
-metadata:
-  author: edgeone
-  version: "1.0.0"
+name: "edgeone-makers-migration"
+description: "Migrate existing AI agent projects (LangChain, LangGraph, OpenAI Agents SDK, Claude Agent SDK, CrewAI) to EdgeOne Makers platform conventions. Use when the user wants to adapt a standard agent project to run on EdgeOne Makers, convert Express/Next.js API routes to Makers handlers, or add platform capabilities (context.tools, context.sandbox, context.store). Do NOT trigger for new agent projects (use makers-agents instead)."
 ---
 
 # EdgeOne Makers Migration Guide

@@ -1,32 +1,6 @@
 ---
-name: edgeone-makers-agents
-description: >-
-  This skill guides building AI agent endpoints on EdgeOne Makers — five
-  framework routes (DeepAgents, LangGraph, CrewAI, OpenAI Agents SDK,
-  Claude Agent SDK), platform-injected `context.store` /
-  `context.tools` / `context.sandbox`, conversation_id dual-channel routing,
-  SSE streaming, and `agents/` vs `cloud-functions/` separation.
-  It should be used when the user wants to create or review an AI agent endpoint
-  on EdgeOne Makers — e.g. "build an agent on EdgeOne Makers", "create a Claude
-  agent endpoint", "wire LangGraph into Makers", "stream LLM responses with SSE",
-  "review my agent template", "use context.store / context.sandbox / context.tools".
-  Do NOT trigger for plain Edge Functions, Cloud Functions, or middleware
-  (those don't run AI logic — use makers-edge-functions / makers-cloud-functions / makers-middleware).
-  Do NOT trigger for deployment workflows (use makers-deploy).
-  Do NOT trigger for generic AI framework development outside
-  an EdgeOne Makers project.
-pathPatterns:
-  - agents/**
-validate:
-  - pattern: "process\\.env|os\\.environ"
-    message: "Read env via context.env inside agents/ and cloud-functions/, never process.env or os.environ (Critical Rule 3)."
-  - pattern: "headers\\s*\\.\\s*get\\s*\\("
-    message: "Headers are plain objects here: context.request.headers['x-name'], not .get('x-name') (Critical Rule 4)."
-  - pattern: "langgraphStore\\s*\\?\\?\\s*store"
-    message: "Never write `store?.langgraphStore ?? store` — in cloud-function context it falls back to a store with no .get and crashes (Critical Rule 12)."
-metadata:
-  author: edgeone
-  version: "1.1.1"
+name: "edgeone-makers-agents"
+description: "This skill guides building AI agent endpoints on EdgeOne Makers — five framework routes (DeepAgents, LangGraph, CrewAI, OpenAI Agents SDK, Claude Agent SDK), platform-injected `context.store` / `context.tools` / `context.sandbox`, conversation_id dual-channel routing, SSE streaming, and `agents/` vs `cloud-functions/` separation. It should be used when the user wants to create or review an AI agent endpoint on EdgeOne Makers — e.g. \"build an agent on EdgeOne Makers\", \"create a Claude agent endpoint\", \"wire LangGraph into Makers\", \"stream LLM responses with SSE\", \"review my agent template\", \"use context.store / context.sandbox / context.tools\". Do NOT trigger for plain Edge Functions, Cloud Functions, or middleware (those don't run AI logic — use makers-edge-functions / makers-cloud-functions / makers-middleware). Do NOT trigger for deployment workflows (use makers-deploy). Do NOT trigger for generic AI framework development outside an EdgeOne Makers project."
 ---
 
 # EdgeOne Makers Agent Development Guide

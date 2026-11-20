@@ -1,21 +1,6 @@
 ---
-slug: edgeone-makers-tools
-name: edgeone-makers-tools
-displayName: EdgeOne Makers
-license: MIT
-description: >-
-  EdgeOne Makers platform development router — the single entry point for building,
-  storing data, and deploying on Tencent EdgeOne Makers. Trigger whenever the user
-  develops, scaffolds, or deploys anything on EdgeOne Makers / EdgeOne Pages: AI agents
-  (DeepAgents, LangGraph, CrewAI, OpenAI/Claude SDK), Cloud Functions (Node/Go/Python),
-  Edge Functions (V8), KV + Blob storage, middleware, CLI usage, project scaffolding,
-  and — importantly — persisting dynamic site data (messages, uploads, votes, save-state)
-  where there is NO managed database, so Blob is used as the backend. Also trigger on
-  "deploy to EdgeOne", "上线", "发布", "部署到 EdgeOne". This SKILL is a routing table;
-  read only the sub-skill relevant to the current task, never all of them at once.
-metadata:
-  author: edgeone
-  version: "2.0.1"
+name: "edgeone-makers-tools"
+description: "EdgeOne Makers platform development router — the single entry point for building, storing data, and deploying on Tencent EdgeOne Makers. Trigger whenever the user develops, scaffolds, or deploys anything on EdgeOne Makers / EdgeOne Pages: AI agents (DeepAgents, LangGraph, CrewAI, OpenAI/Claude SDK), Cloud Functions (Node/Go/Python), Edge Functions (V8), KV + Blob storage, middleware, CLI usage, project scaffolding, and — importantly — persisting dynamic site data (messages, uploads, votes, save-state) where there is NO managed database, so Blob is used as the backend. Also trigger on \"deploy to EdgeOne\", \"上线\", \"发布\", \"部署到 EdgeOne\". This SKILL is a routing table; read only the sub-skill relevant to the current task, never all of them at once."
 ---
 
 # EdgeOne Makers Skills
