@@ -10,15 +10,9 @@ This Claude-only distribution contains Markdown guidance, a plugin manifest, a P
 
 ## Installation and use
 
-Install the plugin through the Claude plugin directory when its listing is available. For local development, use a checkout of the `claude-marketplace` branch as the plugin directory:
+Once the listing is published, search for `edgeone-makers-tools` in the Claude plugin directory and follow the installation prompts. In Claude Code, open `/plugin` and use the Discover tab to find the plugin once it is available there.
 
-```text
-claude --plugin-dir /absolute/path/to/edgeone-makers-tools
-```
-
-Pass the repository root, not its `.claude-plugin` subdirectory. This branch is a standalone plugin and does not contain its own marketplace catalog.
-
-After loading the plugin, ask Claude to help with a specific task, for example:
+After installation, ask Claude to help with a specific task, for example:
 
 - Configure a Next.js application for EdgeOne Makers.
 - Build a Cloud Function API or an AI agent.
