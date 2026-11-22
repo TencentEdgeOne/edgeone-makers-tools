@@ -1,6 +1,6 @@
 # EdgeOne Makers
 
-EdgeOne Makers provides Claude with platform-specific guidance for building and deploying web applications, AI agents, and serverless services on Tencent EdgeOne Makers / EdgeOne Pages.
+EdgeOne Makers provides Claude with platform-specific guidance for building and deploying web applications, AI agents, and serverless services on Tencent EdgeOne Makers.
 
 ## What the plugin does
 
