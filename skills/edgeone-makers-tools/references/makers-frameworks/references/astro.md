@@ -12,11 +12,13 @@
 - [Not supported yet](#not-supported-yet)
 - [Feature support](#feature-support)
 
-Astro 4+ is supported, 5 recommended. The platform runtime is Node.js 22+.
+Astro 5, 6 and 7 are supported, 7 recommended. Astro 7 needs `@edgeone/astro` 1.2.0 or
+later; older adapter releases reject it at install time. The platform runtime is Node.js 22+.
 
 ## The adapter
 
-Required whenever `output` is `server` or `hybrid`. A pure `output: 'static'` site builds
+Required whenever `output` is `server`, or any page sets `export const prerender = false`
+(Astro 5 removed `hybrid`; it is now `static` plus per-page opt-out). A pure static site builds
 to plain files and needs none — but if you later add an API route or middleware, the
 adapter becomes required and nothing in the preview will tell you.
 
