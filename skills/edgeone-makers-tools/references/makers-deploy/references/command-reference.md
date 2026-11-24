@@ -56,8 +56,8 @@ Credentials are managed by CLI or securely injected into the process environment
 
 | Action | Command |
 |--------|---------|
-| Install CLI | `npm install -g edgeone@1.7.3` (ask the user for consent first) |
-| Check version | `edgeone -v` (require ≥ 1.7.0 for all CLI execution; if the public package is unavailable, stop and explain rather than retrying installs) |
+| Install CLI | `npm install -g edgeone@1.7.7` (ask the user for consent first) |
+| Check version | `edgeone -v` (require ≥ 1.7.7 for all CLI execution; if the public package is unavailable, stop and explain rather than retrying installs) |
 | Login (desktop, unknown target) | `edgeone login --interaction agent` |
 | Login (China, explicit site) | `edgeone login --site china --interaction agent` |
 | Login (Global, explicit site) | `edgeone login --site global --interaction agent` |
@@ -67,20 +67,20 @@ Credentials are managed by CLI or securely injected into the process environment
 | Continue pending switch | `edgeone workspace use <workspaceId> --interaction agent --session <sessionId>` |
 | Discover workspaces | `edgeone workspace ls --json` |
 | Login + claim anonymous project | `edgeone login --claim --local --json` (with user consent, run in background after an anonymous deploy; prints `claimLoginUrl`, then waits) |
-| View login info | `edgeone whoami --json` after verifying CLI ≥ 1.7.0 and actual JSON capability |
+| View login info | `edgeone whoami --json` after verifying CLI ≥ 1.7.7 and actual JSON capability |
 | Logout (only when requested, not workspace switching) | `edgeone logout` |
 | Switch account | `edgeone switch --interaction agent` |
 | Init functions | `edgeone makers init` |
 | Local dev | `edgeone makers dev` |
 | Link project | `edgeone makers link` |
 | Link (non-interactive) | `edgeone makers link --name <project> -t <token>` |
-| Deploy | `edgeone makers deploy` |
-| Deploy new project | `edgeone makers deploy -n <name>` |
-| Deploy preview | `edgeone makers deploy -e preview` |
-| Deploy with token | `edgeone makers deploy -t <token>` |
-| Deploy (JSON, Agent/CI) | `edgeone makers deploy -n <name> -t <token> --json` |
-| Deploy anonymously (no login) | `edgeone makers deploy --anonymous --json` |
-| Deploy anonymously to a site | `edgeone makers deploy --anonymous --site china\|global --json` |
+| Deploy | `edgeone makers deploy --platform <platform>` |
+| Deploy new project | `edgeone makers deploy --platform <platform> -n <name>` |
+| Deploy preview | `edgeone makers deploy --platform <platform> -e preview` |
+| Deploy with token | `edgeone makers deploy --platform <platform> -t <token>` |
+| Deploy (JSON, Agent/CI) | `edgeone makers deploy --platform <platform> -n <name> -t <token> --json` |
+| Deploy anonymously (no login) | `edgeone makers deploy --platform <platform> --anonymous --json` |
+| Deploy anonymously to a site | `edgeone makers deploy --platform <platform> --anonymous --site china\|global --json` |
 | Claim an anonymous project | `edgeone makers claim --sid <anonymous-token> --json` |
 
 ## Makers Commands (Agent Projects)
@@ -93,9 +93,9 @@ For projects with `agents/` directory (AI Agent endpoints). `edgeone makers` com
 | Makers dev (non-interactive) | `edgeone makers dev --name <project> --skip-env-sync -t <token>` |
 | Makers dev (custom port) | `edgeone makers dev --port 3000` |
 | Makers link | `edgeone makers link --name <project> -t <token>` |
-| Makers deploy | `edgeone makers deploy -n <name> -t <token>` |
-| Makers deploy (JSON) | `edgeone makers deploy -n <name> -t <token> --json` |
-| Makers deploy (preview) | `edgeone makers deploy -n <name> -t <token> --json -e preview` |
+| Makers deploy | `edgeone makers deploy --platform <platform> -n <name> -t <token>` |
+| Makers deploy (JSON) | `edgeone makers deploy --platform <platform> -n <name> -t <token> --json` |
+| Makers deploy (preview) | `edgeone makers deploy --platform <platform> -n <name> -t <token> --json -e preview` |
 | Makers env pull | `edgeone makers env pull -t <token>` |
 | Makers env set | `edgeone makers env set <KEY> <VALUE>` |
 
@@ -107,6 +107,7 @@ For projects with `agents/` directory (AI Agent endpoints). `edgeone makers` com
 | `--skip-env-sync` | dev | Skip "sync env vars?" prompt |
 | `-t <token>` | dev, link, deploy, env | Token auth (skip browser login) |
 | `--json` | deploy | Machine-readable JSON output (single line) |
+| `--platform <platform>` | deploy only | Deployment attribution; replace with the confirmed host label from [deployment environment setup](../SKILL.md#environment-setup). Explicit value overrides `PAGES_SOURCE`; verify CLI help exposes it. |
 | `--port <number>` | dev | Custom frontend port |
 | `-e preview\|production` | deploy | Target environment |
 | `--anonymous` | deploy | Deploy without login; ignored when already authenticated. No `-a` short form (taken by `--area`) |
