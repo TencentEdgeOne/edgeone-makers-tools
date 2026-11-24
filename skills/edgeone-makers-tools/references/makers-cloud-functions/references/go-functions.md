@@ -176,7 +176,7 @@ cloud-functions/
 Prerequisites: Go installed locally.
 
 ```bash
-npm install -g edgeone@1.7.3   # Install CLI (ask the user for consent first)
+npm install -g edgeone@1.7.7   # Install CLI (ask the user for consent first)
 edgeone makers dev               # Start local dev server
 ```
 

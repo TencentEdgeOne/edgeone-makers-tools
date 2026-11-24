@@ -33,7 +33,7 @@ Deploy any project to **EdgeOne Makers**.
 
 ## ⛔ Critical Rules (never skip)
 
-1. **CLI version ≥ `1.7.0` for every CLI execution flow**, including authenticated and anonymous deployment / claim. Upgrade lower versions before commands, and verify the installed binary's capabilities via makers-cli. If the planned public release is not yet available, stop and report that instead of repeatedly installing or using old-version login/token fallbacks. Writing code alone does not require CLI installation.
+1. **CLI version ≥ `1.7.7` for every CLI execution flow**, including authenticated and anonymous deployment / claim. Upgrade lower versions before commands, and verify the installed binary's capabilities via makers-cli. If the planned public release is not yet available, stop and report that instead of repeatedly installing or using old-version login/token fallbacks. Writing code alone does not require CLI installation.
 2. **Never truncate the deploy URL — this applies to EVERY mention** — `EDGEONE_DEPLOY_URL` includes query parameters (`?eo_token=...&eo_time=...`) required for access. Without them the page returns 401. Always output the **complete** URL with full query string. This rule applies to: the primary display, summary tables, footnotes, comparisons, code blocks, `present_files` calls — **every single occurrence** of the URL in your reply. Truncation is any removal of the `?` and everything after it.
 
    ❌ WRONG (truncated — will 401):
@@ -48,7 +48,7 @@ Deploy any project to **EdgeOne Makers**.
 
    **Self-check after writing your reply**: scan for every instance of the `.edgeone.cool` domain. Does each one include `?eo_token=`? If any doesn't, fix it NOW — the user will get a 401.
 3a. **Prefer `--json` when running non-interactively** — in Agent/CI/headless contexts, always pass `--json` to `deploy` so the result is a single machine-readable line; no need to scrape colored/`\r`-animated stdout. See **Parse Deploy Output**.
-3b. **Use the shared authentication flow** in [makers-cli](../../skills/edgeone-makers-tools/references/makers-cli/SKILL.md). After verifying CLI ≥ 1.7.0 and JSON capability, check `whoami --json`: true = authenticated, false = explicitly unauthed, null = verification failed. Missing JSON capability means checking the actual package/path, not falling back to an older CLI; exit 1 alone does not prove missing login. Do not inspect private credential caches or write a separate token file. Login, workspace switching, account switching and changing the directory target are different actions.
+3b. **Use the shared authentication flow** in [makers-cli](../../skills/edgeone-makers-tools/references/makers-cli/SKILL.md). After verifying CLI ≥ 1.7.7 and JSON capability, check `whoami --json`: true = authenticated, false = explicitly unauthed, null = verification failed. Missing JSON capability means checking the actual package/path, not falling back to an older CLI; exit 1 alone does not prove missing login. Do not inspect private credential caches or write a separate token file. Login, workspace switching, account switching and changing the directory target are different actions.
 5. **Standalone uses agent interaction, not auto.** Complete browser authentication and the user's workspace choice using the shared CLI flow; only pin `--site` when the user specified it. Do not guess a workspace from plan/name/order.
 6. **Keep independent usage supported.** MCP is an optional equivalent path, not a required dependency. Desktop browser login is available where the host supports it; browserless CI keeps using securely provisioned environment credentials. Never force an expert team or a browser in unattended CI.
 7. **Credentials remain CLI-managed.** Do not extract cached tokens or offer a new token file. Persistent local login is an explicit user choice, not an automatic fallback for switching failure.
@@ -76,10 +76,12 @@ export PAGES_SOURCE=skills
 Or prefix each command inline:
 
 ```bash
-PAGES_SOURCE=skills edgeone makers deploy
+PAGES_SOURCE=skills edgeone makers deploy --platform <platform>
 ```
 
-This tells the platform that the deployment is triggered from an AI skill context.
+Replace `<platform>` with the literal label selected by [makers-cli platform attribution](../../skills/edgeone-makers-tools/references/makers-cli/SKILL.md#deployment-platform-attribution), such as `skill-workbuddy`, `skill-claude` for Claude Code, or `skill-unknown` when the host is unknown. Check `edgeone makers deploy --help` exposes `--platform` before deploying. Carry the same label on every deployment; never execute the placeholder literally.
+
+Keep `PAGES_SOURCE=skills` for legacy interaction compatibility, preferably inline per command because shells may not persist. The explicit `--platform` controls deployment attribution and overrides that fallback; do not replace the environment value with `skill-*`.
 
 ---
 
@@ -91,7 +93,7 @@ Run these checks first, then follow the decision table. **Run them silently** �
 # Check 0: Set environment variable (required before any edgeone command)
 export PAGES_SOURCE=skills
 
-# Check 1: Require CLI >= 1.7.0 before further operations
+# Check 1: Require CLI >= 1.7.7 before further operations
 edgeone -v
 # Stop if the required public release is unavailable; do not use an older CLI
 
@@ -115,12 +117,12 @@ cat .edgeone/project.json 2>/dev/null
 
 | CLI version | Login status | Action |
 |-------------|-------------|--------|
-| Not installed or < 1.7.0 | — | → **Install CLI**; if the required public package is unavailable, stop instead of continuing with an older version |
-| `≥ 1.7.0` ✓ | Authenticated, owning project/target confirmed | → **Deploy**; keep existing directory association |
-| `≥ 1.7.0` with verified capabilities | Pending selection or business confirmation | → Shared CLI flow: ask by names, continue original result or confirm via workspace use; no deploy yet |
-| `≥ 1.7.0` | Identity verification error/unknown | Stop and explain the safe cause; do not automatically relogin or switch |
-| `≥ 1.7.0` ✓ | Explicitly unauthed, no environment credentials | → **Anonymous Deploy** only when the user explicitly chooses it; otherwise agent browser login. Do not use login-free deployment to bypass an existing project's auth/target error |
-| `≥ 1.7.0` ✓ | Securely provided environment credentials | Verify effective identity/target; use the same deployment flow without creating a token cache |
+| Not installed or < 1.7.7 | — | → **Install CLI**; if the required public package is unavailable, stop instead of continuing with an older version |
+| `≥ 1.7.7` ✓ | Authenticated, owning project/target confirmed | → **Deploy**; keep existing directory association |
+| `≥ 1.7.7` with verified capabilities | Pending selection or business confirmation | → Shared CLI flow: ask by names, continue original result or confirm via workspace use; no deploy yet |
+| `≥ 1.7.7` | Identity verification error/unknown | Stop and explain the safe cause; do not automatically relogin or switch |
+| `≥ 1.7.7` ✓ | Explicitly unauthed, no environment credentials | → **Anonymous Deploy** only when the user explicitly chooses it; otherwise agent browser login. Do not use login-free deployment to bypass an existing project's auth/target error |
+| `≥ 1.7.7` ✓ | Securely provided environment credentials | Verify effective identity/target; use the same deployment flow without creating a token cache |
 
 ---
 
@@ -129,10 +131,10 @@ cat .edgeone/project.json 2>/dev/null
 Ask the user for consent before any global install, then install the pinned version:
 
 ```bash
-npm install -g edgeone@1.7.3
+npm install -g edgeone@1.7.7
 ```
 
-Verify `edgeone -v` is `1.7.0` or higher, then check the actual command capabilities via makers-cli. If the pinned release is not available from the registry, report the unavailable release and stop; do not repeatedly install or continue via a lower-version authenticated/token path.
+Verify `edgeone -v` is `1.7.7` or higher, then check the actual command capabilities via makers-cli. If the pinned release is not available from the registry, report the unavailable release and stop; do not repeatedly install or continue via a lower-version authenticated/token path.
 
 ---
 
@@ -157,10 +159,10 @@ Authentication failure, unknown identity and unconfirmed business target are dif
 
 ```bash
 # Verified directory association exists in .edgeone/project.json
-edgeone makers deploy --json
+edgeone makers deploy --platform <platform> --json
 
 # Unbound project, after confirming its name and target workspace
-edgeone makers deploy -n <project-name> --json
+edgeone makers deploy --platform <platform> -n <project-name> --json
 ```
 
 Confirm the meaningful name and workspace before creating a new project. `.edgeone/project.json` records the resulting association; `edgeone.json` only configures the application. Existing projects omit replacement names. Global selection changes alone never move the directory target. For an explicitly requested change, follow the shared safe link flow and verify the new association before deployment.
@@ -172,7 +174,7 @@ Use the same commands as browser-authenticated deployment with securely injected
 ### Deploy to preview environment
 
 ```bash
-edgeone makers deploy -e preview
+edgeone makers deploy --platform <platform> -e preview
 ```
 
 ### Non-interactive / Agent / CI deploy (recommended: `--json`)
@@ -182,9 +184,9 @@ result is emitted as a single machine-readable line — no scraping of colored s
 
 ```bash
 # Existing confirmed target
-edgeone makers deploy --json
+edgeone makers deploy --platform <platform> --json
 # New project only after name/workspace confirmation
-edgeone makers deploy -n <project-name> --json
+edgeone makers deploy --platform <platform> -n <project-name> --json
 ```
 
 ### Makers Agent Projects deploy
@@ -193,8 +195,8 @@ For projects with `agents/` directory (AI Agent projects), use `edgeone makers d
 
 ```bash
 # Linked Agent project; credentials remain CLI-managed or securely injected
-edgeone makers deploy --json
-edgeone makers deploy --json -e preview
+edgeone makers deploy --platform <platform> --json
+edgeone makers deploy --platform <platform> --json -e preview
 ```
 
 Note: `edgeone makers deploy` automatically runs build before deploying — no separate `edgeone makers build` step needed.
@@ -207,7 +209,7 @@ The CLI runs the configured build and uploads its output. When a framework needs
 
 ## Anonymous Deploy (no login required)
 
-When explicitly unauthed and using no account credential, the user can choose login-free deployment and later claim the project. This Skill requires CLI `>= 1.7.0` for that flow too. If the baseline package is not available, stop; do not replace it with an older CLI, token flow or a different target.
+When explicitly unauthed and using no account credential, the user can choose login-free deployment and later claim the project. This Skill requires CLI `>= 1.7.7` for that flow too. If the baseline package is not available, stop; do not replace it with an older CLI, token flow or a different target.
 
 ### Step 1: Exclusion check — run this FIRST
 
@@ -275,7 +277,7 @@ Map their pick to the flow:
 
 ```bash
 export PAGES_SOURCE=skills
-edgeone makers deploy --anonymous --json
+edgeone makers deploy --platform <platform> --anonymous --json
 ```
 
 Add `--site china` or `--site global` only when the site must be pinned (the user told you which, or CI needs determinism). Otherwise omit it — **the CLI detects the site itself** from its own egress IP. Do not probe for the site yourself and do not synthesise `--site` from your own check.
@@ -333,7 +335,7 @@ The background `login --claim` process exits on its own when the console relays 
 - the project is linked (`.edgeone/project.json`),
 - `.edgeone/anonymous.json` is removed.
 
-Tell the user plainly, in their language: the project is now in their account, and any further deploys will update that same project. Then use the normal deploy flow (`edgeone makers deploy --json`) for all later deploys.
+Tell the user plainly, in their language: the project is now in their account, and any further deploys will update that same project. Then use the normal deploy flow (`edgeone makers deploy --platform <platform> --json`) with the same confirmed host label for all later deploys.
 
 A non-zero listener exit does not prove the project is unclaimed: a remote claim may have completed before local persistence failed. Check effective identity, current directory association and the confirmed project's remote ownership through supported CLI/tools without extracting tokens. Do not relaunch login, redeploy or replay a possibly consumed result while status is uncertain. Only after confirming that the original claim did not complete and the user still wants it should a fresh listener/link be created.
 
@@ -402,9 +404,9 @@ https://console.cloud.tencent.com/edgeone/pages/project/pages-xxxxxxxx/deploymen
 
 | Error | Solution |
 |-------|----------|
-| `command not found: edgeone` | Ask for consent, then run `npm install -g edgeone@1.7.3` |
-| CLI version < 1.7.0 | Ask for consent, then upgrade with `npm install -g edgeone@1.7.3` and verify. If the required release is not available yet, report it and stop rather than repeatedly installing or continuing with old commands |
-| Required workspace/JSON/link/anonymous flags missing | Verify the actual binary path and installed package version; this Skill requires CLI ≥ 1.7.0 with those capabilities. An unavailable public release is not solved by repeated installs, legacy flags or token fallbacks |
+| `command not found: edgeone` | Ask for consent, then run `npm install -g edgeone@1.7.7` |
+| CLI version < 1.7.7 | Ask for consent, then upgrade with `npm install -g edgeone@1.7.7` and verify. If the required release is not available yet, report it and stop rather than repeatedly installing or continuing with old commands |
+| Required workspace/JSON/link/anonymous flags missing | Verify the actual binary path and installed package version; this Skill requires CLI ≥ 1.7.7 with those capabilities. An unavailable public release is not solved by repeated installs, legacy flags or token fallbacks |
 | Browser does not open during login | Display the original waiting link and verify whether CLI or host owns browser opening; do not start a second login solely on elapsed time |
 | Explicit authenticated=false / legacy text "not authenticated" | Complete supported agent login; exit 1 alone is not proof of missing credentials |
 | authenticated=null / service or local-file error | Report safe cause and retry only the failed verification when appropriate; do not relogin automatically |

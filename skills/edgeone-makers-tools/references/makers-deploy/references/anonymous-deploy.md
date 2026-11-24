@@ -2,7 +2,7 @@
 
 Detail reference for login-free deployment. For the decision flow and the commands to run, see [SKILL.md](../SKILL.md) — read that first.
 
-This version of the Skill requires CLI `>= 1.7.0`, including login-free deployment and claim. Follow the shared release-availability check in the deployment Skill; if the required public package is not yet available, stop rather than falling back to an older CLI.
+This version of the Skill requires CLI `>= 1.7.7`, including login-free deployment and claim. Follow the shared release-availability check in the deployment Skill; if the required public package is not yet available, stop rather than falling back to an older CLI.
 
 ## Contents
 
@@ -25,11 +25,13 @@ This version of the Skill requires CLI `>= 1.7.0`, including login-free deployme
 
 ```bash
 # Anonymous deploy (only takes effect when NOT logged in)
-edgeone makers deploy --anonymous [--site china|global] [--json]
+edgeone makers deploy --platform <platform> --anonymous [--site china|global] [--json]
 
 # Claim an anonymous project into your account (requires login)
 edgeone makers claim [--sid <anonymous-token>] [-t <api-token>] [--json]
 ```
+
+Replace `<platform>` using the confirmed host mapping in [makers-cli](../../makers-cli/SKILL.md#deployment-platform-attribution); use `skill-unknown` if the host is not known. Require `edgeone makers deploy --help` to expose `--platform` before execution, and retain the label when an authenticated invocation ignores `--anonymous` or the claimed project is deployed again.
 
 ### Deploy parameters
 
@@ -294,7 +296,7 @@ A site that loads but breaks on first interaction is worse than an explicit logi
 export PAGES_SOURCE=skills
 
 # 1. Not logged in, and this is a plain frontend project
-edgeone makers deploy --anonymous --json
+edgeone makers deploy --platform <platform> --anonymous --json
 # → last stdout line is the JSON result
 
 # 2. Verify the deployment is live

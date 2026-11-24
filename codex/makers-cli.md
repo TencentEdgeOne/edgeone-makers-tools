@@ -15,12 +15,12 @@ metadata:
 Global installs need the user's consent — ask first, then install the pinned version:
 
 ```bash
-npm install -g edgeone@1.7.3
+npm install -g edgeone@1.7.7
 ```
 
-**This Skill requires CLI `>= 1.7.0` for every CLI execution flow**, including local dev, build, login, switching, linking, env, authenticated deployment and anonymous deployment / claim. Check `edgeone -v` before the first CLI operation and upgrade if lower. Writing code or reading guidance does not require installing/upgrading CLI; local previews do not require authentication unless they use credentialed services.
+**This Skill requires CLI `>= 1.7.7` for every CLI execution flow**, including local dev, build, login, switching, linking, env, authenticated deployment and anonymous deployment / claim. Check `edgeone -v` before the first CLI operation and upgrade if lower. Writing code or reading guidance does not require installing/upgrading CLI; local previews do not require authentication unless they use credentialed services.
 
-**Release availability**: `1.7.0` is the public CLI baseline this Skill requires. If the pinned release is not yet available from the user's configured registry, stop and explain that the required release is unavailable; do not repeatedly install, silently continue with an older CLI, switch registries without consent, or assume a local development build is publicly released.
+**Release availability**: `1.7.7` is the public CLI baseline this Skill requires. If the pinned release is not yet available from the user's configured registry, stop and explain that the required release is unavailable; do not repeatedly install, silently continue with an older CLI, switch registries without consent, or assume a local development build is publicly released.
 
 Version alone is not proof of the invoked package's capabilities: verify the actual CLI on PATH. `login --help` must expose `--interaction`, `--workspace`, `--session`; explicit linking requires `makers link --help` with `--mode`, `link_existing`, `create_upload`, `--skip-env-sync`, `--expected-workspace`, and `--json`; `whoami --help` must expose `--json`. Missing capabilities after a reported version match require checking the installed package/path, not a legacy fallback, guessed flags or private credential files. An arbitrary exit 1 is never proof of missing login.
 
@@ -79,12 +79,12 @@ Keep customer messages concise: login link, neutral workspace names, concrete ou
 |---------|-------------|
 | `edgeone makers dev` | Start local dev server (agent runtime + frontend) |
 | `edgeone makers build` | Build agents + frontend into `.edgeone/` |
-| `edgeone makers deploy` | Build and deploy to EdgeOne Makers |
-| `edgeone makers deploy -n <name>` | Deploy as a new project |
-| `edgeone makers deploy -t <token>` | Deploy with API token (CI/headless) |
-| `edgeone makers deploy -e preview` | Deploy to preview environment |
-| `edgeone makers deploy --anonymous --json` | Deploy without login; claim later (this Skill requires CLI ≥ 1.7.0) |
-| `edgeone makers deploy --anonymous --site china\|global --json` | Anonymous deploy to a specific site (omit `--site` to auto-detect by IP) |
+| `edgeone makers deploy --platform <platform>` | Build and deploy to EdgeOne Makers |
+| `edgeone makers deploy --platform <platform> -n <name>` | Deploy as a new project |
+| `edgeone makers deploy --platform <platform> -t <token>` | Deploy with API token (CI/headless) |
+| `edgeone makers deploy --platform <platform> -e preview` | Deploy to preview environment |
+| `edgeone makers deploy --platform <platform> --anonymous --json` | Deploy without login; claim later (this Skill requires CLI ≥ 1.7.7) |
+| `edgeone makers deploy --platform <platform> --anonymous --site china\|global --json` | Anonymous deploy to a specific site (omit `--site` to auto-detect by IP) |
 | `edgeone makers claim --sid <token>` | Claim an anonymously-deployed project (requires login) |
 | `edgeone makers link` | Link local project to remote EdgeOne project |
 | `edgeone makers env pull` | Pull remote env vars to local `.env` |
@@ -97,11 +97,32 @@ Keep customer messages concise: login link, neutral workspace names, concrete ou
 | `edgeone login --claim --local --json` | Background listener: prints the login+claim link for an anonymous deploy, then auto-links the claimed project |
 | `edgeone whoami` | Check current login status |
 
-> This Skill requires CLI `>= 1.7.0` for anonymous deploy and `claim` as well as other commands. The claim parameter is `--sid` (the anonymous token); `-t` is the account API token — they are different credentials. Tell the user the link expires in 60 minutes; never show the raw `expiresAt`. The claim link you present comes from `edgeone login --claim` (`claimLoginUrl`), not the bare `claimUrl` in the deploy JSON. Details: [makers-deploy/references/anonymous-deploy.md](../skills/edgeone-makers-tools/references/makers-deploy/references/anonymous-deploy.md).
+> This Skill requires CLI `>= 1.7.7` for anonymous deploy and `claim` as well as other commands. The claim parameter is `--sid` (the anonymous token); `-t` is the account API token — they are different credentials. Tell the user the link expires in 60 minutes; never show the raw `expiresAt`. The claim link you present comes from `edgeone login --claim` (`claimLoginUrl`), not the bare `claimUrl` in the deploy JSON. Details: [makers-deploy/references/anonymous-deploy.md](../skills/edgeone-makers-tools/references/makers-deploy/references/anonymous-deploy.md).
+
+## Deployment platform attribution
+
+Before every CLI deployment, replace `<platform>` in the examples with a literal value from the confirmed host context:
+
+| Confirmed host | Platform label |
+|---|---|
+| WorkBuddy | `skill-workbuddy` |
+| Claude Code | `skill-claude` |
+| Cursor | `skill-cursor` |
+| Codex | `skill-codex` |
+| CodeBuddy | `skill-codebuddy` |
+| Host not identified | `skill-unknown` |
+
+Do not infer the host from the model, application SDK, installed directories or tool names. SkillHub is a distribution channel, not a runtime host. Do not ask the user solely for attribution; use `skill-unknown` when the host is not explicitly identified. Never execute the literal `<platform>` placeholder.
+
+Pass `--platform` on **every** authenticated, anonymous, preview and subsequent deployment, including after claiming. The parameter is deploy-only, supported by both `makers deploy` and `pages deploy`; do not append it to login, whoami, dev, build, link, env or claim. It does not select an API site, workspace, runtime or credentials. Source precedence is `--platform` > `PAGES_SOURCE` > `cli`; do not change `PAGES_SOURCE` to a platform label.
+
+**Capability gate:** run `edgeone makers deploy --help` on the actual CLI on PATH and require `--platform` before deployment. The `>= 1.7.7` baseline and pinned `1.7.7` install are not proof of `--platform` support. If missing, explain that the pinned `1.7.7` public release exposing this flag is required, obtain consent before upgrading, and verify help again. If that release is unavailable, stop; do not silently drop `--platform`, repeatedly reinstall the old pin, or assume a local development build is publicly released.
+
+MCP tools do not inherit CLI flags. Use only a documented equivalent attribution field if the MCP tool exposes one; otherwise do not invent parameters or claim host-specific attribution, and do not repeat a completed deployment solely to add a label.
 
 ## Environment Variable
 
-Before any `edgeone` command, set:
+Keep this legacy marker for CLI interaction compatibility; the deployment label above is independent. Before any `edgeone` command, set:
 
 ```bash
 export PAGES_SOURCE=skills
@@ -126,7 +147,7 @@ edgeone makers dev --skip-env-sync
 
 ### Deploy
 ```bash
-edgeone makers deploy
+PAGES_SOURCE=skills edgeone makers deploy --platform <platform>
 ```
 
 ### Set env vars for production
