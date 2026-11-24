@@ -7,10 +7,10 @@ import test from 'node:test';
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (name) => readFileSync(path.join(root, `skills/edgeone-makers-tools/references/${name}/SKILL.md`), 'utf8');
 
-test('all CLI execution guidance shares the 1.7.0 floor without retrying an unreleased package', () => {
+test('all CLI execution guidance shares the 1.7.7 floor without retrying an unreleased package', () => {
   const docs = [read('makers-cli'), read('makers-deploy'), read('makers-env-adaption'), ...['anonymous-deploy.md', 'command-reference.md'].map((file) => readFileSync(path.join(root, 'skills/edgeone-makers-tools/references/makers-deploy/references', file), 'utf8'))];
   for (const text of docs) {
-    assert.match(text, /1\.7\.0/);
+    assert.match(text, /1\.7\.7/);
     assert.doesNotMatch(text, /1\.6\.0|1\.6\.7|1\.6\.29|1\.6\.28/);
     assert.doesNotMatch(text, /Legacy text mode remains supported|legacy text otherwise|legacy CLI requires/);
     assert.doesNotMatch(text, /edgeone login --site <china\\?\|global> --local/);
@@ -55,7 +55,7 @@ test('deploy uses the shared flow and never treats config, failed queries or cac
   assert.doesNotMatch(deploy, /cat edgeone.json|cat \.edgeone\/\.token|echo "<token>"|value\.Token/);
   assert.doesNotMatch(deploy, /ALWAYS pass `--site`|NEVER run a bare|exit 1 → not logged in/);
   assert.doesNotMatch(deploy, /skip login checks entirely|Always pass `-n` to dev/);
-  assert.match(deploy, /1\.7\.0/);
+  assert.match(deploy, /1\.7\.7/);
 });
 
 test('the deployment command reference cannot reintroduce credential-cache or action confusion', () => {
@@ -104,7 +104,7 @@ test('review compliance: pinned installs with consent, no silent credential writ
   for (const text of installDocs) {
     assert.doesNotMatch(text, /npm install -g edgeone@latest/);
     for (const cmd of text.match(/npm install -g edgeone\S*/g) ?? []) {
-      assert.ok(/edgeone@1\.7\.3/.test(cmd), cmd);
+      assert.ok(/edgeone@1\.7\.7/.test(cmd), cmd);
     }
   }
   assert.match(installDocs[0], /consent — ask first/);

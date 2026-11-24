@@ -81,13 +81,14 @@ Inside the WorkBuddy sandbox, CLI interactive prompts cause the process to hang 
 | Linking a project | `--name <project>` + explicit link mode when supported | Confirm name/workspace and creation policy before changing association |
 | Auth when not logged in | `--interaction agent` | Browser authentication with conversation workspace selection; use secure environment credentials for browserless CI |
 | Deploy output | `--json` | Machine-readable JSON, avoids ANSI parsing |
+| Deploy attribution | `--platform skill-workbuddy` | Only for a confirmed WorkBuddy host; follow [makers-cli](../../skills/edgeone-makers-tools/references/makers-cli/SKILL.md#deployment-platform-attribution) and verify deploy help supports the flag. It does not replace non-interactive settings. |
 
 ```bash
 # Correct: local development
 edgeone makers dev --name my-project --skip-env-sync
 
 # Correct: deploy
-edgeone makers deploy -n my-project --json
+PAGES_SOURCE=skills edgeone makers deploy --platform skill-workbuddy -n my-project --json
 
 # Wrong: will hang
 edgeone makers dev
@@ -102,11 +103,11 @@ Follow the shared [login, switching and target flow](../../skills/edgeone-makers
 - Desktop callers use agent interaction; the login listener remains alive until its final result. A pending workspace selection is not login completion. For an already authenticated account use `workspace use` to change workspace, not another login or account switch.
 - Effective credentials may come from an explicit argument, environment, project local auth or global CLI state. Global switching does not overwrite a project-local credential; verify identity in the original project directory and obtain consent to correct the source without printing or deleting its contents.
 - `--local` is opt-in additional credential persistence and may write global state too. It does not guarantee bypassing home write restrictions, and must not be the default response to sandbox errors.
-- Use `whoami --json` after checking CLI `>= 1.7.0` and its JSON capability: true = authenticated, false = unauthed, null = verification unavailable. Missing JSON support on a reported matching version means checking the installed package/path, not a legacy fallback; exit 1 alone cannot distinguish auth from connectivity/file failures.
+- Use `whoami --json` after checking CLI `>= 1.7.7` and its JSON capability: true = authenticated, false = unauthed, null = verification unavailable. Missing JSON support on a reported matching version means checking the installed package/path, not a legacy fallback; exit 1 alone cannot distinguish auth from connectivity/file failures.
 - On an approval-triggered re-run, a login result may already be consumed. Verify identity first; do not automatically replay it, switch commands to bypass policy, or restart browser authentication in a monolithic retry script.
 - A pure-static preview can run without login if it needs no remote credentials. Pure local Blob persistence follows the storage/Agent reference; cloud-backed Blob/KV/Gateway access needs the appropriate target and credential. Deployment and binding must retain the original project ownership.
 
-Use makers-cli's unified CLI `>= 1.7.0` execution baseline and feature capability checks. If the public release is unavailable or installed flags do not match, stop rather than falling back to an older CLI. Reading guidance or writing code does not require CLI installation.
+Use makers-cli's unified CLI `>= 1.7.7` execution baseline and feature capability checks. If the public release is unavailable or installed flags do not match, stop rather than falling back to an older CLI. Reading guidance or writing code does not require CLI installation.
 
 ---
 
@@ -201,7 +202,7 @@ After finishing development, **start the dev server and preview directly** — d
 3. **Pass `http://127.0.0.1:8088/` to `present_files`** (note it is `127.0.0.1`, **not** `localhost` — see §4)
 4. Tell the user: "The project's local preview is running, please check it out. If everything looks good, I can deploy it live for you directly."
 
-Only after the user confirms, run `edgeone makers deploy -n <project> --json` (**background async**, see §7 and §7.2 — it exceeds the foreground wall-clock budget).
+Only after the user confirms, run `PAGES_SOURCE=skills edgeone makers deploy --platform skill-workbuddy -n <project> --json` (**background async**, see §7 and §7.2 — it exceeds the foreground wall-clock budget).
 
 #### ⛔ file:// preview is strictly forbidden
 
@@ -270,7 +271,7 @@ After verifying the target, start the original dev operation with env preservati
 
 | Framework/package | Minimum version | Reason |
 |---------|---------|------|
-| EdgeOne CLI (all commands, including anonymous deploy / claim) | >= 1.7.0 | Unified execution baseline; verify installed capabilities and public release availability via makers-cli before running commands |
+| EdgeOne CLI (all commands, including anonymous deploy / claim) | >= 1.7.7 | Unified execution baseline; verify installed capabilities and public release availability via makers-cli before running commands |
 | Next.js | 16.x | The framework adapter tracks new versions |
 | @edgeone/pages-blob | >= 0.0.14 | Older versions have known bugs |
 

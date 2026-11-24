@@ -288,7 +288,7 @@ curl http://localhost:8088/api/counter
 1. Enable KV Storage in the console
 2. Create a namespace
 3. Bind it to the project (set the variable name)
-4. Deploy:
+4. Deploy: replace `<platform>` using [makers-cli platform attribution](../../makers-cli/SKILL.md#deployment-platform-attribution), verify the CLI exposes the flag, and use `skill-unknown` if the host is unknown.
    ```bash
-   edgeone makers deploy
+   edgeone makers deploy --platform <platform>
    ```
