@@ -261,7 +261,7 @@ Need a sandbox to run code, process uploaded files, or use MCP tools?
 Ask the user for consent first, then install the pinned version:
 
 ```bash
-npm install -g edgeone@1.7.3
+npm install -g edgeone@1.7.7
 ```
 
 Verify: `edgeone -v`.
@@ -390,9 +390,9 @@ edgeone makers env pull
 
    This is not the same failure as a missing API key, and the difference is diagnostic: a missing key fails only after input validation passes, so a request with a deliberately invalid body still gets its fast `400`. A module that failed to load answers nothing at all, on every route, including that one.
 
-6. **Deploy**:
+6. **Deploy**: replace `<platform>` using the confirmed host mapping and capability gate in [makers-cli](../makers-cli/SKILL.md#deployment-platform-attribution); use `skill-unknown` when the host is unknown, never a model/SDK-based guess.
    ```bash
-   edgeone makers deploy
+   edgeone makers deploy --platform <platform>
    ```
 
 **Example interaction when deploying a project with Supabase**:

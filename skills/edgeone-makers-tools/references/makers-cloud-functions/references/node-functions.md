@@ -254,7 +254,7 @@ export function onRequestGet(context) {
 ## Local Development
 
 ```bash
-npm install -g edgeone@1.7.3   # Install CLI (ask the user for consent first)
+npm install -g edgeone@1.7.7   # Install CLI (ask the user for consent first)
 edgeone makers dev               # Start local dev server on port 8088
 ```
 
