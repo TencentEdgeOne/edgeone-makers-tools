@@ -1,0 +1,10 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/mcp.schema.json",
+  "mcpServers": {
+    "edgeone-makers": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@edgeone/makers-mcp@0.0.5"]
+    }
+  }
+}
